@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin panel</title>
+<style>
+  [hidden] { display: none !important; }
+  body { margin: 0; font-family: system-ui, Segoe UI, Arial, sans-serif; background: #F7F4EE; color: #1F1B16; }
+  .top { background: #1F1B16; color: #F7F4EE; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .page { padding: 24px; display: grid; gap: 18px; }
+  .kpis { display: flex; gap: 14px; flex-wrap: wrap; }
+  .kpi { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 16px; min-width: 170px; }
+  .kpi b { display: block; font-size: 24px; margin-top: 4px; }
+  .tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .tools input, .tools select { min-height: 42px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; background: #fff; font-family: inherit; }
+  .box { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 8px 16px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; color: #57534E; padding: 10px 8px; }
+  td { padding: 12px 8px; border-top: 1px solid #EFE8DA; vertical-align: top; }
+  button, input { font-family: inherit; }
+  button.s { min-height: 34px; border: 1px solid #CBC3B3; background: #fff; border-radius: 8px; padding: 0 10px; cursor: pointer; margin: 2px 2px 2px 0; }
+  button.open { min-height: 38px; border: 0; background: #9A3412; color: #fff; border-radius: 8px; padding: 0 14px; cursor: pointer; font-weight: 700; margin: 0 4px 6px 0; display: block; }
+  button.p { min-height: 46px; border: 0; background: #9A3412; color: #fff; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .login { max-width: 340px; margin: 100px auto; display: grid; gap: 12px; padding: 0 16px; }
+  .login input { min-height: 44px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; }
+  .muted { color: #57534E; font-size: 13px; }
+  .err { color: #B91C1C; }
+</style>
+</head>
+<body>
+
+<div id="login" class="login">
+  <h2 style="margin:0">Admin login</h2>
+  <input id="em" type="email" placeholder="Email">
+  <input id="pw" type="password" placeholder="Password">
+  <button class="p" id="go">Login</button>
+  <div id="lerr" class="err"></div>
+</div>
+
+<div id="app" hidden>
+  <div class="top"><b>Restaurant POS - Admin</b><button class="s" id="out">Logout</button></div>
+  <div class="page">
+    <div class="kpis" id="kpis"></div>
+    <div class="tools">
+      <input id="q" placeholder="Search by name, email or phone" style="width:280px">
+      <select id="f">
+        <option value="all">All restaurants</option>
+        <option value="active">Active</option>
+        <option value="pending">Waiting approval</option>
+        <option value="paused">Paused</option>
+        <option value="expired">Expired</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+    <div class="box"><table>
+      <thead><tr>
+        <th>Restaurant</th><th>Status</th><th>Plan</th><th>Paid until</th>
+        <th>Last seen</th><th>Bills</th><th>Sales</th><th>Paid to you</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const rs = (n) => 'Rs ' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })
+let token = sessionStorage.getItem('adm') || ''
+let list = []
+
+async function api(url, body) {
+  const r = await fetch(url, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: body ? JSON.stringify(body) : undefined
+  })
+  if (r.status === 401) { logout(); return null }
+  return r.json()
+}
+
+function logout() {
+  token = ''
+  sessionStorage.removeItem('adm')
+  $('app').hidden = true
+  $('login').hidden = false
+}
+
+$('out').onclick = logout
+$('go').onclick = async () => {
+  const r = await fetch('/api/admin/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: $('em').value, password: $('pw').value })
+  })
+  const d = await r.json()
+  if (!d.ok) { $('lerr').textContent = d.message; return }
+  token = d.token
+  sessionStorage.setItem('adm', token)
+  $('pw').value = ''
+  show()
+}
+$('pw').onkeydown = (e) => { if (e.key === 'Enter') $('go').click() }
+
+const colors = { active: '#166534', pending: '#92400E', paused: '#B91C1C', rejected: '#57534E', expired: '#B91C1C' }
+const badge = (s) => `<span style="color:#fff;background:${colors[s] || '#57534E'};padding:2px 8px;border-radius:10px;font-size:12px">${esc(s)}</span>`
+
+function actions(r) {
+  const b = (act, label) => `<button class="s" data-act="${act}" data-id="${esc(r.id)}">${label}</button>`
+  let out = `<button class="open" data-act="open" data-id="${esc(r.id)}">Open system</button>`
+  if (r.status === 'pending') out += b('approve', 'Approve') + b('reject', 'Reject')
+  if (r.status === 'active') out += b('pause', 'Pause')
+  if (r.status === 'paused') out += b('approve', 'Resume')
+  if (r.status === 'rejected') out += b('approve', 'Approve')
+  return out + b('pay', 'Record payment') + b('plan', 'Edit plan') + b('pw', 'Reset password')
+}
+
+function render() {
+  const active = list.filter((r) => r.status === 'active')
+  const k = [
+    ['Restaurants', list.length],
+    ['Active', active.length],
+    ['Waiting approval', list.filter((r) => r.status === 'pending').length],
+    ['Monthly income (active)', rs(active.reduce((s, r) => s + r.monthly_fee, 0))],
+    ['Total received', rs(list.reduce((s, r) => s + r.total_paid, 0))]
+  ]
+  $('kpis').innerHTML = k.map(([a, b]) => `<div class="kpi"><span class="muted">${a}</span><b>${b}</b></div>`).join('')
+
+  const q = $('q').value.trim().toLowerCase()
+  const f = $('f').value
+  const shown = list.filter((r) =>
+    (f === 'all' || r.license.state === f) &&
+    (!q || [r.name, r.owner_name, r.email, r.phone, r.city].some((x) => String(x || '').toLowerCase().includes(q)))
+  )
+
+  $('rows').innerHTML = shown.length
+    ? shown.map((r) => `<tr>
+        <td><b>${esc(r.name)}</b><div class="muted">${esc(r.owner_name)} - ${esc(r.phone)}</div>
+            <div class="muted">${esc(r.email)} - ${esc(r.city)}</div></td>
+        <td>${badge(r.license.state)}</td>
+        <td>${esc(r.plan)}<div class="muted">${rs(r.monthly_fee)} / month</div></td>
+        <td>${esc(r.paid_until || '-')}<div class="muted">${r.license.days_left === null ? '' : r.license.days_left + ' day(s) left'}</div></td>
+        <td>${r.last_seen ? esc(new Date(r.last_seen).toLocaleString()) : 'Never'}</td>
+        <td>${r.bills}</td><td>${rs(r.sales)}</td><td>${rs(r.total_paid)}</td>
+        <td>${actions(r)}</td></tr>`).join('')
+    : '<tr><td colspan="9" class="muted">No restaurants found.</td></tr>'
+}
+
+$('q').oninput = render
+$('f').onchange = render
+
+async function load() {
+  const d = await api('/api/admin/restaurants')
+  if (!d) return
+  list = d.restaurants
+  render()
+}
+
+function show() {
+  $('login').hidden = true
+  $('app').hidden = false
+  load()
+}
+
+$('rows').onclick = async (e) => {
+  const btn = e.target.closest('button[data-act]')
+  if (!btn) return
+  const id = btn.dataset.id
+  const r = list.find((x) => x.id === id)
+  const act = btn.dataset.act
+
+  if (act === 'open') {
+    const d = await api(`/api/admin/restaurants/${id}/impersonate`, {})
+    if (!d || !d.ok) { alert((d && d.message) || 'Could not open this restaurant'); return }
+    sessionStorage.setItem('tok', d.token)
+    sessionStorage.setItem('imp', r.name)
+    location.href = '/app.html'
+    return
+  }
+
+  if (act === 'approve' || act === 'pause' || act === 'reject') {
+    const status = { approve: 'active', pause: 'paused', reject: 'rejected' }[act]
+    if (!confirm(`${btn.textContent} "${r.name}"?`)) return
+    await api(`/api/admin/restaurants/${id}/status`, { status })
+  }
+
+  if (act === 'pay') {
+    const amount = prompt('Amount received (Rs)?', r.monthly_fee || '')
+    if (!amount) return
+    const days = prompt('How many days to add to the subscription?', '30')
+    if (!days) return
+    const d = await api(`/api/admin/restaurants/${id}/payment`, { amount, days })
+    if (d && !d.ok) alert(d.message)
+  }
+
+  if (act === 'plan') {
+    const fee = prompt('Monthly charge (Rs)?', r.monthly_fee)
+    if (fee === null) return
+    const plan = prompt('Plan name?', r.plan)
+    if (plan === null) return
+    await api(`/api/admin/restaurants/${id}/plan`, { monthly_fee: fee, plan, notes: r.notes || '' })
+  }
+
+  if (act === 'pw') {
+    const pw = prompt(`New password for the owner of "${r.name}" (at least 8 characters)?`)
+    if (!pw) return
+    const d = await api(`/api/admin/restaurants/${id}/password`, { password: pw })
+    alert(d && d.ok ? 'Password changed' : (d && d.message) || 'Could not change the password')
+    return
+  }
+
+  load()
+}
+
+if (token) show()
+</script>
+</body>
+</html>

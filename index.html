@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Restaurant POS - Log in</title>
+<style>
+  [hidden] { display: none !important; }
+  body { margin: 0; font-family: system-ui, Segoe UI, Arial, sans-serif; background: #F7F4EE; color: #1F1B16; }
+  .wrap { max-width: 420px; margin: 60px auto; padding: 0 16px; display: grid; gap: 18px; }
+  .brand { font-size: 22px; font-weight: 800; text-align: center; color: #9A3412; }
+  .card { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 26px; display: grid; gap: 12px; }
+  h1 { margin: 0; font-size: 24px; }
+  input { min-height: 46px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; font-family: inherit; }
+  button.main { min-height: 50px; border: 0; border-radius: 10px; background: #9A3412; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+  button.link { border: 0; background: none; color: #9A3412; font-weight: 700; font-size: 15px; cursor: pointer; padding: 0; text-decoration: underline; }
+  .msg { font-size: 14px; white-space: pre-wrap; }
+  .ok { color: #166534; } .err { color: #B91C1C; }
+  .switch { text-align: center; color: #57534E; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Restaurant POS</div>
+
+  <div id="loginCard" class="card">
+    <h1>Log in</h1>
+    <input id="lemail" type="email" placeholder="Email" autocomplete="username">
+    <input id="lpw" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="main" id="lgo">Log in</button>
+    <div id="lmsg" class="msg"></div>
+    <div class="switch">New restaurant? <button class="link" id="toSignup">Create an account</button></div>
+  </div>
+
+  <div id="signupCard" class="card" hidden>
+    <h1>Create your account</h1>
+    <input id="rname" placeholder="Restaurant name" autocomplete="off">
+    <input id="oname" placeholder="Your name" autocomplete="off">
+    <input id="email" type="email" placeholder="Email" autocomplete="off">
+    <input id="phone" placeholder="Phone" autocomplete="off">
+    <input id="city" placeholder="City" autocomplete="off">
+    <input id="pw" type="password" placeholder="Password (at least 8 characters)" autocomplete="new-password">
+    <button class="main" id="sgo">Request account</button>
+    <div id="smsg" class="msg"></div>
+    <div class="switch">Already have an account? <button class="link" id="toLogin">Log in</button></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id)
+async function post(url, body) {
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  return r.json()
+}
+function view(signup) {
+  $('loginCard').hidden = signup
+  $('signupCard').hidden = !signup
+  document.title = signup ? 'Restaurant POS - Sign up' : 'Restaurant POS - Log in'
+}
+$('toSignup').onclick = () => view(true)
+$('toLogin').onclick = () => view(false)
+
+async function login() {
+  $('lmsg').className = 'msg'
+  $('lmsg').textContent = 'Please wait...'
+  const d = await post('/api/login', { email: $('lemail').value, password: $('lpw').value })
+  if (!d.ok) { $('lmsg').className = 'msg err'; $('lmsg').textContent = d.message; return }
+  sessionStorage.setItem('tok', d.token)
+  sessionStorage.removeItem('imp')
+  location.href = '/app.html'
+}
+$('lgo').onclick = login
+$('lpw').onkeydown = (e) => { if (e.key === 'Enter') login() }
+
+$('sgo').onclick = async () => {
+  const d = await post('/api/signup', {
+    restaurant_name: $('rname').value, owner_name: $('oname').value, email: $('email').value,
+    phone: $('phone').value, city: $('city').value, password: $('pw').value
+  })
+  $('smsg').className = 'msg ' + (d.ok ? 'ok' : 'err')
+  $('smsg').textContent = d.message
+  if (d.ok) {
+    $('lemail').value = $('email').value
+    setTimeout(() => { view(false); $('lmsg').className = 'msg ok'; $('lmsg').textContent = 'Request sent. You can log in after approval.' }, 1800)
+  }
+}
+</script>
+</body>
+</html>

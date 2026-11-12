@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Restaurant POS</title>
+<style>
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; font-family: system-ui, Segoe UI, Arial, sans-serif; background: #F7F4EE; color: #1F1B16; display: flex; flex-direction: column; }
+  button, input, select { font-family: inherit; }
+  #banner { background: #92400E; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex: none; }
+  #banner button { min-height: 36px; border: 1px solid #fff; background: transparent; color: #fff; border-radius: 8px; padding: 0 14px; cursor: pointer; font-weight: 600; }
+  .shell { flex: 1; min-height: 0; display: flex; }
+  .side { width: 200px; background: #1F1B16; padding: 24px 12px; display: flex; flex-direction: column; gap: 6px; flex: none; }
+  .brand { color: #F7F4EE; font-weight: 700; font-size: 18px; padding: 0 14px 4px; }
+  .rname { color: #D6D3D1; font-size: 13px; padding: 0 14px 16px; }
+  .nav { text-align: left; border: 0; border-radius: 10px; padding: 12px 14px; min-height: 44px; font-size: 15px; cursor: pointer; background: transparent; color: #F7F4EE; font-weight: 500; }
+  .nav.on { background: #9A3412; font-weight: 700; }
+  .out { margin-top: auto; background: transparent; border: 1px solid #78716C; color: #F7F4EE; border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+  main { flex: 1; overflow: auto; min-width: 0; }
+  .pad { padding: 28px; display: grid; gap: 16px; align-content: start; }
+  h2 { margin: 0; } h3 { margin: 0; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .top { align-items: flex-start; }
+  .grow1 { flex: 1; min-width: 260px; } .grow2 { flex: 1.5; min-width: 300px; }
+  .card { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 20px; }
+  .kpi { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 16px; flex: 1; min-width: 170px; }
+  .kpi span { color: #57534E; font-size: 14px; } .kpi b { display: block; font-size: 26px; margin-top: 4px; }
+  .muted { color: #57534E; font-size: 14px; }
+  .err { color: #B91C1C; font-size: 14px; } .ok { color: #166534; font-size: 14px; }
+  .btn { min-height: 40px; border: 1px solid #CBC3B3; background: #fff; border-radius: 8px; padding: 0 14px; color: #1F1B16; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; }
+  .btn.red { color: #B91C1C; }
+  .pri { min-height: 44px; border: 0; border-radius: 10px; padding: 0 20px; background: #9A3412; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .inp { min-height: 44px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; background: #fff; color: #1F1B16; }
+  label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 14px; }
+  .bar { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
+  .bar .n { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar .t { flex: 1; height: 14px; background: #EFE8DA; border-radius: 7px; }
+  .bar .t i { display: block; height: 14px; background: #9A3412; border-radius: 7px; }
+  .bar .q { width: 44px; text-align: right; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .catcard { text-align: left; background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 20px; min-height: 140px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; color: #1F1B16; }
+  .catcard b { font-size: 20px; }
+  .thumbs { display: flex; gap: 6px; margin-top: auto; }
+  .thumbs img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+  .prod { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #EFE8DA; }
+  .prod img, .ph { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex: none; }
+  .ph { background: #E7DFD0; color: #57534E; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .chip { background: #F3EBDD; border-radius: 14px; padding: 4px 10px; font-size: 13px; display: inline-block; margin: 6px 6px 0 0; }
+  .tabs { display: inline-flex; gap: 4px; background: #fff; border: 1px solid #E6DED0; border-radius: 12px; padding: 4px; }
+  .tabs button { min-height: 40px; padding: 0 18px; border: 0; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: 600; background: transparent; color: #1F1B16; }
+  .tabs button.on { background: #9A3412; color: #fff; }
+  .ctl { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .bill { display: flex; gap: 18px; padding: 14px 0; border-top: 1px solid #EFE8DA; }
+  .bill .l { width: 160px; flex: none; } .bill .m { flex: 1; min-width: 0; } .bill .r { width: 130px; text-align: right; flex: none; }
+  .li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; font-size: 14px; }
+  .pay { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid #EFE8DA; font-size: 16px; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  .mbox { background: #fff; border-radius: 14px; width: 540px; max-width: 94vw; max-height: 90vh; overflow: auto; padding: 26px; display: grid; gap: 14px; }
+  .vrow { display: flex; gap: 8px; margin-bottom: 8px; } .vrow .vn { flex: 1; min-width: 0; } .vrow .vp { width: 130px; }
+  .photo { display: flex; align-items: center; gap: 12px; } .photo img, .photo .ph { width: 72px; height: 72px; }
+  .mrow { display: flex; gap: 10px; } .mrow .pri { flex: 1; }
+  .lic { padding: 12px 16px; border-radius: 10px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div id="banner" hidden></div>
+
+<div id="shell" class="shell" hidden>
+  <aside class="side">
+    <div class="brand">Restaurant POS</div>
+    <div class="rname" id="rname"></div>
+    <div id="nav" style="display:grid;gap:6px"></div>
+    <button class="out" id="logout">Logout</button>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<div id="modal" class="overlay" hidden><div class="mbox" id="mbox"></div></div>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const rs = (n) => 'Rs ' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })
+const pad = (n) => String(n ?? 0).padStart(4, '0')
+const p2 = (n) => String(n).padStart(2, '0')
+const fmt = (d) => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate())
+const parse = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
+const today = () => fmt(new Date())
+const main = $('main')
+
+let token = sessionStorage.getItem('tok') || ''
+const impName = sessionStorage.getItem('imp') || ''
+if (!token) location.replace('/')
+
+async function api(url, body, method) {
+  const m = method || (body !== undefined ? 'POST' : 'GET')
+  const opt = { method: m, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token } }
+  if (body !== undefined && m !== 'GET') opt.body = JSON.stringify(body)
+  let r
+  try { r = await fetch(url, opt) } catch { return { ok: false, message: 'Cannot reach the server' } }
+  if (r.status === 401) { sessionStorage.removeItem('tok'); location.replace('/'); return { ok: false, message: 'Please log in again' } }
+  try { return await r.json() } catch { return { ok: false, message: 'Server error' } }
+}
+
+const NAV = ['Dashboard', 'Products', 'Reports', 'Settings']
+let me = null, page = 'Dashboard'
+
+function licStrip() {
+  const l = me && me.license
+  if (!l || !l.message) return ''
+  const red = l.state !== 'active' || (l.days_left !== null && l.days_left < 0)
+  return `<div class="lic" style="background:${red ? '#FEE2E2' : '#FEF3C7'};color:${red ? '#991B1B' : '#92400E'}">${esc(l.message)}</div>`
+}
+const kpi = (a, b) => `<div class="kpi"><span>${a}</span><b>${b}</b></div>`
+const hbars = (rows) => {
+  const max = Math.max(...rows.map((r) => r.value), 1)
+  return rows.map((r) => `<div class="bar"><span class="n">${esc(r.name)}</span><div class="t"><i style="width:${(r.value / max) * 100}%"></i></div><span class="q">${r.value}</span></div>`).join('')
+}
+const paymentsHtml = (p) => p.length
+  ? p.map((x) => `<div class="pay"><span>${esc(x.method)}</span><b>${rs(x.total)}</b></div>`).join('')
+  : '<p class="muted">No sales in this period.</p>'
+
+function go(p) {
+  page = p
+  document.querySelectorAll('.nav').forEach((b) => b.classList.toggle('on', b.dataset.p === p))
+  main.scrollTop = 0
+  ;({ Dashboard: viewDashboard, Products: viewProducts, Reports: viewReports, Settings: viewSettings })[p]()
+}
+
+// ---------- Dashboard ----------
+async function viewDashboard() {
+  main.innerHTML = '<div class="pad muted">Loading...</div>'
+  const t = today()
+  const d = await api(`/api/report?from=${t}&to=${t}`)
+  if (!d.ok) { main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
+  const s = d.summary
+  main.innerHTML = `<div class="pad">${licStrip()}<h2>Today at a glance</h2>
+    <div class="row">${kpi("Today's sales", rs(s.sales))}${kpi('Customers', s.guests)}${kpi('Items sold', s.items_sold)}</div>
+    <div class="row top">
+      <div class="card grow2"><b>All items sold today (quantity)</b>
+        ${d.items.length ? hbars(d.items.map((i) => ({ name: i.name, value: i.qty }))) : '<p class="muted">No sales yet today.</p>'}</div>
+      <div class="card grow1"><b>Payments received</b>${paymentsHtml(d.payments)}</div>
+    </div></div>`
+}
+
+// ---------- Products ----------
+let catalog = { categories: [], products: [] }
+let prodCat = null, renaming = false, prodSearch = '', prodMsg = ''
+let draft = null
+
+async function loadCatalog() {
+  const d = await api('/api/catalog')
+  if (d.ok) catalog = d
+  return d
+}
+
+async function viewProducts() {
+  main.innerHTML = '<div class="pad muted">Loading...</div>'
+  const d = await loadCatalog()
+  if (!d.ok) { main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
+  drawProducts()
+}
+
+function productListHtml() {
+  const list = catalog.products.filter((p) => p.category_id === prodCat && p.name.toLowerCase().includes(prodSearch.toLowerCase()))
+  if (!list.length) return '<p class="muted" style="margin-top:20px">No products here yet. Click Add product.</p>'
+  return list.map((p) => `<div class="prod">
+      ${p.image ? `<img src="${esc(p.image)}" alt="">` : '<div class="ph">Photo</div>'}
+      <div style="flex:1;min-width:0"><b style="font-size:16px">${esc(p.name)}</b>
+        <div>${p.variants.map((v) => `<span class="chip">${v.name ? esc(v.name) + ': ' : ''}${rs(v.price)}</span>`).join('')}</div></div>
+      <button class="btn" data-a="editprod" data-id="${esc(p.id)}">Edit</button>
+      <button class="btn red" data-a="delprod" data-id="${esc(p.id)}">Delete</button></div>`).join('')
+}
+
+function drawProducts() {
+  const cur = catalog.categories.find((c) => c.id === prodCat)
+  if (!cur) {
+    prodCat = null
+    main.innerHTML = `<div class="pad">${licStrip()}
+      <div class="row" style="align-items:center"><h2 style="flex:1">Products</h2>
+        <input id="newcat" class="inp" placeholder="New category" autocomplete="off" style="width:260px">
+        <button class="pri" data-a="addcat">Add category</button></div>
+      ${prodMsg ? `<div class="err">${esc(prodMsg)}</div>` : ''}
+      ${catalog.categories.length ? '' : '<p class="muted">No categories yet. Add your first category above.</p>'}
+      <div class="grid">${catalog.categories.map((c) => {
+        const list = catalog.products.filter((p) => p.category_id === c.id)
+        const th = list.filter((p) => p.image).slice(0, 3)
+        return `<button class="catcard" data-a="opencat" data-id="${esc(c.id)}"><b>${esc(c.name)}</b>
+          <span class="muted">${list.length} ${list.length === 1 ? 'product' : 'products'}</span>
+          <div class="thumbs">${th.map((t) => `<img src="${esc(t.image)}" alt="">`).join('')}</div></button>`
+      }).join('')}</div></div>`
+    return
+  }
+  main.innerHTML = `<div class="pad">${licStrip()}
+    <div><button class="btn" data-a="backcat">Back to categories</button></div>
+    <div class="row" style="align-items:center">
+      ${renaming
+        ? `<div class="row" style="flex:1"><input id="rencat" class="inp" value="${esc(cur.name)}" autocomplete="off" style="width:260px">
+             <button class="pri" data-a="savecat">Save</button><button class="btn" data-a="cancelcat">Cancel</button></div>`
+        : `<h2 style="flex:1">${esc(cur.name)}</h2>
+             <button class="btn" data-a="rencat">Rename category</button><button class="btn red" data-a="delcat">Delete category</button>`}
+    </div>
+    ${prodMsg ? `<div class="err">${esc(prodMsg)}</div>` : ''}
+    <div class="card"><div class="row" style="align-items:center">
+      <input id="psearch" class="inp" placeholder="Search in this category" autocomplete="off" style="width:260px" value="${esc(prodSearch)}">
+      <div style="flex:1"></div><button class="pri" data-a="addprod">Add product</button></div>
+      <div id="plist">${productListHtml()}</div></div></div>`
+}
+
+function openProduct(p) {
+  draft = p
+    ? { id: p.id, name: p.name, category_id: p.category_id, image: p.image || '', variants: p.variants.map((v) => ({ id: v.id, name: v.name, price: v.price })) }
+    : { id: '', name: '', category_id: prodCat, image: '', variants: [{ id: '', name: '', price: '' }] }
+  drawModal('')
+}
+
+function drawModal(msg) {
+  const cats = catalog.categories
+  $('mbox').innerHTML = `<h3>${draft.id ? 'Edit product' : 'Add product'}</h3>
+    <label class="f">Product name<input id="pn" class="inp" value="${esc(draft.name)}" autocomplete="off"></label>
+    <label class="f">Category<select id="pc" class="inp">${cats.map((c) => `<option value="${esc(c.id)}" ${c.id === draft.category_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+    <div class="photo">${draft.image ? `<img src="${esc(draft.image)}" alt="">` : '<div class="ph">Photo</div>'}
+      <label class="btn">${draft.image ? 'Change photo' : 'Upload photo'}<input type="file" id="pf" accept="image/*" hidden></label></div>
+    <div id="vars">${draft.variants.map((v, i) => `<div class="vrow">
+      <input class="inp vn" placeholder="Option name" autocomplete="off" value="${esc(v.name)}">
+      <input class="inp vp" type="number" min="0" placeholder="Price (Rs)" value="${esc(v.price)}">
+      <button class="btn" data-a="rmv" data-i="${i}" style="visibility:${draft.variants.length > 1 ? 'visible' : 'hidden'}">x</button></div>`).join('')}</div>
+    <div><button class="btn" data-a="addv">Add another option</button></div>
+    <div class="err">${esc(msg)}</div>
+    <div class="mrow"><button class="pri" data-a="saveprod">${draft.id ? 'Update product' : 'Save product'}</button><button class="btn" data-a="closem">Cancel</button></div>`
+  $('modal').hidden = false
+}
+
+function readDraft() {
+  draft.name = $('pn').value
+  draft.category_id = $('pc').value
+  const ns = [...document.querySelectorAll('#vars .vn')], ps = [...document.querySelectorAll('#vars .vp')]
+  draft.variants = draft.variants.map((v, i) => ({ ...v, name: ns[i].value, price: ps[i].value }))
+}
+
+function resizeImage(file) {
+  return new Promise((resolve) => {
+    const rd = new FileReader()
+    rd.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        const sc = Math.min(1, 300 / Math.max(img.width, img.height))
+        const cv = document.createElement('canvas')
+        cv.width = img.width * sc; cv.height = img.height * sc
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height)
+        resolve(cv.toDataURL('image/jpeg', 0.8))
+      }
+      img.src = rd.result
+    }
+    rd.readAsDataURL(file)
+  })
+}
+
+// ---------- Reports ----------
+const rep = { period: 'daily', date: today(), month: today().slice(0, 7), year: String(new Date().getFullYear()), from: today(), to: today(), data: null, limit: 100 }
+const PERIODS = [['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly'], ['yearly', 'Yearly'], ['custom', 'Custom']]
+
+function repRange() {
+  if (rep.period === 'daily') return { from: rep.date, to: rep.date }
+  if (rep.period === 'weekly') {
+    const d = parse(rep.date), mon = new Date(d)
+    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+    return { from: fmt(mon), to: fmt(sun) }
+  }
+  if (rep.period === 'monthly') {
+    const [y, m] = rep.month.split('-').map(Number)
+    return { from: fmt(new Date(y, m - 1, 1)), to: fmt(new Date(y, m, 0)) }
+  }
+  if (rep.period === 'yearly') return { from: `${rep.year}-01-01`, to: `${rep.year}-12-31` }
+  return { from: rep.from, to: rep.to }
+}
+
+function repControls() {
+  const tabs = PERIODS.map(([k, n]) => `<button class="${rep.period === k ? 'on' : ''}" data-a="period" data-p="${k}">${n}</button>`).join('')
+  let f = ''
+  if (rep.period === 'daily' || rep.period === 'weekly') f = `<label class="ctl">${rep.period === 'daily' ? 'Date' : 'Any date in the week'}<input id="rdate" type="date" class="inp" value="${esc(rep.date)}"></label>`
+  if (rep.period === 'monthly') f = `<label class="ctl">Month<input id="rmonth" type="month" class="inp" value="${esc(rep.month)}"></label>`
+  if (rep.period === 'yearly') f = `<label class="ctl">Year<input id="ryear" type="number" min="2000" max="2100" class="inp" style="width:100px" value="${esc(rep.year)}"></label>`
+  if (rep.period === 'custom') f = `<label class="ctl">From<input id="rfrom" type="date" class="inp" value="${esc(rep.from)}"></label><label class="ctl">To<input id="rto" type="date" class="inp" value="${esc(rep.to)}"></label>`
+  $('repCtl').innerHTML = `<div class="tabs">${tabs}</div>${f}`
+}
+
+function viewReports() {
+  main.innerHTML = `<div class="pad">${licStrip()}
+    <div class="row" style="align-items:center"><h2 style="flex:1">Sales reports</h2><button class="btn" data-a="csv">Export CSV (Excel)</button></div>
+    <div id="repCtl" class="row" style="align-items:center"></div><div id="repOut"></div></div>`
+  repControls()
+  loadReport()
+}
+
+async function loadReport() {
+  const r = repRange()
+  const ok = /^\d{4}-\d{2}-\d{2}$/.test(r.from) && /^\d{4}-\d{2}-\d{2}$/.test(r.to) && r.from <= r.to && Number(r.from.slice(0, 4)) > 1999
+  if (!ok) { $('repOut').innerHTML = '<p class="err">Choose a valid date range (From must not be after To).</p>'; return }
+  $('repOut').innerHTML = '<p class="muted">Loading...</p>'
+  const d = await api(`/api/report?from=${r.from}&to=${r.to}&bills=1`)
+  if (!d.ok) { $('repOut').innerHTML = `<p class="err">${esc(d.message)}</p>`; return }
+  rep.data = d; rep.range = r; rep.limit = 100
+  drawReport()
+}
+
+function drawReport() {
+  const d = rep.data, r = rep.range, s = d.summary
+  const when = (b) => (r.from === r.to ? b.created_at.slice(11, 16) : b.created_at.slice(0, 10) + '  ' + b.created_at.slice(11, 16))
+  const shown = d.bills.slice(0, rep.limit)
+  $('repOut').innerHTML = `<div class="muted">Showing ${r.from === r.to ? r.from : r.from + ' to ' + r.to}</div>
+    <div class="row" style="margin-top:12px">${kpi('Total sales', rs(s.sales))}${kpi('Customers', s.guests)}${kpi('Items sold', s.items_sold)}
+      ${d.payments.map((p) => kpi(esc(p.method) + ' payments', rs(p.total))).join('')}</div>
+    <div class="card" style="margin-top:16px"><b>All customers</b>
+      ${d.bills.length ? shown.map((b) => `<div class="bill">
+        <div class="l"><b>Bill ${pad(b.bill_no)}</b><div class="muted">${esc(when(b))}</div><div class="muted">${esc(b.order_type || '')}${b.table_name ? ' - Table ' + esc(b.table_name) : ''}</div></div>
+        <div class="m">${(b.items || []).map((i) => `<div class="li"><span>${esc(i.name)} x ${i.qty}</span><span class="muted">${rs(i.qty * i.price)}</span></div>`).join('')}
+          ${b.discount > 0 || b.tax > 0 ? `<div class="muted" style="font-size:12px;margin-top:4px">${b.discount > 0 ? 'Discount ' + rs(b.discount) : ''}${b.discount > 0 && b.tax > 0 ? '  |  ' : ''}${b.tax > 0 ? 'Tax ' + rs(b.tax) : ''}</div>` : ''}</div>
+        <div class="r"><b style="font-size:17px">${rs(b.total)}</b><div class="muted">${esc(b.payment_method)}</div></div></div>`).join('')
+        : '<p class="muted">No sales in this period.</p>'}
+      ${d.bills.length > rep.limit ? `<div style="text-align:center;padding-top:14px"><button class="btn" data-a="more">Show more (${d.bills.length - rep.limit} remaining)</button></div>` : ''}</div>`
+}
+
+function exportCsv() {
+  if (!rep.data) return
+  const d = rep.data, r = rep.range, q = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`
+  const lines = [`Report,${r.from} to ${r.to}`, `Total sales,${d.summary.sales}`, `Customers,${d.summary.guests}`,
+    ...d.payments.map((p) => `${p.method} payments,${p.total}`), '', 'Bill ID,Date,Time,Type,Table,Items,Payment,Amount',
+    ...d.bills.map((b) => [pad(b.bill_no), b.created_at.slice(0, 10), b.created_at.slice(11, 16), q(b.order_type), q(b.table_name),
+      q((b.items || []).map((i) => `${i.name} x ${i.qty}`).join('; ')), q(b.payment_method), b.total].join(','))]
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }))
+  a.download = `report-${r.from}-to-${r.to}.csv`
+  a.click()
+}
+
+// ---------- Settings ----------
+async function viewSettings() {
+  main.innerHTML = '<div class="pad muted">Loading...</div>'
+  const d = await api('/api/settings')
+  if (!d.ok) { main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
+  const s = d.settings
+  const f = (k, label, type) => `<label class="f">${label}<input class="inp" id="st_${k}" type="${type || 'text'}" value="${esc(s[k])}" autocomplete="off"></label>`
+  main.innerHTML = `<div class="pad">${licStrip()}<div class="card" style="max-width:480px;display:grid;gap:14px">
+    <h2>Restaurant settings</h2><div class="muted">These details appear on every printed bill.</div>
+    ${f('restaurant_name', 'Restaurant name')}${f('address', 'Address')}${f('phone', 'Phone')}
+    ${f('tax_percent', 'Tax (%) added to every bill', 'number')}${f('footer', 'Message at the bottom of the bill')}
+    <div id="smsg"></div><button class="pri" data-a="savesettings">Save settings</button></div></div>`
+}
+
+// ---------- actions ----------
+const A = {
+  nav: (d) => go(d.p),
+  period: (d) => { rep.period = d.p; repControls(); loadReport() },
+  more: () => { rep.limit += 100; drawReport() },
+  csv: exportCsv,
+  opencat: (d) => { prodCat = d.id; renaming = false; prodSearch = ''; prodMsg = ''; drawProducts() },
+  backcat: () => { prodCat = null; renaming = false; prodMsg = ''; drawProducts() },
+  addcat: async () => {
+    const r = await api('/api/categories', { name: $('newcat').value })
+    prodMsg = r.ok ? '' : r.message
+    if (r.ok) await loadCatalog()
+    drawProducts()
+  },
+  rencat: () => { renaming = true; drawProducts() },
+  cancelcat: () => { renaming = false; drawProducts() },
+  savecat: async () => {
+    const r = await api('/api/categories/' + prodCat, { name: $('rencat').value }, 'PUT')
+    prodMsg = r.ok ? '' : r.message
+    if (r.ok) { renaming = false; await loadCatalog() }
+    drawProducts()
+  },
+  delcat: async () => {
+    const c = catalog.categories.find((x) => x.id === prodCat)
+    if (!confirm(`Delete category "${c.name}"?`)) return
+    const r = await api('/api/categories/' + prodCat, undefined, 'DELETE')
+    prodMsg = r.ok ? '' : r.message
+    if (r.ok) { prodCat = null; await loadCatalog() }
+    drawProducts()
+  },
+  addprod: () => openProduct(null),
+  editprod: (d) => openProduct(catalog.products.find((p) => p.id === d.id)),
+  delprod: async (d) => {
+    const p = catalog.products.find((x) => x.id === d.id)
+    if (!confirm(`Delete "${p.name}"?`)) return
+    const r = await api('/api/products/' + d.id, undefined, 'DELETE')
+    prodMsg = r.ok ? '' : r.message
+    if (r.ok) await loadCatalog()
+    drawProducts()
+  },
+  rmv: (d) => { readDraft(); draft.variants.splice(Number(d.i), 1); drawModal('') },
+  addv: () => { readDraft(); draft.variants.push({ id: '', name: '', price: '' }); drawModal('') },
+  closem: () => { $('modal').hidden = true; draft = null },
+  saveprod: async () => {
+    readDraft()
+    const r = await api('/api/products', draft)
+    if (!r.ok) return drawModal(r.message)
+    $('modal').hidden = true; draft = null; prodMsg = ''
+    await loadCatalog()
+    drawProducts()
+  },
+  savesettings: async () => {
+    const body = {}
+    for (const k of ['restaurant_name', 'address', 'phone', 'tax_percent', 'footer']) body[k] = $('st_' + k).value
+    const r = await api('/api/settings', body)
+    $('smsg').innerHTML = `<span class="${r.ok ? 'ok' : 'err'}">${esc(r.ok ? 'Settings saved' : r.message)}</span>`
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-a]')
+  if (el && A[el.dataset.a]) A[el.dataset.a](el.dataset)
+})
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'psearch') { prodSearch = e.target.value; $('plist').innerHTML = productListHtml() }
+})
+
+document.addEventListener('change', async (e) => {
+  const id = e.target.id
+  if (id === 'pf' && e.target.files[0]) { readDraft(); draft.image = await resizeImage(e.target.files[0]); drawModal('') }
+  if (id === 'rdate') { rep.date = e.target.value; loadReport() }
+  if (id === 'rmonth') { rep.month = e.target.value; loadReport() }
+  if (id === 'ryear') { rep.year = e.target.value; loadReport() }
+  if (id === 'rfrom') { rep.from = e.target.value; loadReport() }
+  if (id === 'rto') { rep.to = e.target.value; loadReport() }
+})
+
+function leave() {
+  if (impName) { sessionStorage.removeItem('tok'); sessionStorage.removeItem('imp'); location.href = '/admin.html' }
+  else { sessionStorage.removeItem('tok'); location.href = '/' }
+}
+$('logout').onclick = leave
+
+async function init() {
+  const d = await api('/api/me')
+  if (!d.ok) { main.innerHTML = ''; $('shell').hidden = false; main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
+  me = d
+  document.title = d.restaurant.name + ' - Restaurant POS'
+  $('rname').textContent = d.restaurant.name
+  if (impName) {
+    $('banner').hidden = false
+    $('banner').innerHTML = `<span>Admin view: you are managing <b>${esc(impName)}</b>. Changes you make here are saved to their account.</span><button id="back">Back to admin panel</button>`
+    $('back').onclick = leave
+    $('logout').textContent = 'Back to admin'
+  }
+  $('nav').innerHTML = NAV.map((n) => `<button class="nav" data-a="nav" data-p="${n}">${n}</button>`).join('')
+  $('shell').hidden = false
+  go('Dashboard')
+}
+init()
+</script>
+</body>
+</html>
