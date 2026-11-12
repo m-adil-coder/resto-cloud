@@ -16,6 +16,7 @@ if (SECRET.length < 32) {
 }
 
 const app = express()
+app.set('trust proxy', 1)
 app.disable('x-powered-by')
 app.use(express.json({ limit: '25mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
@@ -47,11 +48,11 @@ const bad = (res, message, code = 400) => res.status(code).json({ ok: false, mes
 const fails = new Map()
 const limited = (k) => {
   const e = fails.get(k)
-  return !!e && e.count >= 8 && Date.now() - e.t < 15 * 60e3
+  return !!e && e.count >= 15 && Date.now() - e.t < 2 * 60e3
 }
 const addFail = (k) => {
   const e = fails.get(k)
-  if (!e || Date.now() - e.t > 15 * 60e3) fails.set(k, { count: 1, t: Date.now() })
+  if (!e || Date.now() - e.t > 2 * 60e3) fails.set(k, { count: 1, t: Date.now() })
   else e.count++
 }
 
