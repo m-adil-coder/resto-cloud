@@ -4,19 +4,94 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Restaurant POS - Log in</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#9A3412">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
   [hidden] { display: none !important; }
-  body { margin: 0; font-family: system-ui, Segoe UI, Arial, sans-serif; background: #F7F4EE; color: #1F1B16; }
-  .wrap { max-width: 420px; margin: 60px auto; padding: 0 16px; display: grid; gap: 18px; }
-  .brand { font-size: 22px; font-weight: 800; text-align: center; color: #9A3412; }
-  .card { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 26px; display: grid; gap: 12px; }
-  h1 { margin: 0; font-size: 24px; }
-  input { min-height: 46px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; font-family: inherit; }
-  button.main { min-height: 50px; border: 0; border-radius: 10px; background: #9A3412; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
-  button.link { border: 0; background: none; color: #9A3412; font-weight: 700; font-size: 15px; cursor: pointer; padding: 0; text-decoration: underline; }
-  .msg { font-size: 14px; white-space: pre-wrap; }
-  .ok { color: #166534; } .err { color: #B91C1C; }
-  .switch { text-align: center; color: #57534E; font-size: 15px; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #F8F6F0;
+    color: #1F1B16;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 440px; margin: 50px auto; padding: 0 16px; display: grid; gap: 18px; }
+  .brand { font-size: 26px; font-weight: 800; text-align: center; color: #9A3412; letter-spacing: -0.5px; }
+  .card {
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 18px;
+    padding: 30px 26px;
+    display: grid;
+    gap: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  }
+  h1 { margin: 0; font-size: 22px; font-weight: 800; color: #1C1917; }
+  .field { position: relative; width: 100%; }
+  input {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid #D6CEBE;
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #1F1B16;
+    background: #fff;
+    outline: none;
+    transition: all .15s;
+  }
+  input:focus {
+    border-color: #9A3412;
+    box-shadow: 0 0 0 3px rgba(154, 52, 18, 0.15);
+  }
+  .eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #78716C;
+  }
+  .eye-btn:hover { color: #1F1B16; }
+  button.main {
+    min-height: 48px;
+    border: 0;
+    border-radius: 12px;
+    background: #9A3412;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(154,52,18,0.3);
+    transition: background .15s, transform .1s;
+  }
+  button.main:hover { background: #7C2D12; }
+  button.main:active { transform: translateY(1px); }
+  button.link {
+    border: 0;
+    background: none;
+    color: #9A3412;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .msg { font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
+  .ok { color: #166534; } .err { color: #DC2626; }
+  .switch { text-align: center; color: #78716C; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -25,8 +100,17 @@
 
   <div id="loginCard" class="card">
     <h1>Log in</h1>
-    <input id="lemail" type="email" placeholder="Email" autocomplete="username">
-    <input id="lpw" type="password" placeholder="Password" autocomplete="current-password">
+    <div class="field">
+      <input id="lemail" type="email" placeholder="Email address" autocomplete="username">
+    </div>
+    <div class="field">
+      <input id="lpw" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:44px">
+      <button type="button" class="eye-btn" id="lEyeBtn" title="Show or hide password">
+        <svg id="lEyeSvg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
     <button class="main" id="lgo">Log in</button>
     <div id="lmsg" class="msg"></div>
     <div class="switch">New restaurant? <button class="link" id="toSignup">Create an account</button></div>
@@ -34,12 +118,19 @@
 
   <div id="signupCard" class="card" hidden>
     <h1>Create your account</h1>
-    <input id="rname" placeholder="Restaurant name" autocomplete="off">
-    <input id="oname" placeholder="Your name" autocomplete="off">
-    <input id="email" type="email" placeholder="Email" autocomplete="off">
-    <input id="phone" placeholder="Phone" autocomplete="off">
-    <input id="city" placeholder="City" autocomplete="off">
-    <input id="pw" type="password" placeholder="Password (at least 8 characters)" autocomplete="new-password">
+    <div class="field"><input id="rname" placeholder="Restaurant name" autocomplete="off"></div>
+    <div class="field"><input id="oname" placeholder="Owner / Your name" autocomplete="off"></div>
+    <div class="field"><input id="email" type="email" placeholder="Email address" autocomplete="off"></div>
+    <div class="field"><input id="phone" placeholder="Phone number" autocomplete="off"></div>
+    <div class="field"><input id="city" placeholder="City" autocomplete="off"></div>
+    <div class="field">
+      <input id="pw" type="password" placeholder="Password (at least 8 characters)" autocomplete="new-password" style="padding-right:44px">
+      <button type="button" class="eye-btn" id="sEyeBtn" title="Show or hide password">
+        <svg id="sEyeSvg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
     <button class="main" id="sgo">Request account</button>
     <div id="smsg" class="msg"></div>
     <div class="switch">Already have an account? <button class="link" id="toLogin">Log in</button></div>
@@ -48,6 +139,30 @@
 
 <script>
 const $ = (id) => document.getElementById(id)
+
+// Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {})
+}
+
+// Password eye toggles
+const eyeOpen = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
+const eyeClosed = `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+
+let lShow = false
+$('lEyeBtn').onclick = () => {
+  lShow = !lShow
+  $('lpw').type = lShow ? 'text' : 'password'
+  $('lEyeSvg').innerHTML = lShow ? eyeClosed : eyeOpen
+}
+
+let sShow = false
+$('sEyeBtn').onclick = () => {
+  sShow = !sShow
+  $('pw').type = sShow ? 'text' : 'password'
+  $('sEyeSvg').innerHTML = sShow ? eyeClosed : eyeOpen
+}
+
 async function post(url, body) {
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   return r.json()

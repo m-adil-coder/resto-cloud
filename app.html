@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Restaurant POS</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#9A3412">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   [hidden] { display: none !important; }
   * { box-sizing: border-box; }
@@ -74,6 +81,9 @@
     <div class="brand">Restaurant POS</div>
     <div class="rname" id="rname"></div>
     <div id="nav" style="display:grid;gap:6px"></div>
+    <button class="nav" id="installBtn" style="border:1px dashed #78716C;margin-top:10px;color:#FDBA74;display:flex;align-items:center;gap:8px">
+      <span>📲</span> <b>Install App</b>
+    </button>
     <button class="out" id="logout">Logout</button>
   </aside>
   <main id="main"></main>
@@ -454,6 +464,116 @@ async function init() {
   go('Dashboard')
 }
 init()
+
+// Service worker & PWA installation handling
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {})
+}
+
+let deferredPrompt = null
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  deferredPrompt = e
+})
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null
+  localStorage.setItem('pwa_installed', '1')
+  alert('Restaurant POS App has been installed!')
+})
+
+function showAppModal(html) {
+  $('mbox').innerHTML = html
+  $('modal').hidden = false
+}
+
+$('modal').onclick = (e) => {
+  if (e.target === $('modal')) $('modal').hidden = true
+}
+
+$('installBtn').onclick = () => {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+  
+  if (isStandalone) {
+    showAppModal(`
+      <div style="text-align:center;padding:10px">
+        <div style="font-size:48px;margin-bottom:12px">✅</div>
+        <h3 style="margin:0 0 8px;font-size:20px">App is Already Installed!</h3>
+        <p style="color:#57534E;font-size:15px;line-height:1.5;margin:0 0 20px">
+          Ye app aapke system ya mobile par already installed hai aur aap is waqt installed app he use kar rahe hain.
+        </p>
+        <button class="pri" style="width:100%" onclick="$('modal').hidden=true">Theek hai</button>
+      </div>
+    `)
+    return
+  }
+
+  if (deferredPrompt) {
+    deferredPrompt.prompt()
+    deferredPrompt.userChoice.then((choice) => {
+      if (choice.outcome === 'accepted') {
+        localStorage.setItem('pwa_installed', '1')
+      }
+      deferredPrompt = null
+    })
+    return
+  }
+
+  const previouslyInstalled = localStorage.getItem('pwa_installed') === '1'
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+
+  if (isIOS) {
+    showAppModal(`
+      <div>
+        <h3 style="margin:0 0 10px;font-size:20px">📲 Install on iPhone / iPad</h3>
+        <p style="color:#57534E;font-size:14px;line-height:1.6;margin:0 0 14px">
+          Mobile home screen par Play Store ki tarhan app laane ke liye ye steps karein:
+        </p>
+        <div style="background:#FAF6F0;border:1px solid #E6DED0;border-radius:12px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.8">
+          1️⃣ Safari ke niche <b>Share button (⎋)</b> tap karein.<br>
+          2️⃣ Niche scroll karke <b>'Add to Home Screen' (➕)</b> select karein.<br>
+          3️⃣ Top right par <b>'Add'</b> tap karein.
+        </div>
+        <div style="font-size:13px;color:#78716C;margin-bottom:16px">
+          ${previouslyInstalled ? '⚠️ Note: Agr pehle installed thi aur delete ho gayi thi to ab dobara install ho jayegi.' : 'Ye app direct aapke phone ki home screen par save ho jayegi.'}
+        </div>
+        <button class="pri" style="width:100%" onclick="$('modal').hidden=true">Theek hai</button>
+      </div>
+    `)
+    return
+  }
+
+  showAppModal(`
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:30px">📲</span>
+        <div>
+          <h3 style="margin:0;font-size:18px">${previouslyInstalled ? 'App Status: Already Installed' : 'Install Restaurant POS App'}</h3>
+          <span style="font-size:13px;color:#78716C">Home Screen & Desktop Access</span>
+        </div>
+      </div>
+      <p style="color:#57534E;font-size:14px;line-height:1.5;margin:0 0 16px">
+        ${previouslyInstalled
+          ? 'Ye app aapke device par already installed hai. Agr aap se delete ho gayi thi to neeche diye gaye tareeqay se dobara install karein:'
+          : 'App ko mobile ya computer ki home screen par baghair browser ke chalane ke liye:'}
+      </p>
+      <div style="background:#FAF6F0;border:1px solid #E6DED0;border-radius:12px;padding:14px;display:grid;gap:12px;margin-bottom:18px;font-size:14px">
+        <div>
+          <b>📱 Mobile (Chrome / Android):</b><br>
+          <span style="color:#57534E;font-size:13px">Browser ke upar right side 3 dots (⋮) par tap karein aur <b>"Install app"</b> ya <b>"Add to Home screen"</b> choose karein. Play Store app ki tarhan home screen par icon ban jayega.</span>
+        </div>
+        <div style="border-top:1px solid #EFE8DA;padding-top:10px">
+          <b>💻 Desktop / PC (Chrome / Edge):</b><br>
+          <span style="color:#57534E;font-size:13px">Browser ke URL bar ke right corner par <b>Install icon (⊕)</b> par click karein aur <b>Install</b> dabayein.</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        ${previouslyInstalled ? '<button class="btn" style="flex:1" onclick="localStorage.removeItem(\'pwa_installed\');$(\'modal\').hidden=true;alert(\'Re-install mode active. Browser menu se dobara Install kar sakte hain.\')">Reset & Re-install</button>' : ''}
+        <button class="pri" style="flex:1" onclick="$('modal').hidden=true">Theek hai</button>
+      </div>
+    </div>
+  `)
+}
 </script>
 </body>
 </html>

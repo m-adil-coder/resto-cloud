@@ -219,7 +219,13 @@ app.post(
     const full = await getRestaurant(r.id)
     // the desktop app asks for a long-lived token so it keeps working offline
     const token = jwt.sign({ role: 'restaurant', rid: r.id }, SECRET, { expiresIn: req.body?.device ? '365d' : '30d' })
-    res.json({ ok: true, token, restaurant: { id: full.id, name: full.name }, license: licenseOf(full) })
+    res.json({
+      ok: true,
+      token,
+      restaurant: { id: full.id, name: full.name },
+      owner: req.body?.device ? { email: full.email, name: full.owner_name, password_hash: r.password_hash } : undefined,
+      license: licenseOf(full)
+    })
   })
 )
 
@@ -245,9 +251,15 @@ app.get(
   auth('restaurant'),
   wrap(async (req, res) => {
     await pool.query('UPDATE restaurants SET last_seen = now() WHERE id = $1', [req.auth.rid])
-    const r = await getRestaurant(req.auth.rid)
+    const { rows } = await pool.query(`SELECT ${RCOLS}, password_hash FROM restaurants WHERE id = $1`, [req.auth.rid])
+    const r = rows[0]
     if (!r) return bad(res, 'Please log in again', 401)
-    res.json({ ok: true, restaurant: { id: r.id, name: r.name }, license: licenseOf(r) })
+    res.json({
+      ok: true,
+      restaurant: { id: r.id, name: r.name },
+      owner: { email: r.email, name: r.owner_name, password_hash: r.password_hash },
+      license: licenseOf(r)
+    })
   })
 )
 
@@ -809,6 +821,17 @@ app.post(
     if (!r) return bad(res, 'Restaurant not found', 404)
     const token = jwt.sign({ role: 'restaurant', rid: r.id, imp: true }, SECRET, { expiresIn: '4h' })
     res.json({ ok: true, token, restaurant: { id: r.id, name: r.name } })
+  })
+)
+
+app.delete(
+  '/api/admin/restaurants/:id',
+  auth('admin'),
+  needId,
+  wrap(async (req, res) => {
+    const { rowCount } = await pool.query('DELETE FROM restaurants WHERE id = $1', [req.params.id])
+    if (!rowCount) return bad(res, 'Restaurant not found', 404)
+    res.json({ ok: true })
   })
 )
 

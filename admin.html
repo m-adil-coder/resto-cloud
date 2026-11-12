@@ -3,60 +3,290 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin panel</title>
+<title>RestoPOS Admin Console</title>
+<link rel="icon" href="/favicon.png">
 <style>
   [hidden] { display: none !important; }
-  body { margin: 0; font-family: system-ui, Segoe UI, Arial, sans-serif; background: #F7F4EE; color: #1F1B16; }
-  .top { background: #1F1B16; color: #F7F4EE; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-  .page { padding: 24px; display: grid; gap: 18px; }
-  .kpis { display: flex; gap: 14px; flex-wrap: wrap; }
-  .kpi { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 16px; min-width: 170px; }
-  .kpi b { display: block; font-size: 24px; margin-top: 4px; }
-  .tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .tools input, .tools select { min-height: 42px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; background: #fff; font-family: inherit; }
-  .box { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 8px 16px; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; color: #57534E; padding: 10px 8px; }
-  td { padding: 12px 8px; border-top: 1px solid #EFE8DA; vertical-align: top; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #F8F6F0;
+    color: #1F1B16;
+    -webkit-font-smoothing: antialiased;
+  }
+  .top {
+    background: #191612;
+    color: #F8F6F0;
+    padding: 16px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .top-brand { display: flex; align-items: center; gap: 12px; }
+  .top-brand b { font-size: 19px; letter-spacing: -0.3px; }
+  .badge-live {
+    background: #166534;
+    color: #DCFCE7;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .page { max-width: 1440px; margin: 0 auto; padding: 28px 24px; display: grid; gap: 20px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .kpi {
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: #9A3412;
+  }
+  .kpi:nth-child(2)::before { background: #16A34A; }
+  .kpi:nth-child(3)::before { background: #D97706; }
+  .kpi:nth-child(4)::before { background: #2563EB; }
+  .kpi:nth-child(5)::before { background: #7C3AED; }
+  .kpi span { font-size: 13px; font-weight: 600; color: #78716C; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi b { display: block; font-size: 28px; margin-top: 6px; font-weight: 800; color: #1C1917; }
+
+  .tools { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .tools-left { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .tools input, .tools select {
+    min-height: 44px;
+    border: 1px solid #D6CEBE;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 15px;
+    background: #fff;
+    font-family: inherit;
+    color: #1F1B16;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .tools input:focus, .tools select:focus {
+    border-color: #9A3412;
+    box-shadow: 0 0 0 3px rgba(154, 52, 18, 0.15);
+  }
+
+  .box {
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+  thead { background: #FAF7F2; border-bottom: 2px solid #EAE3D5; }
+  th {
+    color: #57534E;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 14px 16px;
+  }
+  td { padding: 14px 16px; border-top: 1px solid #F0EAE0; vertical-align: middle; }
+  tr:hover td { background: #FCFAF6; }
+
+  .rest-name { font-weight: 700; font-size: 15px; color: #1C1917; }
+  .muted { color: #78716C; font-size: 13px; line-height: 1.4; }
+
   button, input { font-family: inherit; }
-  button.s { min-height: 34px; border: 1px solid #CBC3B3; background: #fff; border-radius: 8px; padding: 0 10px; cursor: pointer; margin: 2px 2px 2px 0; }
-  button.open { min-height: 38px; border: 0; background: #9A3412; color: #fff; border-radius: 8px; padding: 0 14px; cursor: pointer; font-weight: 700; margin: 0 4px 6px 0; display: block; }
-  button.p { min-height: 46px; border: 0; background: #9A3412; color: #fff; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
-  .login { max-width: 340px; margin: 100px auto; display: grid; gap: 12px; padding: 0 16px; }
-  .login input { min-height: 44px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; }
-  .muted { color: #57534E; font-size: 13px; }
-  .err { color: #B91C1C; }
+  button.s {
+    min-height: 34px;
+    border: 1px solid #D6CEBE;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 0 10px;
+    cursor: pointer;
+    margin: 3px 3px 3px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #292524;
+    transition: all .15s;
+  }
+  button.s:hover { background: #F5EFEB; border-color: #B5A895; }
+  button.open {
+    min-height: 36px;
+    border: 0;
+    background: #9A3412;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 0 14px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    margin: 0 4px 6px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(154,52,18,0.25);
+    transition: background .15s, transform .1s;
+  }
+  button.open:hover { background: #7C2D12; }
+  button.open:active { transform: translateY(1px); }
+
+  button.del-btn {
+    color: #DC2626 !important;
+    border-color: #FECACA !important;
+    background: #FEF2F2 !important;
+  }
+  button.del-btn:hover {
+    background: #FEE2E2 !important;
+    border-color: #F87171 !important;
+  }
+
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 20px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    display: grid;
+    gap: 16px;
+  }
+  .login-header { text-align: center; margin-bottom: 6px; }
+  .login-logo { font-size: 32px; margin-bottom: 8px; }
+  .login-title { font-size: 22px; font-weight: 800; margin: 0; color: #1C1917; }
+  .login-sub { color: #78716C; font-size: 14px; margin: 4px 0 0; }
+
+  .inp-wrap { position: relative; width: 100%; }
+  .inp-wrap input {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid #D6CEBE;
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 15px;
+    outline: none;
+    transition: all .15s;
+    box-sizing: border-box;
+  }
+  .inp-wrap input:focus {
+    border-color: #9A3412;
+    box-shadow: 0 0 0 3px rgba(154, 52, 18, 0.15);
+  }
+  .eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #78716C;
+  }
+  .eye-btn:hover { color: #1F1B16; }
+
+  button.p {
+    min-height: 48px;
+    border: 0;
+    background: #9A3412;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    box-shadow: 0 3px 8px rgba(154,52,18,0.3);
+  }
+  button.p:hover { background: #7C2D12; }
+  button.p:active { transform: translateY(1px); }
+
+  .out-btn {
+    background: transparent;
+    border: 1px solid #57534E;
+    color: #F8F6F0;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .out-btn:hover { background: #292524; }
+  .err { color: #DC2626; font-size: 14px; text-align: center; }
 </style>
 </head>
 <body>
 
-<div id="login" class="login">
-  <h2 style="margin:0">Admin login</h2>
-  <input id="em" type="email" placeholder="Email">
-  <input id="pw" type="password" placeholder="Password">
-  <button class="p" id="go">Login</button>
-  <div id="lerr" class="err"></div>
+<div id="login" class="login-wrap">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">⚡</div>
+      <h2 class="login-title">Admin Console</h2>
+      <p class="login-sub">Sign in to manage all restaurants & licenses</p>
+    </div>
+    <div class="inp-wrap">
+      <input id="em" type="email" placeholder="Admin email" autocomplete="username">
+    </div>
+    <div class="inp-wrap">
+      <input id="pw" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:44px">
+      <button type="button" class="eye-btn" id="eyeBtn" title="Show or hide password">
+        <svg id="eyeSvg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <button class="p" id="go">Sign In to Admin</button>
+    <div id="lerr" class="err"></div>
+  </div>
 </div>
 
 <div id="app" hidden>
-  <div class="top"><b>Restaurant POS - Admin</b><button class="s" id="out">Logout</button></div>
+  <div class="top">
+    <div class="top-brand">
+      <b>Restaurant POS ⚡ Admin Console</b>
+      <span class="badge-live">Cloud Online</span>
+    </div>
+    <button class="out-btn" id="out">Sign Out</button>
+  </div>
   <div class="page">
     <div class="kpis" id="kpis"></div>
     <div class="tools">
-      <input id="q" placeholder="Search by name, email or phone" style="width:280px">
-      <select id="f">
-        <option value="all">All restaurants</option>
-        <option value="active">Active</option>
-        <option value="pending">Waiting approval</option>
-        <option value="paused">Paused</option>
-        <option value="expired">Expired</option>
-        <option value="rejected">Rejected</option>
-      </select>
+      <div class="tools-left">
+        <input id="q" placeholder="🔍 Search restaurant, owner, email or phone" style="width:340px">
+        <select id="f">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="pending">Waiting approval</option>
+          <option value="paused">Paused</option>
+          <option value="expired">Expired</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      <div style="font-size:13px;color:#78716C;font-weight:600" id="totalCount"></div>
     </div>
     <div class="box"><table>
       <thead><tr>
-        <th>Restaurant</th><th>Status</th><th>Plan</th><th>Paid until</th>
-        <th>Last seen</th><th>Bills</th><th>Sales</th><th>Paid to you</th><th>Actions</th>
+        <th>Restaurant Details</th><th>Status</th><th>Plan</th><th>Subscription</th>
+        <th>Last Seen</th><th>Bills</th><th>Sales</th><th>Revenue</th><th>Control Actions</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
@@ -70,9 +300,20 @@ const rs = (n) => 'Rs ' + Number(n || 0).toLocaleString('en-US', { maximumFracti
 let token = sessionStorage.getItem('adm') || ''
 let list = []
 
-async function api(url, body) {
+// Eye toggle for login password
+let showPassword = false
+$('eyeBtn').onclick = () => {
+  showPassword = !showPassword
+  $('pw').type = showPassword ? 'text' : 'password'
+  $('eyeSvg').innerHTML = showPassword
+    ? `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+    : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
+}
+
+async function api(url, body, method) {
+  const m = method || (body ? 'POST' : 'GET')
   const r = await fetch(url, {
-    method: body ? 'POST' : 'GET',
+    method: m,
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
     body: body ? JSON.stringify(body) : undefined
   })
@@ -89,6 +330,7 @@ function logout() {
 
 $('out').onclick = logout
 $('go').onclick = async () => {
+  $('lerr').textContent = ''
   const r = await fetch('/api/admin/login', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: $('em').value, password: $('pw').value })
@@ -102,29 +344,38 @@ $('go').onclick = async () => {
 }
 $('pw').onkeydown = (e) => { if (e.key === 'Enter') $('go').click() }
 
-const colors = { active: '#166534', pending: '#92400E', paused: '#B91C1C', rejected: '#57534E', expired: '#B91C1C' }
-const badge = (s) => `<span style="color:#fff;background:${colors[s] || '#57534E'};padding:2px 8px;border-radius:10px;font-size:12px">${esc(s)}</span>`
+const statusPills = {
+  active: 'background:#DCFCE7;color:#166534;border:1px solid #BBF7D0',
+  pending: 'background:#FEF3C7;color:#92400E;border:1px solid #FDE68A',
+  paused: 'background:#FEE2E2;color:#991B1B;border:1px solid #FECACA',
+  rejected: 'background:#F5F5F4;color:#57534E;border:1px solid #E7E5E4',
+  expired: 'background:#FEE2E2;color:#991B1B;border:1px solid #FECACA'
+}
+const badge = (s) => `<span style="${statusPills[s] || 'background:#F5F5F4;color:#57534E'};padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;text-transform:capitalize;display:inline-block">${esc(s)}</span>`
 
 function actions(r) {
   const b = (act, label) => `<button class="s" data-act="${act}" data-id="${esc(r.id)}">${label}</button>`
-  let out = `<button class="open" data-act="open" data-id="${esc(r.id)}">Open system</button>`
-  if (r.status === 'pending') out += b('approve', 'Approve') + b('reject', 'Reject')
-  if (r.status === 'active') out += b('pause', 'Pause')
-  if (r.status === 'paused') out += b('approve', 'Resume')
-  if (r.status === 'rejected') out += b('approve', 'Approve')
-  return out + b('pay', 'Record payment') + b('plan', 'Edit plan') + b('pw', 'Reset password')
+  let out = `<button class="open" data-act="open" data-id="${esc(r.id)}"><span>⚡</span> Open System</button><div style="display:flex;flex-wrap:wrap;gap:2px">`
+  if (r.status === 'pending') out += b('approve', '✓ Approve') + b('reject', '✕ Reject')
+  if (r.status === 'active') out += b('pause', '⏸ Pause')
+  if (r.status === 'paused') out += b('approve', '▶ Resume')
+  if (r.status === 'rejected') out += b('approve', '✓ Approve')
+  out += b('pay', '💳 Payment') + b('plan', '📋 Plan') + b('pw', '🔑 Reset PW')
+  out += `<button class="s del-btn" data-act="del" data-id="${esc(r.id)}">🗑 Delete</button>`
+  out += `</div>`
+  return out
 }
 
 function render() {
   const active = list.filter((r) => r.status === 'active')
   const k = [
-    ['Restaurants', list.length],
-    ['Active', active.length],
-    ['Waiting approval', list.filter((r) => r.status === 'pending').length],
-    ['Monthly income (active)', rs(active.reduce((s, r) => s + r.monthly_fee, 0))],
-    ['Total received', rs(list.reduce((s, r) => s + r.total_paid, 0))]
+    ['Total Restaurants', list.length],
+    ['Active Outlets', active.length],
+    ['Waiting Approval', list.filter((r) => r.status === 'pending').length],
+    ['Monthly MRR (Active)', rs(active.reduce((s, r) => s + r.monthly_fee, 0))],
+    ['Total Received', rs(list.reduce((s, r) => s + r.total_paid, 0))]
   ]
-  $('kpis').innerHTML = k.map(([a, b]) => `<div class="kpi"><span class="muted">${a}</span><b>${b}</b></div>`).join('')
+  $('kpis').innerHTML = k.map(([a, b]) => `<div class="kpi"><span>${a}</span><b>${b}</b></div>`).join('')
 
   const q = $('q').value.trim().toLowerCase()
   const f = $('f').value
@@ -133,17 +384,27 @@ function render() {
     (!q || [r.name, r.owner_name, r.email, r.phone, r.city].some((x) => String(x || '').toLowerCase().includes(q)))
   )
 
+  $('totalCount').textContent = `Showing ${shown.length} of ${list.length} restaurants`
+
   $('rows').innerHTML = shown.length
     ? shown.map((r) => `<tr>
-        <td><b>${esc(r.name)}</b><div class="muted">${esc(r.owner_name)} - ${esc(r.phone)}</div>
-            <div class="muted">${esc(r.email)} - ${esc(r.city)}</div></td>
+        <td>
+          <div class="rest-name">${esc(r.name)}</div>
+          <div class="muted">${esc(r.owner_name)} • ${esc(r.phone || '-')}</div>
+          <div class="muted">${esc(r.email)} • ${esc(r.city || '-')}</div>
+        </td>
         <td>${badge(r.license.state)}</td>
-        <td>${esc(r.plan)}<div class="muted">${rs(r.monthly_fee)} / month</div></td>
-        <td>${esc(r.paid_until || '-')}<div class="muted">${r.license.days_left === null ? '' : r.license.days_left + ' day(s) left'}</div></td>
-        <td>${r.last_seen ? esc(new Date(r.last_seen).toLocaleString()) : 'Never'}</td>
-        <td>${r.bills}</td><td>${rs(r.sales)}</td><td>${rs(r.total_paid)}</td>
-        <td>${actions(r)}</td></tr>`).join('')
-    : '<tr><td colspan="9" class="muted">No restaurants found.</td></tr>'
+        <td><b>${esc(r.plan)}</b><div class="muted">${rs(r.monthly_fee)} / mo</div></td>
+        <td>
+          <div><b>${esc(r.paid_until || '-')}</b></div>
+          <div class="muted">${r.license.days_left === null ? '' : (r.license.days_left < 0 ? '<span style="color:#DC2626">Expired</span>' : r.license.days_left + ' day(s) left')}</div>
+        </td>
+        <td class="muted">${r.last_seen ? esc(new Date(r.last_seen).toLocaleString()) : 'Never'}</td>
+        <td><b>${r.bills}</b></td>
+        <td><b>${rs(r.sales)}</b></td>
+        <td><b style="color:#166534">${rs(r.total_paid)}</b></td>
+        <td style="min-width:240px">${actions(r)}</td></tr>`).join('')
+    : '<tr><td colspan="9" class="muted" style="text-align:center;padding:30px">No restaurants match your search or filter.</td></tr>'
 }
 
 $('q').oninput = render
@@ -178,16 +439,26 @@ $('rows').onclick = async (e) => {
     return
   }
 
+  if (act === 'del') {
+    const sure = confirm(`⚠️ PERMANENT DELETE WARNING!\n\nAre you sure you want to completely DELETE "${r.name}" (${r.email})?\n\nAll bills, products, categories, and settings will be permanently destroyed. This cannot be undone!`)
+    if (!sure) return
+    const d = await api(`/api/admin/restaurants/${id}`, undefined, 'DELETE')
+    if (d && !d.ok) { alert(d.message || 'Could not delete restaurant'); return }
+    alert(`Restaurant "${r.name}" deleted successfully.`)
+    load()
+    return
+  }
+
   if (act === 'approve' || act === 'pause' || act === 'reject') {
     const status = { approve: 'active', pause: 'paused', reject: 'rejected' }[act]
-    if (!confirm(`${btn.textContent} "${r.name}"?`)) return
+    if (!confirm(`${btn.textContent.trim()} "${r.name}"?`)) return
     await api(`/api/admin/restaurants/${id}/status`, { status })
   }
 
   if (act === 'pay') {
-    const amount = prompt('Amount received (Rs)?', r.monthly_fee || '')
+    const amount = prompt(`Amount received from "${r.name}" (Rs)?`, r.monthly_fee || '')
     if (!amount) return
-    const days = prompt('How many days to add to the subscription?', '30')
+    const days = prompt('How many days to add to subscription?', '30')
     if (!days) return
     const d = await api(`/api/admin/restaurants/${id}/payment`, { amount, days })
     if (d && !d.ok) alert(d.message)
@@ -205,7 +476,7 @@ $('rows').onclick = async (e) => {
     const pw = prompt(`New password for the owner of "${r.name}" (at least 8 characters)?`)
     if (!pw) return
     const d = await api(`/api/admin/restaurants/${id}/password`, { password: pw })
-    alert(d && d.ok ? 'Password changed' : (d && d.message) || 'Could not change the password')
+    alert(d && d.ok ? 'Password changed successfully' : (d && d.message) || 'Could not change password')
     return
   }
 
