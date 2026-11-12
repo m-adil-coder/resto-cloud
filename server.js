@@ -19,6 +19,7 @@ const app = express()
 app.disable('x-powered-by')
 app.use(express.json({ limit: '25mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(__dirname))
 
 // ---------- helpers ----------
 const today = () => new Date(Date.now() + 5 * 3600e3).toISOString().slice(0, 10) // Pakistan date
