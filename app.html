@@ -2,91 +2,322 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Restaurant POS</title>
-<link rel="manifest" href="/manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Restaurant POS - Portal</title>
 <link rel="icon" href="/favicon.png">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<meta name="theme-color" content="#9A3412">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   [hidden] { display: none !important; }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body { margin: 0; font-family: system-ui, Segoe UI, Arial, sans-serif; background: #F7F4EE; color: #1F1B16; display: flex; flex-direction: column; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #F8F6F0;
+    color: #1F1B16;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
   button, input, select { font-family: inherit; }
-  #banner { background: #92400E; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex: none; }
-  #banner button { min-height: 36px; border: 1px solid #fff; background: transparent; color: #fff; border-radius: 8px; padding: 0 14px; cursor: pointer; font-weight: 600; }
+
+  #banner {
+    background: #92400E;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    font-size: 14px;
+  }
+  #banner button {
+    min-height: 34px;
+    border: 1px solid #fff;
+    background: transparent;
+    color: #fff;
+    border-radius: 8px;
+    padding: 0 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  /* Desktop layout */
   .shell { flex: 1; min-height: 0; display: flex; }
-  .side { width: 200px; background: #1F1B16; padding: 24px 12px; display: flex; flex-direction: column; gap: 6px; flex: none; }
-  .brand { color: #F7F4EE; font-weight: 700; font-size: 18px; padding: 0 14px 4px; }
-  .rname { color: #D6D3D1; font-size: 13px; padding: 0 14px 16px; }
-  .nav { text-align: left; border: 0; border-radius: 10px; padding: 12px 14px; min-height: 44px; font-size: 15px; cursor: pointer; background: transparent; color: #F7F4EE; font-weight: 500; }
-  .nav.on { background: #9A3412; font-weight: 700; }
-  .out { margin-top: auto; background: transparent; border: 1px solid #78716C; color: #F7F4EE; border-radius: 8px; padding: 10px 12px; cursor: pointer; }
-  main { flex: 1; overflow: auto; min-width: 0; }
-  .pad { padding: 28px; display: grid; gap: 16px; align-content: start; }
-  h2 { margin: 0; } h3 { margin: 0; }
+  .side {
+    width: 220px;
+    background: #191612;
+    padding: 24px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: none;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.12);
+  }
+  .brand { color: #F8F6F0; font-weight: 800; font-size: 18px; padding: 0 10px 4px; }
+  .rname { color: #D6D3D1; font-size: 13px; padding: 0 10px 18px; word-break: break-word; }
+  .nav {
+    text-align: left;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    min-height: 44px;
+    font-size: 15px;
+    cursor: pointer;
+    background: transparent;
+    color: #D6D3D1;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all .15s;
+  }
+  .nav:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav.on { background: #9A3412; color: #fff; font-weight: 700; box-shadow: 0 2px 6px rgba(154,52,18,0.3); }
+  .pc-btn {
+    background: #9A3412 !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    margin-top: auto !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 0;
+    box-shadow: 0 2px 6px rgba(154,52,18,0.3);
+  }
+  .out {
+    background: transparent;
+    border: 1px solid #57534E;
+    color: #F8F6F0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: background .15s;
+  }
+  .out:hover { background: #292524; }
+
+  /* Mobile Elements (Hidden on Desktop) */
+  .mob-header { display: none; }
+  .mob-nav { display: none; }
+
+  main { flex: 1; overflow-y: auto; overflow-x: hidden; min-width: 0; }
+  .pad { padding: 28px; display: grid; gap: 18px; align-content: start; max-width: 1200px; margin: 0 auto; }
+  h2 { margin: 0; font-size: 22px; font-weight: 800; color: #1C1917; }
+  h3 { margin: 0; font-size: 18px; font-weight: 700; color: #1C1917; }
   .row { display: flex; gap: 14px; flex-wrap: wrap; }
   .top { align-items: flex-start; }
-  .grow1 { flex: 1; min-width: 260px; } .grow2 { flex: 1.5; min-width: 300px; }
-  .card { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 20px; }
-  .kpi { background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 16px; flex: 1; min-width: 170px; }
-  .kpi span { color: #57534E; font-size: 14px; } .kpi b { display: block; font-size: 26px; margin-top: 4px; }
-  .muted { color: #57534E; font-size: 14px; }
-  .err { color: #B91C1C; font-size: 14px; } .ok { color: #166534; font-size: 14px; }
-  .btn { min-height: 40px; border: 1px solid #CBC3B3; background: #fff; border-radius: 8px; padding: 0 14px; color: #1F1B16; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; }
-  .btn.red { color: #B91C1C; }
-  .pri { min-height: 44px; border: 0; border-radius: 10px; padding: 0 20px; background: #9A3412; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
-  .inp { min-height: 44px; border: 1px solid #CBC3B3; border-radius: 10px; padding: 0 12px; font-size: 15px; background: #fff; color: #1F1B16; }
+  .grow1 { flex: 1; min-width: 260px; }
+  .grow2 { flex: 1.5; min-width: 300px; }
+  .card {
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+  .kpi {
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 14px;
+    padding: 18px;
+    flex: 1;
+    min-width: 160px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  }
+  .kpi span { color: #78716C; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi b { display: block; font-size: 26px; margin-top: 4px; font-weight: 800; color: #1C1917; }
+  .muted { color: #78716C; font-size: 14px; }
+  .err { color: #DC2626; font-size: 14px; }
+  .ok { color: #166534; font-size: 14px; }
+  .btn {
+    min-height: 40px;
+    border: 1px solid #D6CEBE;
+    background: #fff;
+    border-radius: 8px;
+    padding: 0 14px;
+    color: #1F1B16;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+  }
+  .btn.red { color: #DC2626; border-color: #FECACA; background: #FEF2F2; }
+  .pri {
+    min-height: 44px;
+    border: 0;
+    border-radius: 10px;
+    padding: 0 20px;
+    background: #9A3412;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(154,52,18,0.25);
+  }
+  .inp {
+    min-height: 44px;
+    border: 1px solid #D6CEBE;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 15px;
+    background: #fff;
+    color: #1F1B16;
+    outline: none;
+  }
+  .inp:focus {
+    border-color: #9A3412;
+    box-shadow: 0 0 0 3px rgba(154, 52, 18, 0.15);
+  }
   label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 14px; }
   .bar { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
-  .bar .n { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar .n { width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
   .bar .t { flex: 1; height: 14px; background: #EFE8DA; border-radius: 7px; }
   .bar .t i { display: block; height: 14px; background: #9A3412; border-radius: 7px; }
   .bar .q { width: 44px; text-align: right; font-weight: 600; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
-  .catcard { text-align: left; background: #fff; border: 1px solid #E6DED0; border-radius: 14px; padding: 20px; min-height: 140px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; color: #1F1B16; }
-  .catcard b { font-size: 20px; }
+  .catcard {
+    text-align: left;
+    background: #fff;
+    border: 1px solid #EBE4D8;
+    border-radius: 14px;
+    padding: 20px;
+    min-height: 140px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #1F1B16;
+  }
+  .catcard b { font-size: 18px; }
   .thumbs { display: flex; gap: 6px; margin-top: auto; }
   .thumbs img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
   .prod { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #EFE8DA; }
   .prod img, .ph { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex: none; }
-  .ph { background: #E7DFD0; color: #57534E; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .ph { background: #E7DFD0; color: #78716C; font-size: 11px; display: flex; align-items: center; justify-content: center; }
   .chip { background: #F3EBDD; border-radius: 14px; padding: 4px 10px; font-size: 13px; display: inline-block; margin: 6px 6px 0 0; }
-  .tabs { display: inline-flex; gap: 4px; background: #fff; border: 1px solid #E6DED0; border-radius: 12px; padding: 4px; }
-  .tabs button { min-height: 40px; padding: 0 18px; border: 0; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: 600; background: transparent; color: #1F1B16; }
+  .tabs { display: inline-flex; gap: 4px; background: #fff; border: 1px solid #EBE4D8; border-radius: 12px; padding: 4px; }
+  .tabs button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 600; background: transparent; color: #1F1B16; }
   .tabs button.on { background: #9A3412; color: #fff; }
-  .ctl { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-  .bill { display: flex; gap: 18px; padding: 14px 0; border-top: 1px solid #EFE8DA; }
-  .bill .l { width: 160px; flex: none; } .bill .m { flex: 1; min-width: 0; } .bill .r { width: 130px; text-align: right; flex: none; }
+  .ctl { display: flex; align-items: center; gap: 8px; font-size: 14px; flex-wrap: wrap; }
+  .bill { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid #EFE8DA; flex-wrap: wrap; }
+  .bill .l { width: 160px; flex: none; }
+  .bill .m { flex: 1; min-width: 200px; }
+  .bill .r { width: 130px; text-align: right; flex: none; }
   .li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; font-size: 14px; }
-  .pay { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid #EFE8DA; font-size: 16px; }
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 50; }
-  .mbox { background: #fff; border-radius: 14px; width: 540px; max-width: 94vw; max-height: 90vh; overflow: auto; padding: 26px; display: grid; gap: 14px; }
-  .vrow { display: flex; gap: 8px; margin-bottom: 8px; } .vrow .vn { flex: 1; min-width: 0; } .vrow .vp { width: 130px; }
-  .photo { display: flex; align-items: center; gap: 12px; } .photo img, .photo .ph { width: 72px; height: 72px; }
-  .mrow { display: flex; gap: 10px; } .mrow .pri { flex: 1; }
+  .pay { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid #EFE8DA; font-size: 15px; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .mbox { background: #fff; border-radius: 16px; width: 540px; max-width: 100%; max-height: 90vh; overflow-y: auto; padding: 26px; display: grid; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+  .vrow { display: flex; gap: 8px; margin-bottom: 8px; }
+  .vrow .vn { flex: 1; min-width: 0; }
+  .vrow .vp { width: 120px; }
+  .photo { display: flex; align-items: center; gap: 12px; }
+  .photo img, .photo .ph { width: 72px; height: 72px; }
+  .mrow { display: flex; gap: 10px; }
+  .mrow .pri { flex: 1; }
   .lic { padding: 12px 16px; border-radius: 10px; font-size: 14px; }
+
+  /* ================= RESPONSIVE MOBILE STYLES ================= */
+  @media (max-width: 768px) {
+    .side { display: none !important; }
+    .mob-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #191612;
+      color: #fff;
+      padding: 14px 16px;
+      flex: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .mob-header .brand-title { font-size: 17px; font-weight: 800; color: #F8F6F0; }
+    .mob-header .outlet-name { font-size: 12px; color: #D6D3D1; margin-top: 2px; }
+    .mob-header .mob-out {
+      background: transparent;
+      border: 1px solid #78716C;
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mob-nav {
+      display: flex;
+      background: #ffffff;
+      border-top: 1px solid #EBE4D8;
+      position: sticky;
+      bottom: 0;
+      z-index: 40;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+    }
+    .mob-nav-btn {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #78716C;
+      cursor: pointer;
+    }
+    .mob-nav-btn.on { color: #9A3412; font-weight: 800; }
+    .mob-nav-btn .icon { font-size: 18px; }
+
+    .pad { padding: 16px 14px; gap: 14px; width: 100%; box-sizing: border-box; }
+    .kpi { min-width: 130px; padding: 14px; }
+    .kpi b { font-size: 20px; }
+    .card { padding: 16px; }
+    .grow1, .grow2 { min-width: 100%; width: 100%; }
+    .bar .n { width: 110px; font-size: 13px; }
+    .bill .l, .bill .r { width: 100%; text-align: left; }
+    .bill .r { margin-top: 6px; }
+    .grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 
 <div id="banner" hidden></div>
 
+<!-- Mobile App Header -->
+<div class="mob-header" id="mobHeader">
+  <div>
+    <div class="brand-title">Restaurant POS</div>
+    <div class="outlet-name" id="mobRname"></div>
+  </div>
+  <button class="mob-out" id="mobLogout">Logout</button>
+</div>
+
 <div id="shell" class="shell" hidden>
+  <!-- Desktop Sidebar -->
   <aside class="side">
     <div class="brand">Restaurant POS</div>
     <div class="rname" id="rname"></div>
     <div id="nav" style="display:grid;gap:6px"></div>
-    <button class="nav" id="installBtn" style="border:1px dashed #78716C;margin-top:10px;color:#FDBA74;display:flex;align-items:center;gap:8px">
-      <span>📲</span> <b>Install App</b>
+    <button class="nav pc-btn" id="dlBtn">
+      <span>💻</span> <b>Download PC App</b>
     </button>
     <button class="out" id="logout">Logout</button>
   </aside>
   <main id="main"></main>
+</div>
+
+<!-- Mobile Bottom Navigation Bar -->
+<div class="mob-nav" id="mobNav">
+  <button class="mob-nav-btn on" data-p="Dashboard"><span class="icon">📊</span>Dashboard</button>
+  <button class="mob-nav-btn" data-p="Products"><span class="icon">🍔</span>Products</button>
+  <button class="mob-nav-btn" data-p="Reports"><span class="icon">📑</span>Reports</button>
+  <button class="mob-nav-btn" data-p="Settings"><span class="icon">⚙️</span>Settings</button>
 </div>
 
 <div id="modal" class="overlay" hidden><div class="mbox" id="mbox"></div></div>
@@ -137,16 +368,15 @@ const paymentsHtml = (p) => p.length
 function go(p) {
   page = p
   document.querySelectorAll('.nav').forEach((b) => b.classList.toggle('on', b.dataset.p === p))
+  document.querySelectorAll('.mob-nav-btn').forEach((b) => b.classList.toggle('on', b.dataset.p === p))
   main.scrollTop = 0
   ;({ Dashboard: viewDashboard, Products: viewProducts, Reports: viewReports, Settings: viewSettings })[p]()
 }
 
 // ---------- Dashboard ----------
-async function viewDashboard() {
-  main.innerHTML = '<div class="pad muted">Loading...</div>'
-  const t = today()
-  const d = await api(`/api/report?from=${t}&to=${t}`)
-  if (!d.ok) { main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
+let dashCache = null
+
+function renderDashboard(d) {
   const s = d.summary
   main.innerHTML = `<div class="pad">${licStrip()}<h2>Today at a glance</h2>
     <div class="row">${kpi("Today's sales", rs(s.sales))}${kpi('Customers', s.guests)}${kpi('Items sold', s.items_sold)}</div>
@@ -155,6 +385,19 @@ async function viewDashboard() {
         ${d.items.length ? hbars(d.items.map((i) => ({ name: i.name, value: i.qty }))) : '<p class="muted">No sales yet today.</p>'}</div>
       <div class="card grow1"><b>Payments received</b>${paymentsHtml(d.payments)}</div>
     </div></div>`
+}
+
+async function viewDashboard() {
+  if (dashCache) renderDashboard(dashCache)
+  else main.innerHTML = '<div class="pad muted">Loading...</div>'
+  const t = today()
+  const d = await api(`/api/report?from=${t}&to=${t}`)
+  if (!d.ok) {
+    if (!dashCache) main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`
+    return
+  }
+  dashCache = d
+  if (page === 'Dashboard') renderDashboard(d)
 }
 
 // ---------- Products ----------
@@ -169,10 +412,10 @@ async function loadCatalog() {
 }
 
 async function viewProducts() {
-  main.innerHTML = '<div class="pad muted">Loading...</div>'
+  if (catalog.categories.length || catalog.products.length) drawProducts()
+  else main.innerHTML = '<div class="pad muted">Loading...</div>'
   const d = await loadCatalog()
-  if (!d.ok) { main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
-  drawProducts()
+  if (d.ok && page === 'Products') drawProducts()
 }
 
 function productListHtml() {
@@ -191,8 +434,8 @@ function drawProducts() {
   if (!cur) {
     prodCat = null
     main.innerHTML = `<div class="pad">${licStrip()}
-      <div class="row" style="align-items:center"><h2 style="flex:1">Products</h2>
-        <input id="newcat" class="inp" placeholder="New category" autocomplete="off" style="width:260px">
+      <div class="row" style="align-items:center"><h2 style="flex:1">Products & Menu</h2>
+        <input id="newcat" class="inp" placeholder="New category" autocomplete="off" style="width:240px">
         <button class="pri" data-a="addcat">Add category</button></div>
       ${prodMsg ? `<div class="err">${esc(prodMsg)}</div>` : ''}
       ${catalog.categories.length ? '' : '<p class="muted">No categories yet. Add your first category above.</p>'}
@@ -209,14 +452,14 @@ function drawProducts() {
     <div><button class="btn" data-a="backcat">Back to categories</button></div>
     <div class="row" style="align-items:center">
       ${renaming
-        ? `<div class="row" style="flex:1"><input id="rencat" class="inp" value="${esc(cur.name)}" autocomplete="off" style="width:260px">
+        ? `<div class="row" style="flex:1"><input id="rencat" class="inp" value="${esc(cur.name)}" autocomplete="off" style="width:240px">
              <button class="pri" data-a="savecat">Save</button><button class="btn" data-a="cancelcat">Cancel</button></div>`
         : `<h2 style="flex:1">${esc(cur.name)}</h2>
-             <button class="btn" data-a="rencat">Rename category</button><button class="btn red" data-a="delcat">Delete category</button>`}
+             <button class="btn" data-a="rencat">Rename</button><button class="btn red" data-a="delcat">Delete category</button>`}
     </div>
     ${prodMsg ? `<div class="err">${esc(prodMsg)}</div>` : ''}
     <div class="card"><div class="row" style="align-items:center">
-      <input id="psearch" class="inp" placeholder="Search in this category" autocomplete="off" style="width:260px" value="${esc(prodSearch)}">
+      <input id="psearch" class="inp" placeholder="Search in this category" autocomplete="off" style="width:240px" value="${esc(prodSearch)}">
       <div style="flex:1"></div><button class="pri" data-a="addprod">Add product</button></div>
       <div id="plist">${productListHtml()}</div></div></div>`
 }
@@ -248,59 +491,64 @@ function drawModal(msg) {
 function readDraft() {
   draft.name = $('pn').value
   draft.category_id = $('pc').value
-  const ns = [...document.querySelectorAll('#vars .vn')], ps = [...document.querySelectorAll('#vars .vp')]
-  draft.variants = draft.variants.map((v, i) => ({ ...v, name: ns[i].value, price: ps[i].value }))
+  draft.variants = Array.from(document.querySelectorAll('#vars .vrow')).map((r) => ({
+    name: r.querySelector('.vn').value,
+    price: r.querySelector('.vp').value
+  }))
 }
 
 function resizeImage(file) {
   return new Promise((resolve) => {
-    const rd = new FileReader()
-    rd.onload = () => {
-      const img = new Image()
-      img.onload = () => {
-        const sc = Math.min(1, 300 / Math.max(img.width, img.height))
-        const cv = document.createElement('canvas')
-        cv.width = img.width * sc; cv.height = img.height * sc
-        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height)
-        resolve(cv.toDataURL('image/jpeg', 0.8))
+    const img = new Image()
+    img.onload = () => {
+      const max = 400
+      let w = img.width, h = img.height
+      if (w > max || h > max) {
+        if (w > h) { h = Math.round((h * max) / w); w = max }
+        else { w = Math.round((w * max) / h); h = max }
       }
-      img.src = rd.result
+      const cv = document.createElement('canvas')
+      cv.width = w; cv.height = h
+      cv.getContext('2d').drawImage(img, 0, 0, w, h)
+      resolve(cv.toDataURL('image/jpeg', 0.8))
     }
+    const rd = new FileReader()
+    rd.onload = (e) => (img.src = e.target.result)
     rd.readAsDataURL(file)
   })
 }
 
 // ---------- Reports ----------
-const rep = { period: 'daily', date: today(), month: today().slice(0, 7), year: String(new Date().getFullYear()), from: today(), to: today(), data: null, limit: 100 }
-const PERIODS = [['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly'], ['yearly', 'Yearly'], ['custom', 'Custom']]
+const rep = { period: 'day', date: today(), month: today().slice(0, 7), year: today().slice(0, 4), from: today(), to: today(), data: null, range: null, limit: 100 }
+
+function repControls() {
+  const p = rep.period
+  const btn = (k, l) => `<button class="${p === k ? 'on' : ''}" data-a="period" data-p="${k}">${l}</button>`
+  let sub = ''
+  if (p === 'day') sub = `<input type="date" id="rdate" class="inp" value="${rep.date}">`
+  if (p === 'month') sub = `<input type="month" id="rmonth" class="inp" value="${rep.month}">`
+  if (p === 'year') {
+    const y = Number(today().slice(0, 4))
+    const opts = [y, y - 1, y - 2].map((x) => `<option value="${x}" ${String(x) === rep.year ? 'selected' : ''}>${x}</option>`).join('')
+    sub = `<select id="ryear" class="inp">${opts}</select>`
+  }
+  if (p === 'custom') sub = `<input type="date" id="rfrom" class="inp" value="${rep.from}"><span class="muted">to</span><input type="date" id="rto" class="inp" value="${rep.to}">`
+  $('repCtl').innerHTML = `<div class="tabs">${btn('day', 'Day')}${btn('month', 'Month')}${btn('year', 'Year')}${btn('custom', 'Custom range')}</div><div class="ctl">${sub}</div>`
+}
 
 function repRange() {
-  if (rep.period === 'daily') return { from: rep.date, to: rep.date }
-  if (rep.period === 'weekly') {
-    const d = parse(rep.date), mon = new Date(d)
-    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7))
-    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
-    return { from: fmt(mon), to: fmt(sun) }
-  }
-  if (rep.period === 'monthly') {
+  const p = rep.period
+  if (p === 'day') return { from: rep.date, to: rep.date }
+  if (p === 'month') {
     const [y, m] = rep.month.split('-').map(Number)
-    return { from: fmt(new Date(y, m - 1, 1)), to: fmt(new Date(y, m, 0)) }
+    const last = new Date(y, m, 0).getDate()
+    return { from: `${rep.month}-01`, to: `${rep.month}-${p2(last)}` }
   }
-  if (rep.period === 'yearly') return { from: `${rep.year}-01-01`, to: `${rep.year}-12-31` }
+  if (p === 'year') return { from: `${rep.year}-01-01`, to: `${rep.year}-12-31` }
   return { from: rep.from, to: rep.to }
 }
 
-function repControls() {
-  const tabs = PERIODS.map(([k, n]) => `<button class="${rep.period === k ? 'on' : ''}" data-a="period" data-p="${k}">${n}</button>`).join('')
-  let f = ''
-  if (rep.period === 'daily' || rep.period === 'weekly') f = `<label class="ctl">${rep.period === 'daily' ? 'Date' : 'Any date in the week'}<input id="rdate" type="date" class="inp" value="${esc(rep.date)}"></label>`
-  if (rep.period === 'monthly') f = `<label class="ctl">Month<input id="rmonth" type="month" class="inp" value="${esc(rep.month)}"></label>`
-  if (rep.period === 'yearly') f = `<label class="ctl">Year<input id="ryear" type="number" min="2000" max="2100" class="inp" style="width:100px" value="${esc(rep.year)}"></label>`
-  if (rep.period === 'custom') f = `<label class="ctl">From<input id="rfrom" type="date" class="inp" value="${esc(rep.from)}"></label><label class="ctl">To<input id="rto" type="date" class="inp" value="${esc(rep.to)}"></label>`
-  $('repCtl').innerHTML = `<div class="tabs">${tabs}</div>${f}`
-}
-
-function viewReports() {
+async function viewReports() {
   main.innerHTML = `<div class="pad">${licStrip()}
     <div class="row" style="align-items:center"><h2 style="flex:1">Sales reports</h2><button class="btn" data-a="csv">Export CSV (Excel)</button></div>
     <div id="repCtl" class="row" style="align-items:center"></div><div id="repOut"></div></div>`
@@ -312,7 +560,7 @@ async function loadReport() {
   const r = repRange()
   const ok = /^\d{4}-\d{2}-\d{2}$/.test(r.from) && /^\d{4}-\d{2}-\d{2}$/.test(r.to) && r.from <= r.to && Number(r.from.slice(0, 4)) > 1999
   if (!ok) { $('repOut').innerHTML = '<p class="err">Choose a valid date range (From must not be after To).</p>'; return }
-  $('repOut').innerHTML = '<p class="muted">Loading...</p>'
+  if (!rep.data) $('repOut').innerHTML = '<p class="muted">Loading...</p>'
   const d = await api(`/api/report?from=${r.from}&to=${r.to}&bills=1`)
   if (!d.ok) { $('repOut').innerHTML = `<p class="err">${esc(d.message)}</p>`; return }
   rep.data = d; rep.range = r; rep.limit = 100
@@ -425,6 +673,8 @@ const A = {
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-a]')
   if (el && A[el.dataset.a]) A[el.dataset.a](el.dataset)
+  const mobBtn = e.target.closest('.mob-nav-btn')
+  if (mobBtn && mobBtn.dataset.p) go(mobBtn.dataset.p)
 })
 
 document.addEventListener('input', (e) => {
@@ -446,6 +696,7 @@ function leave() {
   else { sessionStorage.removeItem('tok'); location.href = '/' }
 }
 $('logout').onclick = leave
+$('mobLogout').onclick = leave
 
 async function init() {
   const d = await api('/api/me')
@@ -453,34 +704,19 @@ async function init() {
   me = d
   document.title = d.restaurant.name + ' - Restaurant POS'
   $('rname').textContent = d.restaurant.name
+  $('mobRname').textContent = d.restaurant.name
   if (impName) {
     $('banner').hidden = false
     $('banner').innerHTML = `<span>Admin view: you are managing <b>${esc(impName)}</b>. Changes you make here are saved to their account.</span><button id="back">Back to admin panel</button>`
     $('back').onclick = leave
     $('logout').textContent = 'Back to admin'
+    $('mobLogout').textContent = 'Back to admin'
   }
   $('nav').innerHTML = NAV.map((n) => `<button class="nav" data-a="nav" data-p="${n}">${n}</button>`).join('')
   $('shell').hidden = false
   go('Dashboard')
 }
 init()
-
-// Service worker & PWA installation handling
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {})
-}
-
-let deferredPrompt = null
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault()
-  deferredPrompt = e
-})
-
-window.addEventListener('appinstalled', () => {
-  deferredPrompt = null
-  localStorage.setItem('pwa_installed', '1')
-  alert('Restaurant POS App has been installed!')
-})
 
 function showAppModal(html) {
   $('mbox').innerHTML = html
@@ -491,85 +727,30 @@ $('modal').onclick = (e) => {
   if (e.target === $('modal')) $('modal').hidden = true
 }
 
-$('installBtn').onclick = () => {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
-  
-  if (isStandalone) {
-    showAppModal(`
-      <div style="text-align:center;padding:10px">
-        <div style="font-size:48px;margin-bottom:12px">✅</div>
-        <h3 style="margin:0 0 8px;font-size:20px">App is Already Installed!</h3>
-        <p style="color:#57534E;font-size:15px;line-height:1.5;margin:0 0 20px">
-          Ye app aapke system ya mobile par already installed hai aur aap is waqt installed app he use kar rahe hain.
-        </p>
-        <button class="pri" style="width:100%" onclick="$('modal').hidden=true">Theek hai</button>
-      </div>
-    `)
-    return
-  }
-
-  if (deferredPrompt) {
-    deferredPrompt.prompt()
-    deferredPrompt.userChoice.then((choice) => {
-      if (choice.outcome === 'accepted') {
-        localStorage.setItem('pwa_installed', '1')
-      }
-      deferredPrompt = null
-    })
-    return
-  }
-
-  const previouslyInstalled = localStorage.getItem('pwa_installed') === '1'
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
-
-  if (isIOS) {
-    showAppModal(`
-      <div>
-        <h3 style="margin:0 0 10px;font-size:20px">📲 Install on iPhone / iPad</h3>
-        <p style="color:#57534E;font-size:14px;line-height:1.6;margin:0 0 14px">
-          Mobile home screen par Play Store ki tarhan app laane ke liye ye steps karein:
-        </p>
-        <div style="background:#FAF6F0;border:1px solid #E6DED0;border-radius:12px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.8">
-          1️⃣ Safari ke niche <b>Share button (⎋)</b> tap karein.<br>
-          2️⃣ Niche scroll karke <b>'Add to Home Screen' (➕)</b> select karein.<br>
-          3️⃣ Top right par <b>'Add'</b> tap karein.
-        </div>
-        <div style="font-size:13px;color:#78716C;margin-bottom:16px">
-          ${previouslyInstalled ? '⚠️ Note: Agr pehle installed thi aur delete ho gayi thi to ab dobara install ho jayegi.' : 'Ye app direct aapke phone ki home screen par save ho jayegi.'}
-        </div>
-        <button class="pri" style="width:100%" onclick="$('modal').hidden=true">Theek hai</button>
-      </div>
-    `)
-    return
-  }
-
+$('dlBtn').onclick = () => {
   showAppModal(`
-    <div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <span style="font-size:30px">📲</span>
+    <div style="padding:4px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <span style="font-size:38px">💻</span>
         <div>
-          <h3 style="margin:0;font-size:18px">${previouslyInstalled ? 'App Status: Already Installed' : 'Install Restaurant POS App'}</h3>
-          <span style="font-size:13px;color:#78716C">Home Screen & Desktop Access</span>
+          <h3 style="margin:0;font-size:20px;color:#1C1917">Download Restaurant POS Desktop</h3>
+          <span style="color:#78716C;font-size:13px">Windows 10 / 11 (64-bit PC & Laptop)</span>
         </div>
       </div>
-      <p style="color:#57534E;font-size:14px;line-height:1.5;margin:0 0 16px">
-        ${previouslyInstalled
-          ? 'Ye app aapke device par already installed hai. Agr aap se delete ho gayi thi to neeche diye gaye tareeqay se dobara install karein:'
-          : 'App ko mobile ya computer ki home screen par baghair browser ke chalane ke liye:'}
+      <p style="color:#57534E;font-size:14px;line-height:1.6;margin:0 0 16px">
+        Download the full offline-first POS software for your counter:
       </p>
-      <div style="background:#FAF6F0;border:1px solid #E6DED0;border-radius:12px;padding:14px;display:grid;gap:12px;margin-bottom:18px;font-size:14px">
-        <div>
-          <b>📱 Mobile (Chrome / Android):</b><br>
-          <span style="color:#57534E;font-size:13px">Browser ke upar right side 3 dots (⋮) par tap karein aur <b>"Install app"</b> ya <b>"Add to Home screen"</b> choose karein. Play Store app ki tarhan home screen par icon ban jayega.</span>
-        </div>
-        <div style="border-top:1px solid #EFE8DA;padding-top:10px">
-          <b>💻 Desktop / PC (Chrome / Edge):</b><br>
-          <span style="color:#57534E;font-size:13px">Browser ke URL bar ke right corner par <b>Install icon (⊕)</b> par click karein aur <b>Install</b> dabayein.</span>
-        </div>
+      <div style="background:#FAF6F0;border:1px solid #E6DED0;border-radius:12px;padding:14px;display:grid;gap:10px;font-size:14px;margin-bottom:20px">
+        <div>⚡ <b>Fast Billing:</b> Dine-in, Takeaway, Delivery, Tables, Quick Cart</div>
+        <div>🖨️ <b>Thermal Printing:</b> 80mm & 58mm Receipt Printer Support</div>
+        <div>👥 <b>Staff Logins:</b> Cashiers, Managers, Admin Users</div>
+        <div>📶 <b>100% Offline-First:</b> Continue billing and printing without internet. Automatically syncs to cloud when connected.</div>
       </div>
       <div style="display:flex;gap:10px">
-        ${previouslyInstalled ? '<button class="btn" style="flex:1" onclick="localStorage.removeItem(\'pwa_installed\');$(\'modal\').hidden=true;alert(\'Re-install mode active. Browser menu se dobara Install kar sakte hain.\')">Reset & Re-install</button>' : ''}
-        <button class="pri" style="flex:1" onclick="$('modal').hidden=true">Theek hai</button>
+        <a href="/download" class="pri" style="flex:1;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px" target="_blank">
+          <span>⬇️</span> Download Setup (.exe)
+        </a>
+        <button class="btn" onclick="$('modal').hidden=true">Close</button>
       </div>
     </div>
   `)

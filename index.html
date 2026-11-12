@@ -4,12 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Restaurant POS - Log in</title>
-<link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/favicon.png">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<meta name="theme-color" content="#9A3412">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
   [hidden] { display: none !important; }
   * { box-sizing: border-box; }
@@ -139,11 +134,6 @@
 
 <script>
 const $ = (id) => document.getElementById(id)
-
-// Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {})
-}
 
 // Password eye toggles
 const eyeOpen = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`

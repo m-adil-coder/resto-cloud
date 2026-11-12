@@ -22,6 +22,11 @@ app.use(express.json({ limit: '25mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.static(__dirname))
 
+app.get('/download', (req, res) => {
+  const url = process.env.DESKTOP_DOWNLOAD_URL || 'https://github.com/m-adil-coder/resto-cloud/releases/download/v1.0.0/resto-pos-1.0.0-setup.exe'
+  res.redirect(url)
+})
+
 // ---------- helpers ----------
 const today = () => new Date(Date.now() + 5 * 3600e3).toISOString().slice(0, 10) // Pakistan date
 const addDays = (d, n) => {
