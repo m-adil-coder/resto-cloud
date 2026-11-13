@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -304,10 +304,7 @@
     <div class="brand">Restaurant POS</div>
     <div class="rname" id="rname"></div>
     <div id="nav" style="display:grid;gap:6px"></div>
-    <button class="nav pc-btn" id="dlBtn">
-      <span>💻</span> <b>Download PC App</b>
-    </button>
-    <button class="out" id="logout">Logout</button>
+    <button class="out" id="logout" style="margin-top:auto">Logout</button>
   </aside>
   <main id="main"></main>
 </div>
@@ -727,34 +724,6 @@ $('modal').onclick = (e) => {
   if (e.target === $('modal')) $('modal').hidden = true
 }
 
-$('dlBtn').onclick = () => {
-  showAppModal(`
-    <div style="padding:4px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <span style="font-size:38px">💻</span>
-        <div>
-          <h3 style="margin:0;font-size:20px;color:#1C1917">Download Restaurant POS Desktop</h3>
-          <span style="color:#78716C;font-size:13px">Windows 10 / 11 (64-bit PC & Laptop)</span>
-        </div>
-      </div>
-      <p style="color:#57534E;font-size:14px;line-height:1.6;margin:0 0 16px">
-        Download the full offline-first POS software for your counter:
-      </p>
-      <div style="background:#FAF6F0;border:1px solid #E6DED0;border-radius:12px;padding:14px;display:grid;gap:10px;font-size:14px;margin-bottom:20px">
-        <div>⚡ <b>Fast Billing:</b> Dine-in, Takeaway, Delivery, Tables, Quick Cart</div>
-        <div>🖨️ <b>Thermal Printing:</b> 80mm & 58mm Receipt Printer Support</div>
-        <div>👥 <b>Staff Logins:</b> Cashiers, Managers, Admin Users</div>
-        <div>📶 <b>100% Offline-First:</b> Continue billing and printing without internet. Automatically syncs to cloud when connected.</div>
-      </div>
-      <div style="display:flex;gap:10px">
-        <a href="/download" class="pri" style="flex:1;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px" target="_blank">
-          <span>⬇️</span> Download Setup (.exe)
-        </a>
-        <button class="btn" onclick="$('modal').hidden=true">Close</button>
-      </div>
-    </div>
-  `)
-}
 </script>
 </body>
 </html>
