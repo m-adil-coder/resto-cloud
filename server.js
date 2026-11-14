@@ -303,9 +303,9 @@ app.post(
         }))
 
         await client.query(
-          `INSERT INTO bills (restaurant_id, id, bill_no, created_at, order_type, table_name, guests,
+          `INSERT INTO bills (restaurant_id, id, bill_no, created_at, order_type, table_name, waiter_name, guests,
              subtotal, discount, tax, total, payment_method, items)
-           VALUES ($1,$2,$3,$4::timestamp,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb)
+           VALUES ($1,$2,$3,$4::timestamp,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb)
            ON CONFLICT (restaurant_id, id) DO NOTHING`,
           [
             r.id,
@@ -314,6 +314,7 @@ app.post(
             b.created_at.replace('T', ' ').slice(0, 19),
             clean(b.order_type, 30),
             clean(b.table_name, 30),
+            clean(b.waiter_name, 60),
             Math.max(1, Math.floor(num(b.guests))),
             num(b.subtotal),
             num(b.discount),
@@ -373,12 +374,17 @@ app.post(
         const name = clean(p && p.name)
         if (!isUuid(p && p.id) || !name) continue
         const image = typeof p.image === 'string' && isImage(p.image) ? p.image : ''
+        const track_stock = !!(p.track_stock && p.track_stock !== '0')
+        const stock = Math.max(0, Math.floor(num(p.stock)))
+        const min_stock = Math.max(0, Math.floor(num(p.min_stock)) || 5)
         await client.query(
-          `INSERT INTO products (restaurant_id, id, category_id, name, image, is_active) VALUES ($1,$2,$3,$4,$5,$6)
+          `INSERT INTO products (restaurant_id, id, category_id, name, image, track_stock, stock, min_stock, is_active)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
            ON CONFLICT (restaurant_id, id) DO UPDATE
            SET category_id = EXCLUDED.category_id, name = EXCLUDED.name, image = EXCLUDED.image,
+               track_stock = EXCLUDED.track_stock, stock = EXCLUDED.stock, min_stock = EXCLUDED.min_stock,
                is_active = EXCLUDED.is_active, updated_at = now()`,
-          [rid, p.id, isUuid(p.category_id) ? p.category_id : null, name, image, on(p.is_active)]
+          [rid, p.id, isUuid(p.category_id) ? p.category_id : null, name, image, track_stock, stock, min_stock, on(p.is_active)]
         )
       }
 
@@ -386,12 +392,16 @@ app.post(
         if (!isUuid(v && v.id) || !isUuid(v.product_id)) continue
         const price = num(v.price)
         if (price < 0) continue
+        const stock = Math.max(0, Math.floor(num(v.stock)))
+        const min_stock = Math.max(0, Math.floor(num(v.min_stock)) || 5)
         await client.query(
-          `INSERT INTO variants (restaurant_id, id, product_id, name, price, pos, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7)
+          `INSERT INTO variants (restaurant_id, id, product_id, name, price, pos, is_active, stock, min_stock)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
            ON CONFLICT (restaurant_id, id) DO UPDATE
            SET product_id = EXCLUDED.product_id, name = EXCLUDED.name, price = EXCLUDED.price,
-               pos = EXCLUDED.pos, is_active = EXCLUDED.is_active`,
-          [rid, v.id, v.product_id, clean(v.name, 40), price, Math.max(0, Math.floor(num(v.pos))), on(v.is_active)]
+               pos = EXCLUDED.pos, is_active = EXCLUDED.is_active,
+               stock = EXCLUDED.stock, min_stock = EXCLUDED.min_stock`,
+          [rid, v.id, v.product_id, clean(v.name, 40), price, Math.max(0, Math.floor(num(v.pos))), on(v.is_active), stock, min_stock]
         )
       }
 
@@ -424,11 +434,11 @@ app.post(
     const [c, p, v, s] = await Promise.all([
       pool.query('SELECT id, name, is_active FROM categories WHERE restaurant_id = $1 AND synced_at > $2::timestamptz', [rid, since]),
       pool.query(
-        'SELECT id, category_id, name, image, is_active FROM products WHERE restaurant_id = $1 AND synced_at > $2::timestamptz',
+        'SELECT id, category_id, name, image, track_stock, stock, min_stock, is_active FROM products WHERE restaurant_id = $1 AND synced_at > $2::timestamptz',
         [rid, since]
       ),
       pool.query(
-        `SELECT id, product_id, name, price::float AS price, pos, is_active FROM variants
+        `SELECT id, product_id, name, price::float AS price, pos, is_active, stock, min_stock FROM variants
          WHERE restaurant_id = $1 AND synced_at > $2::timestamptz`,
         [rid, since]
       ),
@@ -470,12 +480,12 @@ app.get(
     const [c, p, v] = await Promise.all([
       pool.query('SELECT id, name FROM categories WHERE restaurant_id = $1 AND is_active ORDER BY lower(name)', [rid]),
       pool.query(
-        `SELECT id, category_id, name, image FROM products
+        `SELECT id, category_id, name, image, track_stock, stock, min_stock FROM products
          WHERE restaurant_id = $1 AND is_active ORDER BY lower(name)`,
         [rid]
       ),
       pool.query(
-        `SELECT id, product_id, name, price::float AS price FROM variants
+        `SELECT id, product_id, name, price::float AS price, pos, stock, min_stock FROM variants
          WHERE restaurant_id = $1 AND is_active ORDER BY pos`,
         [rid]
       )
@@ -566,7 +576,13 @@ app.post(
 
     const variants = (Array.isArray(b.variants) ? b.variants : [])
       .slice(0, 20)
-      .map((v) => ({ id: isUuid(v && v.id) ? v.id : '', name: clean(v && v.name, 40), price: num(v && v.price) }))
+      .map((v) => ({
+        id: isUuid(v && v.id) ? v.id : '',
+        name: clean(v && v.name, 40),
+        price: num(v && v.price),
+        stock: Math.max(0, Math.floor(num(v && v.stock))),
+        min_stock: Math.max(0, Math.floor(num(v && v.min_stock)) || 5)
+      }))
       .filter((v) => v.name || v.price)
 
     if (!variants.length) return bad(res, 'Add at least one price')
@@ -576,6 +592,10 @@ app.post(
     const cat = await pool.query('SELECT 1 FROM categories WHERE restaurant_id = $1 AND id = $2 AND is_active', [rid, b.category_id])
     if (!cat.rowCount) return bad(res, 'Category not found')
 
+    const track_stock = !!b.track_stock
+    const stock = track_stock ? variants.reduce((sum, v) => sum + (v.stock || 0), 0) : 0
+    const min_stock = Math.max(0, Math.floor(num(b.min_stock)) || 5)
+
     let notFound = false
     const client = await pool.connect()
     try {
@@ -583,16 +603,16 @@ app.post(
       let id = isUuid(b.id) ? b.id : null
       if (id) {
         const up = await client.query(
-          `UPDATE products SET name = $1, category_id = $2, image = $3, updated_at = now(), is_active = TRUE
-           WHERE restaurant_id = $4 AND id = $5`,
-          [name, b.category_id, image, rid, id]
+          `UPDATE products SET name = $1, category_id = $2, image = $3, track_stock = $4, stock = $5, min_stock = $6, updated_at = now(), is_active = TRUE
+           WHERE restaurant_id = $7 AND id = $8`,
+          [name, b.category_id, image, track_stock, stock, min_stock, rid, id]
         )
         if (!up.rowCount) notFound = true
       } else {
         id = crypto.randomUUID()
         await client.query(
-          'INSERT INTO products (restaurant_id, id, category_id, name, image) VALUES ($1,$2,$3,$4,$5)',
-          [rid, id, b.category_id, name, image]
+          'INSERT INTO products (restaurant_id, id, category_id, name, image, track_stock, stock, min_stock) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+          [rid, id, b.category_id, name, image, track_stock, stock, min_stock]
         )
       }
 
@@ -604,17 +624,17 @@ app.post(
           let updated = 0
           if (vid) {
             const u = await client.query(
-              `UPDATE variants SET name = $1, price = $2, pos = $3, is_active = TRUE
-               WHERE restaurant_id = $4 AND id = $5 AND product_id = $6`,
-              [v.name, v.price, i, rid, vid, id]
+              `UPDATE variants SET name = $1, price = $2, pos = $3, stock = $4, min_stock = $5, is_active = TRUE
+               WHERE restaurant_id = $6 AND id = $7 AND product_id = $8`,
+              [v.name, v.price, i, v.stock, v.min_stock, rid, vid, id]
             )
             updated = u.rowCount
           }
           if (!updated) {
             vid = crypto.randomUUID()
             await client.query(
-              'INSERT INTO variants (restaurant_id, id, product_id, name, price, pos) VALUES ($1,$2,$3,$4,$5,$6)',
-              [rid, vid, id, v.name, v.price, i]
+              'INSERT INTO variants (restaurant_id, id, product_id, name, price, pos, stock, min_stock) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+              [rid, vid, id, v.name, v.price, i, v.stock, v.min_stock]
             )
           }
           keep.push(vid)
@@ -653,6 +673,43 @@ app.delete(
       req.params.id
     ])
     res.json({ ok: true })
+  })
+)
+
+app.patch(
+  '/api/products/:id/stock',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid id')
+    const stock = Math.max(0, Math.floor(num(req.body && req.body.stock)))
+    const up = await pool.query(
+      'UPDATE products SET stock = $1, updated_at = now() WHERE restaurant_id = $2 AND id = $3 AND is_active = TRUE',
+      [stock, req.auth.rid, req.params.id]
+    )
+    if (!up.rowCount) return bad(res, 'Product not found', 404)
+    res.json({ ok: true, stock })
+  })
+)
+
+app.patch(
+  '/api/variants/:id/stock',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid id')
+    const stock = Math.max(0, Math.floor(num(req.body && req.body.stock)))
+    const up = await pool.query(
+      `UPDATE variants SET stock = $1 WHERE restaurant_id = $2 AND id = $3 AND is_active = TRUE RETURNING product_id`,
+      [stock, req.auth.rid, req.params.id]
+    )
+    if (!up.rowCount) return bad(res, 'Variant not found', 404)
+    const pid = up.rows[0].product_id
+    await pool.query(
+      `UPDATE products SET stock = (SELECT COALESCE(SUM(stock),0) FROM variants WHERE restaurant_id = $1 AND product_id = $2 AND is_active = TRUE), updated_at = now() WHERE restaurant_id = $1 AND id = $2`,
+      [req.auth.rid, pid]
+    )
+    res.json({ ok: true, stock })
   })
 )
 
