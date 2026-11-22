@@ -127,6 +127,15 @@ async function init() {
       PRIMARY KEY (restaurant_id, id)
     );
 
+    CREATE TABLE IF NOT EXISTS tables (
+      restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      id UUID NOT NULL,
+      name TEXT NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+      PRIMARY KEY (restaurant_id, id)
+    );
+
     -- columns and triggers used by the desktop sync
     ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
     ALTER TABLE categories ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
@@ -143,6 +152,8 @@ async function init() {
     ALTER TABLE users      ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
     ALTER TABLE waiters    ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
     ALTER TABLE waiters    ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
+    ALTER TABLE tables     ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+    ALTER TABLE tables     ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
 
     CREATE OR REPLACE FUNCTION touch_synced_at() RETURNS trigger AS $$
     BEGIN
@@ -163,6 +174,8 @@ async function init() {
     CREATE TRIGGER t_users_sync BEFORE INSERT OR UPDATE ON users FOR EACH ROW EXECUTE FUNCTION touch_synced_at();
     DROP TRIGGER IF EXISTS t_waiters_sync ON waiters;
     CREATE TRIGGER t_waiters_sync BEFORE INSERT OR UPDATE ON waiters FOR EACH ROW EXECUTE FUNCTION touch_synced_at();
+    DROP TRIGGER IF EXISTS t_tables_sync ON tables;
+    CREATE TRIGGER t_tables_sync BEFORE INSERT OR UPDATE ON tables FOR EACH ROW EXECUTE FUNCTION touch_synced_at();
   `)
 }
 

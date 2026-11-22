@@ -1040,6 +1040,73 @@ app.delete(
   })
 )
 
+// ---------- restaurant panel: tables ----------
+app.get(
+  '/api/tables',
+  auth('restaurant'),
+  wrap(async (req, res) => {
+    const { rows } = await pool.query(
+      'SELECT id, name, is_active FROM tables WHERE restaurant_id = $1 AND is_active ORDER BY name',
+      [req.auth.rid]
+    )
+    res.json({ ok: true, tables: rows })
+  })
+)
+
+app.post(
+  '/api/tables',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    const rid = req.auth.rid
+    const name = clean(req.body?.name, 60)
+    if (!name) return bad(res, 'Enter a table name')
+    const dup = await pool.query(
+      'SELECT 1 FROM tables WHERE restaurant_id = $1 AND lower(name) = lower($2) AND is_active',
+      [rid, name]
+    )
+    if (dup.rowCount) return bad(res, 'This table already exists')
+    const id = crypto.randomUUID()
+    await pool.query('INSERT INTO tables (restaurant_id, id, name, is_active) VALUES ($1,$2,$3,TRUE)', [
+      rid,
+      id,
+      name
+    ])
+    res.json({ ok: true, id, name })
+  })
+)
+
+app.put(
+  '/api/tables/:id',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid id')
+    const name = clean(req.body?.name, 60)
+    if (!name) return bad(res, 'Enter a table name')
+    await pool.query('UPDATE tables SET name = $1 WHERE restaurant_id = $2 AND id = $3', [
+      name,
+      req.auth.rid,
+      req.params.id
+    ])
+    res.json({ ok: true, id: req.params.id, name })
+  })
+)
+
+app.delete(
+  '/api/tables/:id',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid id')
+    await pool.query('UPDATE tables SET is_active = FALSE WHERE restaurant_id = $1 AND id = $2', [
+      req.auth.rid,
+      req.params.id
+    ])
+    res.json({ ok: true })
+  })
+)
+
 // ---------- admin (you) ----------
 app.post(
   '/api/admin/login',

@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Restaurant POS - Log in</title>
 <link rel="icon" href="/favicon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#9A3412">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   [hidden] { display: none !important; }
   * { box-sizing: border-box; }
@@ -171,8 +176,12 @@ async function login() {
   const d = await post('/api/login', { email: $('lemail').value, password: $('lpw').value })
   if (!d.ok) { $('lmsg').className = 'msg err'; $('lmsg').textContent = d.message; return }
   sessionStorage.setItem('tok', d.token)
+  localStorage.setItem('tok', d.token)
   sessionStorage.removeItem('imp')
   location.href = '/app.html'
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {})
 }
 $('lgo').onclick = login
 $('lpw').onkeydown = (e) => { if (e.key === 'Enter') login() }

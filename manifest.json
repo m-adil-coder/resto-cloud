@@ -1,13 +1,13 @@
 {
   "name": "Restaurant POS",
   "short_name": "RestoPOS",
+  "description": "Smart Restaurant Point of Sale & Billing System",
   "start_url": "/app.html",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#1F1B16",
+  "background_color": "#191612",
   "theme_color": "#9A3412",
   "orientation": "any",
-  "description": "Restaurant Point of Sale & Management System",
   "icons": [
     {
       "src": "/icon-192.png",

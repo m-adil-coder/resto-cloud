@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Restaurant POS - Portal</title>
 <link rel="icon" href="/favicon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#191612">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   [hidden] { display: none !important; }
   * { box-sizing: border-box; }
@@ -224,6 +229,204 @@
   .mrow .pri { flex: 1; }
   .lic { padding: 12px 16px; border-radius: 10px; font-size: 14px; }
 
+  /* Network status pill */
+  .net-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: #064E3B;
+    color: #34D399;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all .2s;
+  }
+  .net-badge.offline {
+    background: #78350F;
+    color: #FCD34D;
+  }
+
+  /* Segmented order-type selector */
+  .pos-type-bar {
+    display: flex;
+    background: #EFE8DA;
+    padding: 3px;
+    border-radius: 10px;
+    gap: 4px;
+    width: 100%;
+  }
+  .pos-type-pill {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 8px 4px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #57534E;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .pos-type-pill.on {
+    background: #9A3412;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(154,52,18,0.25);
+  }
+
+  /* Horizontal table chips scroller */
+  .table-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 0 6px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-scroll::-webkit-scrollbar { display: none; }
+  .table-chip {
+    flex: none;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border: 1px solid #D6CEBE;
+    background: #fff;
+    color: #1F1B16;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .table-chip.on {
+    background: #9A3412;
+    color: #fff;
+    border-color: #9A3412;
+    box-shadow: 0 2px 4px rgba(154,52,18,0.25);
+  }
+  .table-chip.occupied {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-color: #FCA5A5;
+  }
+
+  /* Product card & components */
+  .pos-card-img-wrap {
+    width: 100%;
+    height: 105px;
+    position: relative;
+    background: #F4EFE6;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  .pos-card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .pos-card-img-ph {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    background: #EDE6D8;
+  }
+  .pos-card-body {
+    padding: 2px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+  .pos-card-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1C1917;
+    line-height: 1.3;
+    min-height: 34px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pos-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    gap: 4px;
+  }
+  .pos-card-price {
+    font-weight: 800;
+    font-size: 14px;
+    color: #9A3412;
+  }
+  .pos-card-add-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #9A3412;
+    color: #fff;
+    border: 0;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: none;
+    box-shadow: 0 2px 5px rgba(154,52,18,0.28);
+    transition: transform .1s;
+  }
+  .pos-card-add-btn:active {
+    transform: scale(0.92);
+  }
+
+  /* Settings 3-tabs bar */
+  .settings-tabs-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #E6DED0;
+    margin-bottom: 18px;
+    scrollbar-width: none;
+  }
+  .settings-tabs-bar::-webkit-scrollbar { display: none; }
+  .settings-tab-btn {
+    min-height: 42px;
+    border: 1px solid #D6CEBE;
+    background: #fff;
+    color: #1F1B16;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .15s;
+  }
+  .settings-tab-btn.on {
+    background: #9A3412;
+    color: #fff;
+    border-color: #9A3412;
+    box-shadow: 0 2px 6px rgba(154,52,18,0.25);
+  }
+
   /* ================= RESPONSIVE MOBILE STYLES ================= */
   @media (max-width: 768px) {
     .side { display: none !important; }
@@ -233,20 +436,21 @@
       align-items: center;
       background: #191612;
       color: #fff;
-      padding: 14px 16px;
+      padding: 10px 14px;
       flex: none;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border-bottom: 1px solid #292524;
     }
-    .mob-header .brand-title { font-size: 17px; font-weight: 800; color: #F8F6F0; }
-    .mob-header .outlet-name { font-size: 12px; color: #D6D3D1; margin-top: 2px; }
+    .mob-header .brand-title { font-size: 15px; font-weight: 800; color: #F8F6F0; }
+    .mob-header .outlet-name { font-size: 11px; color: #A8A29E; margin-top: 1px; }
     .mob-header .mob-out {
-      background: transparent;
-      border: 1px solid #78716C;
-      color: #fff;
+      background: #292524;
+      border: 1px solid #57534E;
+      color: #F5F5F4;
       border-radius: 8px;
-      padding: 6px 12px;
+      padding: 5px 10px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
     }
     .mob-nav {
@@ -262,7 +466,7 @@
       flex: 1;
       border: 0;
       background: transparent;
-      padding: 10px 4px;
+      padding: 8px 2px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -271,18 +475,19 @@
       font-weight: 600;
       color: #78716C;
       cursor: pointer;
+      position: relative;
     }
     .mob-nav-btn.on { color: #9A3412; font-weight: 800; }
     .mob-nav-btn .icon { font-size: 18px; }
 
-    .pad { padding: 16px 14px; gap: 14px; width: 100%; box-sizing: border-box; }
-    .kpi { min-width: 130px; padding: 14px; }
-    .kpi b { font-size: 20px; }
-    .card { padding: 16px; }
+    .pad { padding: 14px 12px; gap: 12px; width: 100%; box-sizing: border-box; }
+    .kpi { min-width: 125px; padding: 12px; }
+    .kpi b { font-size: 18px; }
+    .card { padding: 14px; }
     .grow1, .grow2 { min-width: 100%; width: 100%; }
-    .bar .n { width: 110px; font-size: 13px; }
+    .bar .n { width: 100px; font-size: 12px; }
     .bill .l, .bill .r { width: 100%; text-align: left; }
-    .bill .r { margin-top: 6px; }
+    .bill .r { margin-top: 4px; }
     .grid { grid-template-columns: 1fr; }
   }
 
@@ -412,7 +617,10 @@
     <div class="brand-title">Restaurant POS</div>
     <div class="outlet-name" id="mobRname"></div>
   </div>
-  <button class="mob-out" id="mobLogout">Logout</button>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="mobNetBadge" class="net-badge">🟢 Online</span>
+    <button class="mob-out" id="mobLogout">Logout</button>
+  </div>
 </div>
 
 <div id="shell" class="shell" hidden>
@@ -432,13 +640,12 @@
   <button style="border:0;background:#fff;color:#9A3412;font-weight:800;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer">View Order →</button>
 </div>
 
-<!-- Mobile Bottom Navigation Bar -->
+<!-- Mobile Bottom Navigation Bar (5 tabs) -->
 <div class="mob-nav" id="mobNav">
   <button class="mob-nav-btn on" data-p="Billing"><span class="icon">🧾</span>Billing</button>
   <button class="mob-nav-btn" data-p="Dashboard"><span class="icon">📊</span>Dashboard</button>
   <button class="mob-nav-btn" data-p="Products"><span class="icon">🍔</span>Products</button>
   <button class="mob-nav-btn" data-p="Reports"><span class="icon">📑</span>Reports</button>
-  <button class="mob-nav-btn" data-p="Staff"><span class="icon">👥</span>Staff</button>
   <button class="mob-nav-btn" data-p="Settings"><span class="icon">⚙️</span>Settings</button>
 </div>
 
@@ -455,22 +662,68 @@ const parse = (s) => { const [y, m, d] = s.split('-').map(Number); return new Da
 const today = () => fmt(new Date())
 const main = $('main')
 
-let token = sessionStorage.getItem('tok') || ''
+// Register Service Worker for offline PWA capability
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW reg error', err))
+  })
+}
+
+// Persistent token (localStorage + sessionStorage)
+let token = localStorage.getItem('tok') || sessionStorage.getItem('tok') || ''
 const impName = sessionStorage.getItem('imp') || ''
-if (!token) location.replace('/')
+if (!token && !localStorage.getItem('cached_api_/api/me')) location.replace('/')
+
+function updateNetStatus() {
+  const isOff = !navigator.onLine
+  const b = $('mobNetBadge')
+  if (b) {
+    b.className = isOff ? 'net-badge offline' : 'net-badge'
+    b.textContent = isOff ? '🟠 Offline' : '🟢 Online'
+  }
+}
+window.addEventListener('online', () => {
+  updateNetStatus()
+  syncOfflineQueue()
+  loadCatalog()
+})
+window.addEventListener('offline', updateNetStatus)
 
 async function api(url, body, method) {
   const m = method || (body !== undefined ? 'POST' : 'GET')
   const opt = { method: m, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token } }
   if (body !== undefined && m !== 'GET') opt.body = JSON.stringify(body)
   let r
-  try { r = await fetch(url, opt) } catch { return { ok: false, message: 'Cannot reach the server' } }
-  if (r.status === 401) { sessionStorage.removeItem('tok'); location.replace('/'); return { ok: false, message: 'Please log in again' } }
-  try { return await r.json() } catch { return { ok: false, message: 'Server error' } }
+  try {
+    r = await fetch(url, opt)
+  } catch (err) {
+    if (m === 'GET') {
+      const cached = localStorage.getItem('cached_api_' + url)
+      if (cached) {
+        try { return { ok: true, offline: true, ...JSON.parse(cached) } } catch {}
+      }
+    }
+    return { ok: false, offline: true, message: 'Offline mode: Cannot reach server' }
+  }
+  if (r.status === 401) {
+    sessionStorage.removeItem('tok')
+    localStorage.removeItem('tok')
+    location.replace('/')
+    return { ok: false, message: 'Please log in again' }
+  }
+  try {
+    const data = await r.json()
+    if (data.ok && m === 'GET') {
+      localStorage.setItem('cached_api_' + url, JSON.stringify(data))
+    }
+    return data
+  } catch {
+    return { ok: false, message: 'Server error' }
+  }
 }
 
-const NAV = ['Billing', 'Dashboard', 'Products', 'Reports', 'Staff', 'Settings']
-const NAV_ICONS = { Billing: '🧾', Dashboard: '📊', Products: '🍔', Reports: '📑', Staff: '👥', Settings: '⚙️' }
+const NAV = ['Billing', 'Dashboard', 'Products', 'Reports', 'Settings']
+const NAV_ICONS = { Billing: '🧾', Dashboard: '📊', Products: '🍔', Reports: '📑', Settings: '⚙️' }
 let me = null, page = 'Billing'
 
 function licStrip() {
@@ -729,13 +982,13 @@ function drawBilling() {
   const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
   updateMobCartBar(totalQty, total)
 
-  // Quick tables
-  const TABLES = Array.from({ length: 10 }, (_, i) => `Table ${i + 1}`)
-  const tablesHtml = TABLES.map((t) => {
-    const isOccupied = !!billHeldTables[t]
-    const isSelected = billOrderType === 'Dine-in' && billTable === t
-    return `<button data-a="posseltable" data-t="${esc(t)}" style="min-height:34px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid ${isSelected ? '#9A3412' : '#D6CEBE'};background:${isSelected ? '#9A3412' : isOccupied ? '#FEE2E2' : '#fff'};color:${isSelected ? '#fff' : isOccupied ? '#991B1B' : '#1F1B16'};display:inline-flex;align-items:center;gap:6px">
-      <span style="font-size:10px">${isOccupied ? '🔴' : '🟢'}</span> ${esc(t)}
+  // Tables list
+  const tables = (tablesList && tablesList.length) ? tablesList : Array.from({ length: 10 }, (_, i) => ({ id: `tbl_${i+1}`, name: `Table ${i + 1}` }))
+  const tablesHtml = tables.map((t) => {
+    const isOccupied = !!billHeldTables[t.name]
+    const isSelected = billOrderType === 'Dine-in' && billTable === t.name
+    return `<button data-a="posseltable" data-t="${esc(t.name)}" class="table-chip ${isSelected ? 'on' : ''} ${isOccupied ? 'occupied' : ''}">
+      <span style="font-size:9px">${isOccupied ? '🔴' : '🟢'}</span> ${esc(t.name)}
     </button>`
   }).join('')
 
@@ -757,14 +1010,19 @@ function drawBilling() {
     const hasOptions = vars.length > 1
     const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
     const isOut = p.track_stock && totalStock <= 0
-    return `<div class="pos-card" data-a="posclickprod" data-id="${esc(p.id)}" style="${isOut ? 'opacity:0.6;' : ''}">
-      ${p.image ? `<img src="${esc(p.image)}" alt="">` : `<div class="pos-img-ph">🍔</div>`}
-      <div class="title">${esc(p.name)}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
-        <span class="price">${priceText}</span>
-        ${hasOptions ? `<span style="font-size:11px;background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:4px;font-weight:700">${vars.length} options</span>` : ''}
+    return `<div class="pos-card" data-a="posclickprod" data-id="${esc(p.id)}" style="${isOut ? 'opacity:0.55;' : ''}">
+      <div class="pos-card-img-wrap">
+        ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<div class="pos-card-img-ph">🍔</div>`}
+        ${p.track_stock ? `<span style="position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;background:${isOut ? '#FEE2E2' : '#DCFCE7'};color:${isOut ? '#991B1B' : '#166534'}">${isOut ? 'Out of stock' : `${totalStock} in stock`}</span>` : ''}
+        ${hasOptions ? `<span style="position:absolute;bottom:6px;left:6px;font-size:10px;background:rgba(0,0,0,0.65);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700">${vars.length} options</span>` : ''}
       </div>
-      ${p.track_stock ? `<div style="font-size:11px;font-weight:600;color:${isOut ? '#DC2626' : '#059669'}">${isOut ? '🔴 Out of stock' : `📦 ${totalStock} in stock`}</div>` : ''}
+      <div class="pos-card-body">
+        <div class="pos-card-title">${esc(p.name)}</div>
+        <div class="pos-card-footer">
+          <span class="pos-card-price">${priceText}</span>
+          <button class="pos-card-add-btn" data-a="posclickprod" data-id="${esc(p.id)}" title="Add to bill">+</button>
+        </div>
+      </div>
     </div>`
   }).join('') : `<div style="grid-column:1/-1;padding:40px;text-align:center" class="muted">No items match your search.</div>`
 
@@ -806,45 +1064,42 @@ function drawBilling() {
       ${licStrip()}
       ${toastHtml}
 
-      <!-- Top Dine-in Tables Bar -->
-      <div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-          <span style="font-size:13px;font-weight:700;color:#57534E">🍽️ Quick Tables (Click to select or hold):</span>
-          <span style="font-size:12px;color:#78716C">🟢 Available • 🔴 Held Order</span>
+      <!-- Compact Top Control Bar -->
+      <div class="card" style="padding:10px 14px;display:flex;flex-direction:column;gap:10px">
+        <!-- Segmented Type Selector -->
+        <div class="pos-type-bar">
+          <button class="pos-type-pill ${billOrderType === 'Dine-in' ? 'on' : ''}" data-a="possetordertype" data-type="Dine-in">🍽️ Dine-in</button>
+          <button class="pos-type-pill ${billOrderType === 'Takeaway' ? 'on' : ''}" data-a="possetordertype" data-type="Takeaway">🥡 Takeaway</button>
+          <button class="pos-type-pill ${billOrderType === 'Delivery' ? 'on' : ''}" data-a="possetordertype" data-type="Delivery">🛵 Delivery</button>
         </div>
-        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
-          ${tablesHtml}
-        </div>
-      </div>
-
-      <!-- Controls: Order Type, Waiter, Guests, Search -->
-      <div class="card" style="padding:12px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Type:
-          <select id="posOrderType" class="inp" style="min-height:38px;padding:0 8px">
-            <option value="Dine-in" ${billOrderType === 'Dine-in' ? 'selected' : ''}>🍽️ Dine-in</option>
-            <option value="Takeaway" ${billOrderType === 'Takeaway' ? 'selected' : ''}>🥡 Takeaway</option>
-            <option value="Delivery" ${billOrderType === 'Delivery' ? 'selected' : ''}>🚚 Delivery</option>
-          </select>
-        </label>
 
         ${billOrderType === 'Dine-in' ? `
-        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Table:
-          <input id="posTableInp" class="inp" value="${esc(billTable)}" placeholder="e.g. Table 1" style="min-height:38px;width:110px;padding:0 8px">
-        </label>` : ''}
+        <!-- Sleek Horizontal Table Chips Scroller -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#78716C">
+            <span>Select Table: <b style="color:#9A3412">${esc(billTable || 'None')}</b></span>
+            <span>🟢 Free • 🔴 Occupied</span>
+          </div>
+          <div class="table-scroll">
+            ${tablesHtml}
+          </div>
+        </div>
+        ` : ''}
 
-        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Waiter:
-          <select id="posWaiter" class="inp" style="min-height:38px;padding:0 8px">
-            <option value="">(None)</option>
+        <!-- Compact Sub-row: Waiter, Guests, Search -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="posWaiter" class="inp" style="width:125px;min-height:36px;padding:0 8px;font-size:13px">
+            <option value="">👤 Waiter</option>
             ${waitersList.map((w) => `<option value="${esc(w.name)}" ${billWaiter === w.name ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}
           </select>
-        </label>
 
-        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Guests:
-          <input id="posGuests" type="number" min="1" value="${billGuests}" class="inp" style="min-height:38px;width:60px;padding:0 8px;text-align:center">
-        </label>
+          ${billOrderType === 'Dine-in' ? `
+          <input id="posGuests" type="number" min="1" value="${billGuests}" class="inp" placeholder="Guests" title="Guests count" style="width:65px;min-height:36px;padding:0 6px;text-align:center;font-size:13px">
+          ` : ''}
 
-        <div style="flex:1;min-width:200px">
-          <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="🔍 Search product..." class="inp" style="width:100%;min-height:38px">
+          <div style="flex:1;min-width:140px">
+            <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="🔍 Search menu..." class="inp" style="width:100%;min-height:36px;padding:0 10px;font-size:13px">
+          </div>
         </div>
       </div>
 
@@ -1323,23 +1578,27 @@ function exportCsv() {
   a.click()
 }
 
-// ---------- Settings ----------
-async function viewSettings() {
-  main.innerHTML = '<div class="pad muted">Loading...</div>'
-  const d = await api('/api/settings')
-  if (!d.ok) { main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
-  const s = d.settings
-  const f = (k, label, type) => `<label class="f">${label}<input class="inp" id="st_${k}" type="${type || 'text'}" value="${esc(s[k])}" autocomplete="off"></label>`
-  main.innerHTML = `<div class="pad">${licStrip()}<div class="card" style="max-width:480px;display:grid;gap:14px">
-    <h2>Restaurant settings</h2><div class="muted">These details appear on every printed bill.</div>
-    ${f('restaurant_name', 'Restaurant name')}${f('address', 'Address')}${f('phone', 'Phone')}
-    ${f('tax_percent', 'Tax (%) added to every bill', 'number')}${f('footer', 'Message at the bottom of the bill')}
-    <div id="smsg"></div><button class="pri" data-a="savesettings">Save settings</button></div></div>`
-}
-
-// ---------- Staff & Waiters ----------
+// ---------- Settings (3 Tabs matching Desktop POS) ----------
+let settingsTab = 'general' // 'general' | 'waiters' | 'tables'
 let staffData = { users: [], waiters: [] }
 let staffMsg = ''
+let tablesList = []
+let editingTable = null
+let tableMsg = ''
+
+async function loadTables() {
+  const r = await api('/api/tables')
+  if (r.ok && Array.isArray(r.tables) && r.tables.length > 0) {
+    tablesList = r.tables
+  } else if (!tablesList.length) {
+    const loc = localStorage.getItem('cached_tables')
+    if (loc) { try { tablesList = JSON.parse(loc) } catch {} }
+    if (!tablesList.length) {
+      tablesList = Array.from({ length: 10 }, (_, i) => ({ id: `tbl_${i + 1}`, name: `Table ${i + 1}` }))
+    }
+  }
+  localStorage.setItem('cached_tables', JSON.stringify(tablesList))
+}
 
 async function loadStaff() {
   const [uRes, wRes] = await Promise.all([
@@ -1348,12 +1607,59 @@ async function loadStaff() {
   ])
   staffData.users = uRes.ok ? uRes.users : []
   staffData.waiters = wRes.ok ? wRes.waiters : []
+  waitersList = staffData.waiters
 }
 
-function drawStaff() {
+async function viewSettings() {
+  main.innerHTML = '<div class="pad muted">Loading settings...</div>'
+  const [sRes] = await Promise.all([
+    api('/api/settings'),
+    loadStaff(),
+    loadTables()
+  ])
+  if (sRes.ok) settingsCache = sRes.settings
+  drawSettings()
+}
+
+function drawSettings() {
+  const s = settingsCache || {}
   const users = staffData.users || []
   const waiters = staffData.waiters || []
+  const tables = tablesList || []
 
+  const f = (k, label, type) => `<label class="f">${label}<input class="inp" id="st_${k}" type="${type || 'text'}" value="${esc(s[k])}" autocomplete="off"></label>`
+
+  // Tab 1: Restaurant & Receipt
+  const generalTabHtml = `
+    <div class="card" style="max-width:560px;display:grid;gap:14px">
+      <div>
+        <h3>Restaurant details</h3>
+        <div class="muted" style="font-size:13px;margin-top:2px">These details appear at the top and bottom of every printed receipt.</div>
+      </div>
+      ${f('restaurant_name', 'Restaurant name')}
+      ${f('address', 'Address')}
+      ${f('phone', 'Phone')}
+      ${f('tax_percent', 'Tax (%) added to every bill', 'number')}
+      ${f('footer', 'Message at the bottom of the bill')}
+      <div id="smsg"></div>
+      <button class="pri" data-a="savesettings" style="min-height:44px">Save settings</button>
+    </div>
+
+    <!-- Thermal printer fast print guide -->
+    <div class="card" style="max-width:560px;display:grid;gap:10px;background:#FAF8F5">
+      <div style="font-weight:800;font-size:15px;color:#1C1917">⚡ 1-Click Thermal Fast Printing Setup</div>
+      <div style="font-size:13px;color:#57534E;line-height:1.5">
+        To print bills instantly without the browser print dialog pop-up:
+      </div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;color:#57534E;line-height:1.6">
+        <li><b>On Chrome / Edge (Desktop):</b> Add <code>--kiosk-printing</code> flag to the browser shortcut target.</li>
+        <li><b>Default Printer:</b> Set your thermal receipt printer (e.g. BIXOLON, Xprinter, POS-80) as system default.</li>
+        <li><b>Margins:</b> In print settings, set Margins to <b>None</b> and uncheck <b>Headers and Footers</b>.</li>
+      </ul>
+    </div>
+  `
+
+  // Tab 2: Waiters & Staff
   const usersHtml = users.length ? users.map((u) => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #EFE8DA;gap:12px;flex-wrap:wrap">
       <div>
@@ -1395,8 +1701,7 @@ function drawStaff() {
     </div>
   `).join('') : '<p class="muted">No waiters added yet.</p>'
 
-  main.innerHTML = `<div class="pad">
-    ${licStrip()}
+  const waitersTabHtml = `
     <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px">
       <span style="font-size:24px">🚨</span>
       <div>
@@ -1413,7 +1718,7 @@ function drawStaff() {
       <div class="card grow2">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
           <div>
-            <h3>👥 Cashiers & POS Users</h3>
+            <h3>👥 Cashiers & POS Users (${users.length})</h3>
             <div class="muted" style="font-size:13px">Accounts that can log in to the Desktop counter</div>
           </div>
           <button class="pri" data-a="adduser" style="min-height:38px;padding:0 14px;font-size:13px">+ Add Cashier</button>
@@ -1424,7 +1729,7 @@ function drawStaff() {
       <div class="card grow1">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
           <div>
-            <h3>🍽️ Waiters</h3>
+            <h3>🍽️ Waiters (${waiters.length})</h3>
             <div class="muted" style="font-size:13px">Assigned to Dine-in tables</div>
           </div>
           <button class="pri" data-a="addwaiter" style="min-height:38px;padding:0 14px;font-size:13px">+ Add Waiter</button>
@@ -1432,13 +1737,80 @@ function drawStaff() {
         <div>${waitersHtml}</div>
       </div>
     </div>
-  </div>`
+  `
+
+  // Tab 3: Dine-in Tables
+  const tablesCardsHtml = tables.length ? tables.map((t) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;background:#FAF6F0;border:1px solid #E6DED0">
+      ${editingTable && editingTable.id === t.id ? `
+        <div style="display:flex;gap:6px;flex:1">
+          <input id="editTableInput" value="${esc(editingTable.name)}" class="inp" style="flex:1;min-height:34px;font-size:13px">
+          <button class="pri" data-a="savetable" style="min-height:34px;padding:0 12px;font-size:12px">Save</button>
+          <button class="btn" data-a="canceltable" style="min-height:34px;padding:0 8px;font-size:12px">✕</button>
+        </div>
+      ` : `
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">🍽️</span>
+          <span style="font-weight:700;font-size:15px;color:#1C1917">${esc(t.name)}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn" data-a="edittable" data-id="${esc(t.id)}" data-name="${esc(t.name)}" style="min-height:32px;padding:0 10px;font-size:12px">Edit</button>
+          <button class="btn red" data-a="deltable" data-id="${esc(t.id)}" data-name="${esc(t.name)}" style="min-height:32px;padding:0 8px;font-size:12px">Delete</button>
+        </div>
+      `}
+    </div>
+  `).join('') : '<p class="muted">No tables configured. Add a table below.</p>'
+
+  const tablesTabHtml = `
+    <div class="card" style="display:grid;gap:16px">
+      <div>
+        <h3>🍽️ Dine-in Tables</h3>
+        <p style="margin:4px 0 0;color:#57534E;font-size:14px">
+          Manage tables for dine-in customers. Cashier can open running orders and track occupied tables.
+        </p>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;max-width:520px">
+        <input id="newTableInput" placeholder="Enter new table name (e.g. Table 11, VIP Lounge)" class="inp" style="flex:1;min-height:42px">
+        <button class="pri" data-a="addtable" style="min-height:42px;padding:0 18px;font-size:14px">+ Add Table</button>
+      </div>
+      ${tableMsg ? `<div style="color:#B91C1C;font-size:13px;font-weight:600">${esc(tableMsg)}</div>` : ''}
+
+      <div>
+        <div style="font-weight:700;font-size:14px;color:#57534E;margin-bottom:10px">
+          Available Tables (${tables.length})
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px">
+          ${tablesCardsHtml}
+        </div>
+      </div>
+    </div>
+  `
+
+  main.innerHTML = `
+    <div class="pad" style="max-width:1100px">
+      ${licStrip()}
+      <!-- 3 Tabs Switcher matching Desktop POS -->
+      <div class="settings-tabs-bar">
+        <button class="settings-tab-btn ${settingsTab === 'general' ? 'on' : ''}" data-a="settab" data-tab="general">
+          🏪 Restaurant & Receipt
+        </button>
+        <button class="settings-tab-btn ${settingsTab === 'waiters' ? 'on' : ''}" data-a="settab" data-tab="waiters">
+          👥 Waiters & Staff (${(staffData.waiters || []).length})
+        </button>
+        <button class="settings-tab-btn ${settingsTab === 'tables' ? 'on' : ''}" data-a="settab" data-tab="tables">
+          🍽️ Dine-in Tables (${tables.length})
+        </button>
+      </div>
+
+      ${settingsTab === 'general' ? generalTabHtml : settingsTab === 'waiters' ? waitersTabHtml : tablesTabHtml}
+    </div>
+  `
 }
 
 async function viewStaff() {
-  main.innerHTML = '<div class="pad muted">Loading staff...</div>'
-  await loadStaff()
-  drawStaff()
+  settingsTab = 'waiters'
+  go('Settings')
 }
 
 // ---------- actions ----------
@@ -1789,21 +2161,87 @@ const A = {
       items: billCart
     }
 
+    let billSaved = null
     const r = await api('/api/orders', payload)
-    if (!r.ok) {
-      alert(r.message || 'Failed to save bill')
-      return
+    if (r.ok && r.bill) {
+      billSaved = r.bill
+      billToast = `✅ Bill #${pad(r.bill.bill_no)} saved & printed successfully!`
+    } else {
+      // Offline fallback: generate local offline bill and queue for sync
+      const offNo = (Math.floor(Math.random() * 8999) + 1000)
+      billSaved = {
+        bill_no: offNo,
+        created_at: new Date().toLocaleString(),
+        ...payload
+      }
+      const q = JSON.parse(localStorage.getItem('offline_bills_queue') || '[]')
+      q.push(payload)
+      localStorage.setItem('offline_bills_queue', JSON.stringify(q))
+      billToast = `🟠 Bill #${offNo} saved offline & printed! Will sync when internet reconnects.`
     }
 
-    const html = buildOnlineReceiptHtml(r.bill, settingsCache)
+    const html = buildOnlineReceiptHtml(billSaved, settingsCache)
     printThermalHtml(html)
 
     delete billHeldTables[billTable]
-    billToast = `✅ Bill #${pad(r.bill.bill_no)} saved & printed successfully!`
     billCart = []
     billDiscount = 0
+    const panel = $('posCartPanel')
+    if (panel) panel.classList.remove('mob-open')
     drawBilling()
-    loadCatalog()
+    if (navigator.onLine) loadCatalog()
+  },
+  possetordertype: (d) => {
+    billOrderType = d.type
+    drawBilling()
+  },
+  settab: (d) => {
+    settingsTab = d.tab
+    drawSettings()
+  },
+  addtable: async () => {
+    const input = $('newTableInput')
+    const name = input ? input.value.trim() : ''
+    if (!name) return
+    const id = 'tbl_' + Date.now()
+    const r = await api('/api/tables', { name })
+    if (r.ok) {
+      tablesList.push({ id: r.id || id, name })
+      localStorage.setItem('cached_tables', JSON.stringify(tablesList))
+      tableMsg = ''
+      drawSettings()
+    } else {
+      tablesList.push({ id, name })
+      localStorage.setItem('cached_tables', JSON.stringify(tablesList))
+      drawSettings()
+    }
+  },
+  edittable: (d) => {
+    editingTable = { id: d.id, name: d.name }
+    drawSettings()
+  },
+  canceltable: () => {
+    editingTable = null
+    drawSettings()
+  },
+  savetable: async () => {
+    const input = $('editTableInput')
+    const name = input ? input.value.trim() : ''
+    if (!name || !editingTable) return
+    const id = editingTable.id
+    await api('/api/tables/' + id, { name }, 'PUT')
+    const idx = tablesList.findIndex((t) => t.id === id)
+    if (idx !== -1) tablesList[idx].name = name
+    localStorage.setItem('cached_tables', JSON.stringify(tablesList))
+    editingTable = null
+    drawSettings()
+  },
+  deltable: async (d) => {
+    if (!confirm(`Delete table "${d.name}"?`)) return
+    await api('/api/tables/' + d.id, undefined, 'DELETE')
+    tablesList = tablesList.filter((t) => t.id !== d.id)
+    localStorage.setItem('cached_tables', JSON.stringify(tablesList))
+    drawSettings()
   },
   posprintkot: () => {
     if (!billCart.length) return
@@ -1861,13 +2299,50 @@ function leave() {
 $('logout').onclick = leave
 $('mobLogout').onclick = leave
 
+async function syncOfflineQueue() {
+  const qStr = localStorage.getItem('offline_bills_queue')
+  if (!qStr) return
+  const q = JSON.parse(qStr || '[]')
+  if (!q.length) return
+  let remaining = []
+  for (const bill of q) {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(bill)
+      })
+      const d = await res.json()
+      if (!d.ok) remaining.push(bill)
+    } catch {
+      remaining.push(bill)
+    }
+  }
+  localStorage.setItem('offline_bills_queue', JSON.stringify(remaining))
+  if (remaining.length === 0) {
+    billToast = '✅ All offline bills synced to cloud successfully!'
+    if (page === 'Billing') drawBilling()
+  }
+}
+
 async function init() {
+  updateNetStatus()
   const d = await api('/api/me')
-  if (!d.ok) { main.innerHTML = ''; $('shell').hidden = false; main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return }
-  me = d
-  document.title = d.restaurant.name + ' - Restaurant POS'
-  $('rname').textContent = d.restaurant.name
-  $('mobRname').textContent = d.restaurant.name
+  if (!d.ok) {
+    const cachedMe = localStorage.getItem('cached_api_/api/me')
+    if (cachedMe) {
+      me = JSON.parse(cachedMe)
+    } else {
+      main.innerHTML = ''; $('shell').hidden = false; main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return
+    }
+  } else {
+    me = d
+    localStorage.setItem('cached_api_/api/me', JSON.stringify(d))
+  }
+  document.title = me.restaurant.name + ' - Restaurant POS'
+  $('rname').textContent = me.restaurant.name
+  $('mobRname').textContent = me.restaurant.name
+  loadTables()
   if (impName) {
     $('banner').hidden = false
     $('banner').innerHTML = `<span>Admin view: you are managing <b>${esc(impName)}</b>. Changes you make here are saved to their account.</span><button id="back">Back to admin panel</button>`
