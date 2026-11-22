@@ -285,6 +285,121 @@
     .bill .r { margin-top: 6px; }
     .grid { grid-template-columns: 1fr; }
   }
+
+  /* Billing POS Styles */
+  .pos-container { display: flex; gap: 18px; align-items: flex-start; }
+  .pos-left { flex: 1.6; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .pos-right { flex: 1; min-width: 320px; position: sticky; top: 16px; }
+  .pos-cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+  .pos-cat-btn {
+    min-height: 38px;
+    padding: 0 16px;
+    border: 1px solid #D6CEBE;
+    background: #fff;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    color: #1F1B16;
+    transition: all .15s;
+    user-select: none;
+  }
+  .pos-cat-btn.on { background: #9A3412; color: #fff; border-color: #9A3412; }
+  .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .pos-card {
+    background: #fff;
+    border: 1px solid #EBE4D8;
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    transition: transform .1s, box-shadow .1s;
+    user-select: none;
+    position: relative;
+  }
+  .pos-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .pos-card img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+  .pos-card .pos-img-ph { width: 100%; height: 110px; background: #EFE8DA; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+  .pos-card .title { font-weight: 800; font-size: 14px; color: #1C1917; line-height: 1.25; }
+  .pos-card .price { font-weight: 900; font-size: 15px; color: #9A3412; margin-top: auto; }
+  .pos-cart-panel {
+    background: #fff;
+    border: 1px solid #EBE4D8;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .pos-cart-items { max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .pos-cart-row {
+    border-bottom: 1px dashed #E5E7EB;
+    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .pos-qty-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #D1D5DB;
+    background: #F3F4F6;
+    border-radius: 6px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .mob-cart-bar {
+    display: none;
+    position: fixed;
+    bottom: 58px;
+    left: 12px;
+    right: 12px;
+    background: #9A3412;
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px 18px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 14px rgba(154,52,18,0.4);
+    z-index: 45;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  @media (max-width: 768px) {
+    .pos-container { flex-direction: column; }
+    .pos-right { display: none; }
+    .pos-right.mob-open {
+      display: flex !important;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 55;
+      padding: 16px;
+      overflow-y: auto;
+      align-items: flex-end;
+    }
+    .pos-right.mob-open .pos-cart-panel {
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 16px 16px 0 0;
+      animation: slideUp .2s ease-out;
+    }
+    .mob-cart-bar.active { display: flex !important; }
+    .pos-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .pos-card img, .pos-card .pos-img-ph { height: 90px; }
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -311,11 +426,19 @@
   <main id="main"></main>
 </div>
 
+<!-- Mobile Floating Cart Bar -->
+<div id="mobCartBar" class="mob-cart-bar" data-a="togglemobcart">
+  <div>🛒 <b id="mobCartCount">0 items</b> • <b id="mobCartTotal">Rs 0</b></div>
+  <button style="border:0;background:#fff;color:#9A3412;font-weight:800;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer">View Order →</button>
+</div>
+
 <!-- Mobile Bottom Navigation Bar -->
 <div class="mob-nav" id="mobNav">
-  <button class="mob-nav-btn on" data-p="Dashboard"><span class="icon">📊</span>Dashboard</button>
+  <button class="mob-nav-btn on" data-p="Billing"><span class="icon">🧾</span>Billing</button>
+  <button class="mob-nav-btn" data-p="Dashboard"><span class="icon">📊</span>Dashboard</button>
   <button class="mob-nav-btn" data-p="Products"><span class="icon">🍔</span>Products</button>
   <button class="mob-nav-btn" data-p="Reports"><span class="icon">📑</span>Reports</button>
+  <button class="mob-nav-btn" data-p="Staff"><span class="icon">👥</span>Staff</button>
   <button class="mob-nav-btn" data-p="Settings"><span class="icon">⚙️</span>Settings</button>
 </div>
 
@@ -346,8 +469,9 @@ async function api(url, body, method) {
   try { return await r.json() } catch { return { ok: false, message: 'Server error' } }
 }
 
-const NAV = ['Dashboard', 'Products', 'Reports', 'Settings']
-let me = null, page = 'Dashboard'
+const NAV = ['Billing', 'Dashboard', 'Products', 'Reports', 'Staff', 'Settings']
+const NAV_ICONS = { Billing: '🧾', Dashboard: '📊', Products: '🍔', Reports: '📑', Staff: '👥', Settings: '⚙️' }
+let me = null, page = 'Billing'
 
 function licStrip() {
   const l = me && me.license
@@ -369,7 +493,436 @@ function go(p) {
   document.querySelectorAll('.nav').forEach((b) => b.classList.toggle('on', b.dataset.p === p))
   document.querySelectorAll('.mob-nav-btn').forEach((b) => b.classList.toggle('on', b.dataset.p === p))
   main.scrollTop = 0
-  ;({ Dashboard: viewDashboard, Products: viewProducts, Reports: viewReports, Settings: viewSettings })[p]()
+  const mobBar = $('mobCartBar')
+  if (mobBar && p !== 'Billing') mobBar.style.display = 'none'
+  ;({ Billing: viewBilling, Dashboard: viewDashboard, Products: viewProducts, Reports: viewReports, Staff: viewStaff, Settings: viewSettings })[p]()
+}
+
+// ---------- Billing (POS) ----------
+let billCart = []
+let billCat = 'all'
+let billSearch = ''
+let billOrderType = 'Dine-in'
+let billTable = 'Table 1'
+let billGuests = 1
+let billWaiter = ''
+let billDiscount = 0
+let billPayment = 'Cash'
+let billHeldTables = {}
+let waitersList = []
+let settingsCache = { restaurant_name: 'Restaurant POS', address: '', phone: '', tax_percent: 0, footer: 'Thank you! Visit again.' }
+let billToast = ''
+
+function printThermalHtml(html) {
+  let iframe = document.getElementById('pos-print-frame')
+  if (!iframe) {
+    iframe = document.createElement('iframe')
+    iframe.id = 'pos-print-frame'
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    document.body.appendChild(iframe)
+  }
+  const doc = iframe.contentWindow.document
+  doc.open()
+  doc.write(html)
+  doc.close()
+  setTimeout(() => {
+    try {
+      iframe.contentWindow.focus()
+      iframe.contentWindow.print()
+    } catch (e) {
+      console.error('Print failed:', e)
+    }
+  }, 250)
+}
+
+function buildOnlineReceiptHtml(bill, s) {
+  const shopName = s.restaurant_name || 'Restaurant POS'
+  const rows = (bill.items || []).map((i) => `
+    <tr>
+      <td style="width:62%;word-break:break-word">
+        <div style="font-weight:800;font-size:13px">${esc(i.name)}</div>
+        <div style="font-size:11.5px;font-weight:700">${i.qty} &times; ${rs(i.price)}</div>
+      </td>
+      <td style="width:38%;text-align:right;font-weight:800;font-size:13px">${rs(i.qty * i.price)}</td>
+    </tr>
+  `).join('')
+
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+@page { size: 80mm auto; margin: 0 !important; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  width: 68mm; max-width: 68mm; margin: 0 auto; padding: 0 1mm 2mm;
+  font-family: Arial, Helvetica, sans-serif; font-size: 12.5px; line-height: 1.35;
+  color: #000; font-weight: 700; -webkit-print-color-adjust: exact;
+}
+.header { text-align: center; margin-bottom: 3px; }
+.shop-name { font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0 0 2px; }
+.shop-meta { font-size: 12px; margin-top: 1px; }
+.bill-badge { text-align: center; font-size: 16px; font-weight: 900; margin: 3px 0; }
+hr { border: 0; border-top: 1.5px dashed #000; margin: 4px 0; }
+.meta-box { font-size: 12px; line-height: 1.4; }
+.meta-row { display: flex; justify-content: space-between; align-items: baseline; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th { font-size: 12px; font-weight: 800; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 2px; }
+td { vertical-align: top; padding: 3px 0; }
+.totals-table td { padding: 2px 0; font-size: 12.5px; }
+.total-row td { border-top: 2px solid #000; border-bottom: 2px solid #000; font-size: 16px; font-weight: 900; padding: 4px 0; }
+.footer { text-align: center; font-size: 12px; font-weight: 800; margin-top: 5px; }
+</style></head><body>
+<div class="header">
+  <div class="shop-name">${esc(shopName)}</div>
+  ${s.address ? `<div class="shop-meta">${esc(s.address)}</div>` : ''}
+  ${s.phone ? `<div class="shop-meta">Tel: ${esc(s.phone)}</div>` : ''}
+</div>
+<hr>
+<div class="bill-badge">Bill #: ${pad(bill.bill_no)}</div>
+<hr>
+<div class="meta-box">
+  <div class="meta-row"><span>Date:</span><b>${esc(bill.created_at)}</b></div>
+  <div class="meta-row"><span>Order Type:</span><b>${esc(bill.order_type)}</b></div>
+  ${bill.table_name ? `<div class="meta-row"><span>Table:</span><b>${esc(bill.table_name)}</b></div>` : ''}
+  ${bill.waiter_name ? `<div class="meta-row"><span>Waiter:</span><b>${esc(bill.waiter_name)}</b></div>` : ''}
+  ${bill.guests > 1 ? `<div class="meta-row"><span>Guests:</span><b>${esc(bill.guests)}</b></div>` : ''}
+</div>
+<hr>
+<table>
+  <thead><tr><th align="left" style="width:62%">Item</th><th align="right" style="width:38%">Amount</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<hr>
+<table class="totals-table">
+  <tr><td style="width:55%">Subtotal</td><td style="width:45%;text-align:right"><b>${rs(bill.subtotal)}</b></td></tr>
+  ${bill.discount > 0 ? `<tr><td>Discount</td><td style="text-align:right"><b>- ${rs(bill.discount)}</b></td></tr>` : ''}
+  ${bill.tax > 0 ? `<tr><td>Tax</td><td style="text-align:right"><b>${rs(bill.tax)}</b></td></tr>` : ''}
+  <tr class="total-row"><td>TOTAL</td><td style="text-align:right">${rs(bill.total)}</td></tr>
+</table>
+<hr>
+<div class="footer">${esc(s.footer || 'Thank you! Visit again.')}</div>
+</body></html>`
+}
+
+function buildOnlineKotHtml(items, info, s) {
+  const shopName = s.restaurant_name || 'Restaurant POS'
+  const rows = items.map((i) => `
+    <tr>
+      <td style="width:75%;word-break:break-word">
+        <div style="font-size:13.5px;font-weight:800">${esc(i.name)}</div>
+        ${i.note ? `<div style="font-size:11.5px;font-style:italic;font-weight:800;margin-top:1px">&raquo; Note: ${esc(i.note)}</div>` : ''}
+      </td>
+      <td style="width:25%;text-align:right;font-size:15px;font-weight:900">&times; ${i.qty}</td>
+    </tr>
+  `).join('')
+
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+@page { size: 80mm auto; margin: 0 !important; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  width: 68mm; max-width: 68mm; margin: 0 auto; padding: 0 1mm 2mm;
+  font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.35;
+  color: #000; font-weight: 700; -webkit-print-color-adjust: exact;
+}
+.header { text-align: center; margin-bottom: 4px; }
+.kot-badge { font-size: 15px; font-weight: 900; letter-spacing: 0.5px; border: 1.5px dashed #000; padding: 4px; margin-bottom: 4px; }
+.shop-name { font-size: 13px; font-weight: 800; text-transform: uppercase; }
+hr { border: 0; border-top: 1.5px dashed #000; margin: 4px 0; }
+.meta-box { font-size: 12px; line-height: 1.45; }
+.meta-row { display: flex; justify-content: space-between; align-items: baseline; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th { font-size: 12px; font-weight: 800; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 3px; }
+td { vertical-align: top; padding: 3px 0; }
+.footer { text-align: center; font-size: 11.5px; font-weight: 800; margin-top: 6px; }
+</style></head><body>
+<div class="header">
+  <div class="kot-badge">KITCHEN ORDER (KOT)</div>
+  <div class="shop-name">${esc(shopName)}</div>
+</div>
+<hr>
+<div class="meta-box">
+  <div class="meta-row"><span>Table:</span><b style="font-size:16px">${esc(info.table_name || 'Dine-in')}</b></div>
+  ${info.waiter_name ? `<div class="meta-row"><span>Waiter:</span><b>${esc(info.waiter_name)}</b></div>` : ''}
+  <div class="meta-row"><span>Time:</span><b>${new Date().toLocaleTimeString()}</b></div>
+</div>
+<hr>
+<table>
+  <thead><tr><th align="left" style="width:75%">Item</th><th align="right" style="width:25%">Qty</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<hr>
+<div class="footer">Please prepare order promptly</div>
+</body></html>`
+}
+
+async function loadBillingData() {
+  const [catRes, waitRes, setRes] = await Promise.all([
+    loadCatalog(),
+    api('/api/waiters'),
+    api('/api/settings')
+  ])
+  if (waitRes && waitRes.ok) waitersList = waitRes.waiters || []
+  if (setRes && setRes.ok && setRes.settings) settingsCache = setRes.settings
+}
+
+async function viewBilling() {
+  if (!catalog.products.length) {
+    main.innerHTML = '<div class="pad muted">Loading billing products & tables...</div>'
+    await loadBillingData()
+  } else {
+    loadBillingData() // background refresh
+  }
+  drawBilling()
+}
+
+function updateMobCartBar(count, total) {
+  const bar = $('mobCartBar')
+  if (!bar) return
+  if (count > 0 && page === 'Billing') {
+    bar.style.display = 'flex'
+    $('mobCartCount').textContent = count + ' items'
+    $('mobCartTotal').textContent = rs(total)
+  } else {
+    bar.style.display = 'none'
+  }
+}
+
+function addCartItem(prod, v) {
+  const existing = billCart.find((x) => x.variant_id === v.id && !x.note)
+  if (existing) {
+    existing.qty++
+  } else {
+    billCart.push({
+      uid: Date.now() + Math.random().toString(36).substr(2, 4),
+      product_id: prod.id,
+      variant_id: v.id,
+      name: v.name ? `${prod.name} (${v.name})` : prod.name,
+      price: Number(v.price || 0),
+      qty: 1,
+      note: ''
+    })
+  }
+  drawBilling()
+}
+
+function drawBilling() {
+  if (page !== 'Billing') return
+  const categories = catalog.categories || []
+  const prods = (catalog.products || []).filter((p) => {
+    if (billCat !== 'all' && p.category_id !== billCat) return false
+    if (billSearch) {
+      const q = billSearch.toLowerCase()
+      const nMatch = p.name.toLowerCase().includes(q)
+      const vMatch = (p.variants || []).some((v) => v.name && v.name.toLowerCase().includes(q))
+      if (!nMatch && !vMatch) return false
+    }
+    return true
+  })
+
+  const subtotal = billCart.reduce((s, i) => s + (i.qty * i.price), 0)
+  const taxPct = Number(settingsCache.tax_percent || 0)
+  const taxable = Math.max(0, subtotal - billDiscount)
+  const tax = taxPct > 0 ? (taxable * (taxPct / 100)) : 0
+  const total = Math.max(0, taxable + tax)
+  const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
+  updateMobCartBar(totalQty, total)
+
+  // Quick tables
+  const TABLES = Array.from({ length: 10 }, (_, i) => `Table ${i + 1}`)
+  const tablesHtml = TABLES.map((t) => {
+    const isOccupied = !!billHeldTables[t]
+    const isSelected = billOrderType === 'Dine-in' && billTable === t
+    return `<button data-a="posseltable" data-t="${esc(t)}" style="min-height:34px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid ${isSelected ? '#9A3412' : '#D6CEBE'};background:${isSelected ? '#9A3412' : isOccupied ? '#FEE2E2' : '#fff'};color:${isSelected ? '#fff' : isOccupied ? '#991B1B' : '#1F1B16'};display:inline-flex;align-items:center;gap:6px">
+      <span style="font-size:10px">${isOccupied ? '🔴' : '🟢'}</span> ${esc(t)}
+    </button>`
+  }).join('')
+
+  // Categories pills
+  const catsHtml = `
+    <button class="pos-cat-btn ${billCat === 'all' ? 'on' : ''}" data-a="poscat" data-id="all">All</button>
+    ${categories.map((c) => `<button class="pos-cat-btn ${billCat === c.id ? 'on' : ''}" data-a="poscat" data-id="${esc(c.id)}">${esc(c.name)}</button>`).join('')}
+  `
+
+  // Products cards
+  const prodsHtml = prods.length ? prods.map((p) => {
+    const vars = p.variants || []
+    let priceText = 'Rs 0'
+    if (vars.length === 1) priceText = rs(vars[0].price)
+    else if (vars.length > 1) {
+      const minP = Math.min(...vars.map((v) => Number(v.price || 0)))
+      priceText = 'From ' + rs(minP)
+    }
+    const hasOptions = vars.length > 1
+    const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
+    const isOut = p.track_stock && totalStock <= 0
+    return `<div class="pos-card" data-a="posclickprod" data-id="${esc(p.id)}" style="${isOut ? 'opacity:0.6;' : ''}">
+      ${p.image ? `<img src="${esc(p.image)}" alt="">` : `<div class="pos-img-ph">🍔</div>`}
+      <div class="title">${esc(p.name)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
+        <span class="price">${priceText}</span>
+        ${hasOptions ? `<span style="font-size:11px;background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:4px;font-weight:700">${vars.length} options</span>` : ''}
+      </div>
+      ${p.track_stock ? `<div style="font-size:11px;font-weight:600;color:${isOut ? '#DC2626' : '#059669'}">${isOut ? '🔴 Out of stock' : `📦 ${totalStock} in stock`}</div>` : ''}
+    </div>`
+  }).join('') : `<div style="grid-column:1/-1;padding:40px;text-align:center" class="muted">No items match your search.</div>`
+
+  // Cart rows
+  const cartRowsHtml = billCart.length ? billCart.map((i) => `
+    <div class="pos-cart-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <b style="font-size:14px;color:#1C1917">${esc(i.name)}</b>
+          <div style="font-size:12px;color:#78716C;margin-top:2px">${rs(i.price)} each</div>
+          ${i.note ? `<div style="font-size:12px;color:#9A3412;font-weight:700;margin-top:2px">&raquo; ${esc(i.note)}</div>` : ''}
+        </div>
+        <button data-a="posrmvcart" data-uid="${esc(i.uid)}" style="border:0;background:transparent;color:#9CA3AF;cursor:pointer;font-size:16px;padding:2px 6px">✕</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="pos-qty-btn" data-a="posqtyminus" data-uid="${esc(i.uid)}">-</button>
+          <span style="font-weight:800;font-size:14px;min-width:24px;text-align:center">${i.qty}</span>
+          <button class="pos-qty-btn" data-a="posqtyplus" data-uid="${esc(i.uid)}">+</button>
+        </div>
+        <span style="font-weight:900;font-size:14px;color:#1C1917">${rs(i.qty * i.price)}</span>
+      </div>
+      <div>
+        <button data-a="posopennotemodal" data-uid="${esc(i.uid)}" style="border:0;background:transparent;color:#9A3412;font-size:12px;font-weight:700;cursor:pointer;padding:2px 0">
+          ${i.note ? '✏️ Edit Kitchen Note' : '+ Kitchen note'}
+        </button>
+      </div>
+    </div>
+  `).join('') : `<div style="text-align:center;padding:36px 12px" class="muted"><div style="font-size:32px;margin-bottom:8px">🛒</div>Tap any item to start customer order</div>`
+
+  const toastHtml = billToast ? `
+    <div style="background:#DCFCE7;border:1px solid #86EFAC;color:#166534;border-radius:10px;padding:12px 16px;font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span>${esc(billToast)}</span>
+      <button data-a="posclosetoast" style="border:0;background:transparent;color:#166534;font-weight:800;cursor:pointer">✕</button>
+    </div>` : ''
+
+  main.innerHTML = `
+    <div class="pad" style="max-width:1400px">
+      ${licStrip()}
+      ${toastHtml}
+
+      <!-- Top Dine-in Tables Bar -->
+      <div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <span style="font-size:13px;font-weight:700;color:#57534E">🍽️ Quick Tables (Click to select or hold):</span>
+          <span style="font-size:12px;color:#78716C">🟢 Available • 🔴 Held Order</span>
+        </div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
+          ${tablesHtml}
+        </div>
+      </div>
+
+      <!-- Controls: Order Type, Waiter, Guests, Search -->
+      <div class="card" style="padding:12px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Type:
+          <select id="posOrderType" class="inp" style="min-height:38px;padding:0 8px">
+            <option value="Dine-in" ${billOrderType === 'Dine-in' ? 'selected' : ''}>🍽️ Dine-in</option>
+            <option value="Takeaway" ${billOrderType === 'Takeaway' ? 'selected' : ''}>🥡 Takeaway</option>
+            <option value="Delivery" ${billOrderType === 'Delivery' ? 'selected' : ''}>🚚 Delivery</option>
+          </select>
+        </label>
+
+        ${billOrderType === 'Dine-in' ? `
+        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Table:
+          <input id="posTableInp" class="inp" value="${esc(billTable)}" placeholder="e.g. Table 1" style="min-height:38px;width:110px;padding:0 8px">
+        </label>` : ''}
+
+        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Waiter:
+          <select id="posWaiter" class="inp" style="min-height:38px;padding:0 8px">
+            <option value="">(None)</option>
+            ${waitersList.map((w) => `<option value="${esc(w.name)}" ${billWaiter === w.name ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}
+          </select>
+        </label>
+
+        <label style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">Guests:
+          <input id="posGuests" type="number" min="1" value="${billGuests}" class="inp" style="min-height:38px;width:60px;padding:0 8px;text-align:center">
+        </label>
+
+        <div style="flex:1;min-width:200px">
+          <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="🔍 Search product..." class="inp" style="width:100%;min-height:38px">
+        </div>
+      </div>
+
+      <!-- Main POS Content: Products Left, Cart Right -->
+      <div class="pos-container">
+        <!-- Products Column -->
+        <div class="pos-left">
+          <div class="pos-cats">${catsHtml}</div>
+          <div class="pos-grid">${prodsHtml}</div>
+        </div>
+
+        <!-- Cart Panel (Right Column on Desktop, Modal on Mobile) -->
+        <div class="pos-right" id="posCartPanel">
+          <div class="pos-cart-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFE8DA;padding-bottom:10px">
+              <div>
+                <b style="font-size:17px;color:#1C1917">Customer Order</b>
+                <div style="font-size:12px;color:#78716C;margin-top:2px">
+                  ${esc(billOrderType)} ${billOrderType === 'Dine-in' && billTable ? `• ${esc(billTable)}` : ''} ${billWaiter ? `• ${esc(billWaiter)}` : ''}
+                </div>
+              </div>
+              <button data-a="posclosemobcart" style="border:0;background:#F3F4F6;border-radius:6px;padding:6px 10px;font-weight:800;cursor:pointer">✕ Close</button>
+            </div>
+
+            <div class="pos-cart-items">${cartRowsHtml}</div>
+
+            <!-- Cart Calculation Section -->
+            <div style="border-top:1px solid #EFE8DA;padding-top:10px;display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span class="muted">Subtotal:</span>
+                <b>${rs(subtotal)}</b>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+                <span class="muted">Discount (Rs):</span>
+                <input id="posDiscount" type="number" min="0" value="${billDiscount || ''}" placeholder="0" class="inp" style="min-height:32px;width:90px;text-align:right;padding:2px 8px">
+              </div>
+              ${taxPct > 0 ? `
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span class="muted">Tax (${taxPct}%):</span>
+                <b>${rs(tax)}</b>
+              </div>` : ''}
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+                <span class="muted">Pay via:</span>
+                <select id="posPayment" class="inp" style="min-height:32px;padding:2px 8px">
+                  <option value="Cash" ${billPayment === 'Cash' ? 'selected' : ''}>💵 Cash</option>
+                  <option value="Online / Card" ${billPayment === 'Online / Card' ? 'selected' : ''}>💳 Online / Card</option>
+                </select>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;border-top:2px solid #1C1917;padding-top:8px;margin-top:4px">
+                <span>TOTAL:</span>
+                <span style="color:#9A3412">${rs(total)}</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display:grid;gap:8px;margin-top:6px">
+              <button class="pri" data-a="posprintfinal" style="width:100%;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+                🖨️ Print Final Bill
+              </button>
+              <div style="display:flex;gap:8px">
+                <button class="btn" data-a="posprintkot" style="flex:1;justify-content:center;font-weight:700" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+                  📋 Print KOT
+                </button>
+                ${billOrderType === 'Dine-in' ? `
+                <button class="btn" data-a="posholdorder" style="flex:1;justify-content:center;font-weight:700" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+                  💾 Hold Table
+                </button>` : ''}
+                <button class="btn red" data-a="posclearcart" style="justify-content:center" title="Clear order">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  `
 }
 
 // ---------- Dashboard ----------
@@ -784,9 +1337,205 @@ async function viewSettings() {
     <div id="smsg"></div><button class="pri" data-a="savesettings">Save settings</button></div></div>`
 }
 
+// ---------- Staff & Waiters ----------
+let staffData = { users: [], waiters: [] }
+let staffMsg = ''
+
+async function loadStaff() {
+  const [uRes, wRes] = await Promise.all([
+    api('/api/users'),
+    api('/api/waiters')
+  ])
+  staffData.users = uRes.ok ? uRes.users : []
+  staffData.waiters = wRes.ok ? wRes.waiters : []
+}
+
+function drawStaff() {
+  const users = staffData.users || []
+  const waiters = staffData.waiters || []
+
+  const usersHtml = users.length ? users.map((u) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #EFE8DA;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px">
+          ${esc(u.name)}
+          <span style="font-size:11px;padding:2px 8px;border-radius:6px;background:${u.role === 'admin' ? '#FEF3C7' : u.role === 'manager' ? '#EFF6FF' : '#F3E8FF'};color:${u.role === 'admin' ? '#92400E' : u.role === 'manager' ? '#1E40AF' : '#6B21A8'};font-weight:800;text-transform:uppercase">
+            ${esc(u.role)}
+          </span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:6px;background:${u.is_active ? '#DCFCE7' : '#FEE2E2'};color:${u.is_active ? '#166534' : '#991B1B'};font-weight:800">
+            ${u.is_active ? '🟢 ACTIVE' : '🔴 BLOCKED'}
+          </span>
+        </div>
+        <div style="font-size:13px;color:#78716C;margin-top:2px">Username: <b>${esc(u.username)}</b></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${u.role !== 'admin' ? `
+          <button class="btn" style="background:${u.is_active ? '#FEF2F2' : '#F0FDF4'};color:${u.is_active ? '#DC2626' : '#166534'};border-color:${u.is_active ? '#FCA5A5' : '#BBF7D0'};font-weight:700" data-a="tgluser" data-id="${u.id}" data-act="${u.is_active ? '0' : '1'}">
+            ${u.is_active ? '🚫 Block' : '✅ Unblock'}
+          </button>
+        ` : ''}
+        <button class="btn" data-a="pwuser" data-id="${u.id}" data-name="${esc(u.name)}">
+          🔑 Reset Password
+        </button>
+        ${u.role !== 'admin' ? `
+          <button class="btn red" data-a="deluser" data-id="${u.id}" data-name="${esc(u.name)}">
+            🗑️ Delete
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `).join('') : '<p class="muted">No staff members found.</p>'
+
+  const waitersHtml = waiters.length ? waiters.map((w) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #EFE8DA">
+      <div style="font-weight:600;font-size:15px">🍽️ ${esc(w.name)}</div>
+      <button class="btn red" data-a="delwaiter" data-id="${w.id}" data-name="${esc(w.name)}">
+        🗑️ Remove
+      </button>
+    </div>
+  `).join('') : '<p class="muted">No waiters added yet.</p>'
+
+  main.innerHTML = `<div class="pad">
+    ${licStrip()}
+    <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:24px">🚨</span>
+      <div>
+        <b style="color:#92400E;font-size:15px">Manager Emergency Control:</b>
+        <div style="color:#78350F;font-size:13px;margin-top:2px">
+          In case of emergency or dispute, you can instantly <b>Block / Deactivate</b> any cashier or change their password from here. The Desktop POS will sync and lock them out immediately.
+        </div>
+      </div>
+    </div>
+
+    ${staffMsg ? `<div class="err" style="background:#FEF2F2;border:1px solid #FCA5A5;padding:10px 14px;border-radius:8px">${esc(staffMsg)}</div>` : ''}
+
+    <div class="row top">
+      <div class="card grow2">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3>👥 Cashiers & POS Users</h3>
+            <div class="muted" style="font-size:13px">Accounts that can log in to the Desktop counter</div>
+          </div>
+          <button class="pri" data-a="adduser" style="min-height:38px;padding:0 14px;font-size:13px">+ Add Cashier</button>
+        </div>
+        <div>${usersHtml}</div>
+      </div>
+
+      <div class="card grow1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3>🍽️ Waiters</h3>
+            <div class="muted" style="font-size:13px">Assigned to Dine-in tables</div>
+          </div>
+          <button class="pri" data-a="addwaiter" style="min-height:38px;padding:0 14px;font-size:13px">+ Add Waiter</button>
+        </div>
+        <div>${waitersHtml}</div>
+      </div>
+    </div>
+  </div>`
+}
+
+async function viewStaff() {
+  main.innerHTML = '<div class="pad muted">Loading staff...</div>'
+  await loadStaff()
+  drawStaff()
+}
+
 // ---------- actions ----------
 const A = {
   nav: (d) => go(d.p),
+  adduser: () => {
+    showAppModal(`
+      <h3>➕ Add Cashier / User</h3>
+      <label class="f">Full Name<input class="inp" id="m_uname" placeholder="e.g. Muhammad Ali"></label>
+      <label class="f">Username (used to log in)<input class="inp" id="m_uuser" placeholder="e.g. ali123"></label>
+      <label class="f">Role
+        <select class="inp" id="m_urole">
+          <option value="cashier">Cashier</option>
+          <option value="manager">Manager</option>
+        </select>
+      </label>
+      <label class="f">Password (min 6 characters)<input class="inp" id="m_upw" type="password"></label>
+      <div id="m_err" class="err"></div>
+      <div class="mrow">
+        <button class="btn" data-a="closem">Cancel</button>
+        <button class="pri" data-a="saveuser">Save User</button>
+      </div>
+    `)
+  },
+  saveuser: async () => {
+    const name = $('m_uname').value.trim()
+    const username = $('m_uuser').value.trim()
+    const role = $('m_urole').value
+    const password = $('m_upw').value
+    const r = await api('/api/users', { name, username, role, password })
+    if (!r.ok) { $('m_err').textContent = r.message; return }
+    $('modal').hidden = true
+    await loadStaff()
+    drawStaff()
+  },
+  tgluser: async (d) => {
+    const toActive = d.act === '1'
+    if (!toActive && !confirm('Emergency: Are you sure you want to BLOCK this cashier immediately?\\n\\nThey will be unable to log in to the POS.')) return
+    const r = await api(`/api/users/${d.id}/status`, { is_active: toActive }, 'PUT')
+    if (!r.ok) staffMsg = r.message
+    else staffMsg = ''
+    await loadStaff()
+    drawStaff()
+  },
+  pwuser: (d) => {
+    showAppModal(`
+      <h3>🔑 Reset Password for ${esc(d.name)}</h3>
+      <label class="f">New Password (min 6 characters)<input class="inp" id="m_newpw" type="password"></label>
+      <div id="m_err" class="err"></div>
+      <div class="mrow">
+        <button class="btn" data-a="closem">Cancel</button>
+        <button class="pri" data-a="savepw" data-id="${d.id}">Update Password</button>
+      </div>
+    `)
+  },
+  savepw: async (d) => {
+    const password = $('m_newpw').value
+    const r = await api(`/api/users/${d.id}/password`, { password }, 'PUT')
+    if (!r.ok) { $('m_err').textContent = r.message; return }
+    $('modal').hidden = true
+    alert('Password updated successfully! The cashier must now use this new password.')
+  },
+  deluser: async (d) => {
+    if (!confirm(`Permanently remove user "${d.name}"?`)) return
+    const r = await api(`/api/users/${d.id}`, undefined, 'DELETE')
+    if (!r.ok) staffMsg = r.message
+    else staffMsg = ''
+    await loadStaff()
+    drawStaff()
+  },
+  addwaiter: () => {
+    showAppModal(`
+      <h3>🍽️ Add Waiter</h3>
+      <label class="f">Waiter Name<input class="inp" id="m_wname" placeholder="e.g. Aslam"></label>
+      <div id="m_err" class="err"></div>
+      <div class="mrow">
+        <button class="btn" data-a="closem">Cancel</button>
+        <button class="pri" data-a="savewaiter">Save Waiter</button>
+      </div>
+    `)
+  },
+  savewaiter: async () => {
+    const name = $('m_wname').value.trim()
+    const r = await api('/api/waiters', { name })
+    if (!r.ok) { $('m_err').textContent = r.message; return }
+    $('modal').hidden = true
+    await loadStaff()
+    drawStaff()
+  },
+  delwaiter: async (d) => {
+    if (!confirm(`Remove waiter "${d.name}"?`)) return
+    const r = await api(`/api/waiters/${d.id}`, undefined, 'DELETE')
+    if (!r.ok) staffMsg = r.message
+    else staffMsg = ''
+    await loadStaff()
+    drawStaff()
+  },
   period: (d) => { rep.period = d.p; repControls(); loadReport() },
   more: () => { rep.limit += 100; drawReport() },
   csv: exportCsv,
@@ -861,6 +1610,219 @@ const A = {
     for (const k of ['restaurant_name', 'address', 'phone', 'tax_percent', 'footer']) body[k] = $('st_' + k).value
     const r = await api('/api/settings', body)
     $('smsg').innerHTML = `<span class="${r.ok ? 'ok' : 'err'}">${esc(r.ok ? 'Settings saved' : r.message)}</span>`
+  },
+  poscat: (d) => { billCat = d.id; drawBilling() },
+  posseltable: (d) => {
+    billTable = d.t
+    billOrderType = 'Dine-in'
+    if (billHeldTables[d.t]) {
+      const h = billHeldTables[d.t]
+      billCart = JSON.parse(JSON.stringify(h.cart || []))
+      billWaiter = h.waiter || ''
+      billGuests = h.guests || 1
+      billDiscount = h.discount || 0
+      billPayment = h.payment || 'Cash'
+      billToast = `Loaded active order for ${d.t}`
+    }
+    drawBilling()
+  },
+  posclickprod: (d) => {
+    const p = (catalog.products || []).find((x) => x.id === d.id)
+    if (!p) return
+    const vars = p.variants || []
+    if (vars.length <= 1) {
+      const v = vars[0] || { id: p.id, name: '', price: 0 }
+      addCartItem(p, v)
+    } else {
+      const buttons = vars.map((v) => `
+        <button class="btn" data-a="pospickvar" data-pid="${esc(p.id)}" data-vid="${esc(v.id)}" style="min-height:50px;padding:12px 16px;justify-content:space-between;width:100%;font-size:15px;font-weight:700">
+          <span>${esc(v.name || p.name)}</span>
+          <b style="color:#9A3412">${rs(v.price)}</b>
+        </button>
+      `).join('')
+      showAppModal(`
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #E5E7EB;padding-bottom:10px">
+          <b style="font-size:18px">Select Option: ${esc(p.name)}</b>
+          <button data-a="closem" style="border:0;background:transparent;font-size:20px;cursor:pointer">✕</button>
+        </div>
+        <div style="display:grid;gap:10px;margin-top:14px">
+          ${buttons}
+        </div>
+      `)
+    }
+  },
+  pospickvar: (d) => {
+    const p = (catalog.products || []).find((x) => x.id === d.pid)
+    if (!p) return
+    const v = (p.variants || []).find((x) => x.id === d.vid)
+    if (!v) return
+    $('modal').hidden = true
+    addCartItem(p, v)
+  },
+  posqtyplus: (d) => {
+    const item = billCart.find((x) => x.uid === d.uid)
+    if (item) { item.qty++; drawBilling() }
+  },
+  posqtyminus: (d) => {
+    const item = billCart.find((x) => x.uid === d.uid)
+    if (item) {
+      if (item.qty > 1) item.qty--
+      else billCart = billCart.filter((x) => x.uid !== d.uid)
+      drawBilling()
+    }
+  },
+  posrmvcart: (d) => {
+    billCart = billCart.filter((x) => x.uid !== d.uid)
+    drawBilling()
+  },
+  posclearcart: () => {
+    if (!billCart.length || confirm('Clear current customer order?')) {
+      billCart = []
+      billDiscount = 0
+      drawBilling()
+    }
+  },
+  posholdorder: () => {
+    if (!billCart.length) return
+    billHeldTables[billTable] = {
+      cart: JSON.parse(JSON.stringify(billCart)),
+      waiter: billWaiter,
+      guests: billGuests,
+      discount: billDiscount,
+      payment: billPayment
+    }
+    billToast = `Order held on ${billTable}!`
+    billCart = []
+    billDiscount = 0
+    drawBilling()
+  },
+  posopennotemodal: (d) => {
+    const item = billCart.find((x) => x.uid === d.uid)
+    if (!item) return
+    const TAGS = [
+      '🥡 PACK / PARCEL (Takeaway)',
+      '🍽️ DINE-IN (Serve on Table)',
+      '🌶️ Extra Spicy',
+      '🟢 Less Spicy / Mild',
+      '❌ No Onion',
+      '🧂 Extra Sauce / Raita',
+      '🔥 Crispy'
+    ]
+    const tagsHtml = TAGS.map((t) => `
+      <button class="btn" data-a="posappendtag" data-tag="${esc(t)}" style="min-height:34px;font-size:12px;font-weight:700;border-radius:6px">
+        ${esc(t)}
+      </button>
+    `).join('')
+
+    showAppModal(`
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #E5E7EB;padding-bottom:10px">
+        <b style="font-size:17px">Kitchen Note & Packaging - ${esc(item.name)}</b>
+        <button data-a="closem" style="border:0;background:transparent;font-size:20px;cursor:pointer">✕</button>
+      </div>
+      <div style="font-size:13px;color:#78716C;margin-top:10px">Quick Packaging & Taste tags:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        ${tagsHtml}
+      </div>
+      <label class="f" style="margin-top:12px">Custom Kitchen Note:
+        <input id="posNoteInp" class="inp" value="${esc(item.note || '')}" placeholder="e.g. 2 table pr, 1 pack, less oil...">
+      </label>
+      ${item.qty > 1 ? `
+      <div style="background:#FFFBEB;border:1px dashed #F59E0B;border-radius:10px;padding:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span style="font-size:13px;color:#92400E"><b>Customer wants 1 separate packed?</b></span>
+        <button class="btn" data-a="possplitpacked" data-uid="${esc(item.uid)}" style="background:#FEF3C7;border-color:#F59E0B;color:#92400E;font-weight:800;font-size:12px">
+          ✂️ Split 1 qty as Packed
+        </button>
+      </div>` : ''}
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="pri" data-a="possavenote" data-uid="${esc(item.uid)}" style="flex:1">Save Note</button>
+        <button class="btn" data-a="closem">Cancel</button>
+      </div>
+    `)
+  },
+  posappendtag: (d) => {
+    const inp = $('posNoteInp')
+    if (inp) {
+      const cur = inp.value.trim()
+      inp.value = cur ? cur + ', ' + d.tag : d.tag
+    }
+  },
+  possplitpacked: (d) => {
+    const item = billCart.find((x) => x.uid === d.uid)
+    if (!item || item.qty <= 1) return
+    item.qty--
+    const packedItem = {
+      ...item,
+      uid: Date.now() + Math.random().toString(36).substr(2, 4),
+      qty: 1,
+      note: '[🥡 PACK / PARCEL]'
+    }
+    billCart.push(packedItem)
+    $('modal').hidden = true
+    drawBilling()
+  },
+  possavenote: (d) => {
+    const item = billCart.find((x) => x.uid === d.uid)
+    if (item && $('posNoteInp')) {
+      item.note = $('posNoteInp').value.trim()
+    }
+    $('modal').hidden = true
+    drawBilling()
+  },
+  posprintfinal: async () => {
+    if (!billCart.length) return
+    const subtotal = billCart.reduce((s, i) => s + (i.qty * i.price), 0)
+    const taxPct = Number(settingsCache.tax_percent || 0)
+    const taxable = Math.max(0, subtotal - billDiscount)
+    const tax = taxPct > 0 ? (taxable * (taxPct / 100)) : 0
+    const total = Math.max(0, taxable + tax)
+
+    const payload = {
+      order_type: billOrderType,
+      table_name: billOrderType === 'Dine-in' ? billTable : '',
+      waiter_name: billWaiter,
+      guests: Number(billGuests) || 1,
+      subtotal,
+      discount: billDiscount,
+      tax,
+      total,
+      payment_method: billPayment,
+      items: billCart
+    }
+
+    const r = await api('/api/orders', payload)
+    if (!r.ok) {
+      alert(r.message || 'Failed to save bill')
+      return
+    }
+
+    const html = buildOnlineReceiptHtml(r.bill, settingsCache)
+    printThermalHtml(html)
+
+    delete billHeldTables[billTable]
+    billToast = `✅ Bill #${pad(r.bill.bill_no)} saved & printed successfully!`
+    billCart = []
+    billDiscount = 0
+    drawBilling()
+    loadCatalog()
+  },
+  posprintkot: () => {
+    if (!billCart.length) return
+    const html = buildOnlineKotHtml(billCart, { table_name: billOrderType === 'Dine-in' ? billTable : billOrderType, waiter_name: billWaiter }, settingsCache)
+    printThermalHtml(html)
+    billToast = '📋 KOT printed for Kitchen!'
+    drawBilling()
+  },
+  togglemobcart: () => {
+    const panel = $('posCartPanel')
+    if (panel) panel.classList.toggle('mob-open')
+  },
+  posclosemobcart: () => {
+    const panel = $('posCartPanel')
+    if (panel) panel.classList.remove('mob-open')
+  },
+  posclosetoast: () => {
+    billToast = ''
+    drawBilling()
   }
 }
 
@@ -873,10 +1835,17 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('input', (e) => {
   if (e.target.id === 'psearch') { prodSearch = e.target.value; $('plist').innerHTML = productListHtml() }
+  if (e.target.id === 'posSearch') { billSearch = e.target.value; drawBilling() }
+  if (e.target.id === 'posDiscount') { billDiscount = Math.max(0, Number(e.target.value) || 0); drawBilling() }
+  if (e.target.id === 'posTableInp') { billTable = e.target.value; }
+  if (e.target.id === 'posGuests') { billGuests = Math.max(1, parseInt(e.target.value, 10) || 1); }
 })
 
 document.addEventListener('change', async (e) => {
   const id = e.target.id
+  if (id === 'posOrderType') { billOrderType = e.target.value; drawBilling() }
+  if (id === 'posWaiter') { billWaiter = e.target.value; }
+  if (id === 'posPayment') { billPayment = e.target.value; }
   if (id === 'pf' && e.target.files[0]) { readDraft(); draft.image = await resizeImage(e.target.files[0]); drawModal('') }
   if (id === 'rdate') { rep.date = e.target.value; loadReport() }
   if (id === 'rmonth') { rep.month = e.target.value; loadReport() }
@@ -906,9 +1875,10 @@ async function init() {
     $('logout').textContent = 'Back to admin'
     $('mobLogout').textContent = 'Back to admin'
   }
-  $('nav').innerHTML = NAV.map((n) => `<button class="nav" data-a="nav" data-p="${n}">${n}</button>`).join('')
+  const NAV_ICONS = { Billing: '🧾', Dashboard: '📊', Products: '🍔', Reports: '📑', Staff: '👥', Settings: '⚙️' }
+  $('nav').innerHTML = NAV.map((n) => `<button class="nav" data-a="nav" data-p="${n}"><span style="font-size:16px">${NAV_ICONS[n] || ''}</span> ${n}</button>`).join('')
   $('shell').hidden = false
-  go('Dashboard')
+  go('Billing')
 }
 init()
 

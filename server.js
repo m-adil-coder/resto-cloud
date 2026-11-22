@@ -29,6 +29,7 @@ app.get('/download', (req, res) => {
 
 // ---------- helpers ----------
 const today = () => new Date(Date.now() + 5 * 3600e3).toISOString().slice(0, 10) // Pakistan date
+const nowPkt = () => new Date(Date.now() + 5 * 3600e3).toISOString().replace('T', ' ').slice(0, 19)
 const addDays = (d, n) => {
   const x = new Date(d + 'T00:00:00Z')
   x.setUTCDate(x.getUTCDate() + n)
@@ -282,10 +283,14 @@ app.post(
     const list = Array.isArray(req.body?.bills) ? req.body.bills.slice(0, 200) : []
     const accepted = []
     const rejected = []
+    const voidedList = Array.isArray(req.body?.voided) ? req.body.voided.filter(isUuid) : []
 
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
+      if (voidedList.length > 0) {
+        await client.query('DELETE FROM bills WHERE restaurant_id = $1 AND id = ANY($2::uuid[])', [r.id, voidedList])
+      }
       for (const b of list) {
         const okShape =
           b &&
@@ -335,7 +340,104 @@ app.post(
     }
 
     await pool.query('UPDATE restaurants SET last_seen = now() WHERE id = $1', [r.id])
-    res.json({ ok: true, accepted, rejected, license: lic })
+    res.json({ ok: true, accepted, rejected, voided: voidedList, license: lic })
+  })
+)
+
+// ---------- online / mobile POS billing order creation ----------
+app.post(
+  '/api/orders',
+  auth('restaurant'),
+  wrap(async (req, res) => {
+    const r = await getRestaurant(req.auth.rid)
+    if (!r) return bad(res, 'Please log in again', 401)
+    const lic = licenseOf(r)
+    if (lic.state !== 'active') {
+      return res.status(403).json({ ok: false, license: lic, message: lic.message || 'Account is not active' })
+    }
+
+    const b = req.body || {}
+    const rawItems = Array.isArray(b.items) ? b.items : []
+    const items = rawItems.map((i) => ({
+      name: clean(i.name, 120),
+      qty: Math.max(1, Math.floor(num(i.qty))),
+      price: num(i.price),
+      note: clean(i.note, 200) || '',
+      product_id: isUuid(i.product_id) ? i.product_id : null,
+      variant_id: isUuid(i.variant_id) ? i.variant_id : null
+    }))
+    if (!items.length) return bad(res, 'Order must contain at least one item')
+
+    const billId = isUuid(b.id) ? b.id : crypto.randomUUID()
+
+    const maxRes = await pool.query(
+      'SELECT COALESCE(MAX(bill_no), 0) + 1 AS next_bill_no FROM bills WHERE restaurant_id = $1',
+      [r.id]
+    )
+    const billNo = Number(maxRes.rows[0].next_bill_no)
+    const createdAt = nowPkt()
+
+    const subtotal = num(b.subtotal) || items.reduce((s, i) => s + i.qty * i.price, 0)
+    const discount = num(b.discount) || 0
+    const tax = num(b.tax) || 0
+    const total = num(b.total) || Math.max(0, subtotal - discount + tax)
+    const orderType = clean(b.order_type, 30) || 'Dine-in'
+    const tableName = clean(b.table_name, 30) || ''
+    const waiterName = clean(b.waiter_name, 60) || ''
+    const guests = Math.max(1, Math.floor(num(b.guests)))
+    const paymentMethod = clean(b.payment_method, 30) || 'Cash'
+
+    await pool.query(
+      `INSERT INTO bills (restaurant_id, id, bill_no, created_at, order_type, table_name, waiter_name, guests,
+         subtotal, discount, tax, total, payment_method, items)
+       VALUES ($1, $2, $3, $4::timestamp, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb)
+       ON CONFLICT (restaurant_id, id) DO NOTHING`,
+      [
+        r.id,
+        billId,
+        billNo,
+        createdAt,
+        orderType,
+        tableName,
+        waiterName,
+        guests,
+        subtotal,
+        discount,
+        tax,
+        total,
+        paymentMethod,
+        JSON.stringify(items)
+      ]
+    )
+
+    // Deduct stock for tracked items if any
+    for (const item of items) {
+      if (item.variant_id) {
+        await pool.query(
+          'UPDATE variants SET stock = GREATEST(0, stock - $1), updated_at = now() WHERE restaurant_id = $2 AND id = $3',
+          [item.qty, r.id, item.variant_id]
+        )
+      }
+    }
+
+    res.json({
+      ok: true,
+      bill: {
+        id: billId,
+        bill_no: billNo,
+        created_at: createdAt,
+        order_type: orderType,
+        table_name: tableName,
+        waiter_name: waiterName,
+        guests,
+        subtotal,
+        discount,
+        tax,
+        total,
+        payment_method: paymentMethod,
+        items
+      }
+    })
   })
 )
 
@@ -405,6 +507,35 @@ app.post(
         )
       }
 
+      for (const u of arr(b.users, 200)) {
+        if (!isUuid(u && u.id)) continue
+        const name = clean(u.name, 60)
+        const username = clean(u.username, 60).toLowerCase()
+        if (!name || !username) continue
+        await client.query(
+          `INSERT INTO users (restaurant_id, id, name, username, password_hash, role, is_active)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)
+           ON CONFLICT (restaurant_id, id) DO UPDATE
+           SET name = EXCLUDED.name, username = EXCLUDED.username,
+               password_hash = CASE WHEN EXCLUDED.password_hash <> '' THEN EXCLUDED.password_hash ELSE users.password_hash END,
+               role = EXCLUDED.role, is_active = EXCLUDED.is_active`,
+          [rid, u.id, name, username, u.password_hash || '', clean(u.role || 'cashier', 20), on(u.is_active)]
+        )
+      }
+
+      for (const w of arr(b.waiters, 200)) {
+        if (!isUuid(w && w.id)) continue
+        const name = clean(w.name, 60)
+        if (!name) continue
+        await client.query(
+          `INSERT INTO waiters (restaurant_id, id, name, is_active)
+           VALUES ($1,$2,$3,$4)
+           ON CONFLICT (restaurant_id, id) DO UPDATE
+           SET name = EXCLUDED.name, is_active = EXCLUDED.is_active`,
+          [rid, w.id, name, on(w.is_active)]
+        )
+      }
+
       if (b.settings && typeof b.settings === 'object') {
         for (const k of SETTING_KEYS) {
           if (b.settings[k] === undefined) continue
@@ -431,7 +562,7 @@ app.post(
     // everything that changed on the server since the desktop last asked
     const since = b.since && !Number.isNaN(Date.parse(b.since)) ? new Date(b.since).toISOString() : '1970-01-01T00:00:00Z'
     const t = (await pool.query('SELECT clock_timestamp() AS t')).rows[0].t
-    const [c, p, v, s] = await Promise.all([
+    const [c, p, v, s, u, w, bi] = await Promise.all([
       pool.query('SELECT id, name, is_active FROM categories WHERE restaurant_id = $1 AND synced_at > $2::timestamptz', [rid, since]),
       pool.query(
         'SELECT id, category_id, name, image, track_stock, stock, min_stock, is_active FROM products WHERE restaurant_id = $1 AND synced_at > $2::timestamptz',
@@ -442,7 +573,14 @@ app.post(
          WHERE restaurant_id = $1 AND synced_at > $2::timestamptz`,
         [rid, since]
       ),
-      pool.query('SELECT key, value FROM settings WHERE restaurant_id = $1 AND synced_at > $2::timestamptz', [rid, since])
+      pool.query('SELECT key, value FROM settings WHERE restaurant_id = $1 AND synced_at > $2::timestamptz', [rid, since]),
+      pool.query('SELECT id, name, username, password_hash, role, is_active FROM users WHERE restaurant_id = $1 AND synced_at > $2::timestamptz', [rid, since]),
+      pool.query('SELECT id, name, is_active FROM waiters WHERE restaurant_id = $1 AND synced_at > $2::timestamptz', [rid, since]),
+      pool.query(
+        `SELECT id, bill_no, created_at, order_type, table_name, waiter_name, guests, subtotal, discount, tax, total, payment_method, items
+         FROM bills WHERE restaurant_id = $1 AND received_at > $2::timestamptz`,
+        [rid, since]
+      )
     ])
     const settings = {}
     for (const x of s.rows) if (SETTING_KEYS.includes(x.key)) settings[x.key] = x.value
@@ -455,6 +593,9 @@ app.post(
       products: p.rows,
       variants: v.rows,
       settings,
+      users: u.rows,
+      waiters: w.rows,
+      bills: bi.rows,
       license: lic
     })
   })
@@ -753,6 +894,148 @@ app.post(
         [req.auth.rid, k, clean(b[k], 200)]
       )
     }
+    res.json({ ok: true })
+  })
+)
+
+// ---------- restaurant panel: users & cashiers ----------
+app.get(
+  '/api/users',
+  auth('restaurant'),
+  wrap(async (req, res) => {
+    const { rows } = await pool.query(
+      'SELECT id, name, username, role, is_active FROM users WHERE restaurant_id = $1 ORDER BY role, lower(name)',
+      [req.auth.rid]
+    )
+    res.json({ ok: true, users: rows })
+  })
+)
+
+app.post(
+  '/api/users',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    const rid = req.auth.rid
+    const b = req.body || {}
+    const name = clean(b.name, 60)
+    const username = clean(b.username, 60).toLowerCase()
+    const password = String(b.password || '')
+    const role = ['manager', 'admin'].includes(b.role) ? b.role : 'cashier'
+
+    if (!name) return bad(res, "Enter the person's name")
+    if (!/^[a-z0-9._-]{3,}$/.test(username)) {
+      return bad(res, 'Username needs at least 3 letters or numbers, with no spaces')
+    }
+    if (password.length < 6) return bad(res, 'Password must be at least 6 characters')
+
+    const dup = await pool.query('SELECT 1 FROM users WHERE restaurant_id = $1 AND lower(username) = $2', [
+      rid,
+      username
+    ])
+    if (dup.rowCount) return bad(res, 'This username is already taken')
+
+    const id = crypto.randomUUID()
+    const hash = bcrypt.hashSync(password, 10)
+    await pool.query(
+      'INSERT INTO users (restaurant_id, id, name, username, password_hash, role, is_active) VALUES ($1,$2,$3,$4,$5,$6,TRUE)',
+      [rid, id, name, username, hash, role]
+    )
+    res.json({ ok: true, id })
+  })
+)
+
+app.put(
+  '/api/users/:id/status',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid user id')
+    const isActive = req.body?.is_active !== false
+    await pool.query('UPDATE users SET is_active = $1 WHERE restaurant_id = $2 AND id = $3', [
+      isActive,
+      req.auth.rid,
+      req.params.id
+    ])
+    res.json({ ok: true, is_active: isActive })
+  })
+)
+
+app.put(
+  '/api/users/:id/password',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid user id')
+    const password = String(req.body?.password || '')
+    if (password.length < 6) return bad(res, 'Password must be at least 6 characters')
+    const hash = bcrypt.hashSync(password, 10)
+    await pool.query('UPDATE users SET password_hash = $1 WHERE restaurant_id = $2 AND id = $3', [
+      hash,
+      req.auth.rid,
+      req.params.id
+    ])
+    res.json({ ok: true })
+  })
+)
+
+app.delete(
+  '/api/users/:id',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid user id')
+    await pool.query('DELETE FROM users WHERE restaurant_id = $1 AND id = $2', [req.auth.rid, req.params.id])
+    res.json({ ok: true })
+  })
+)
+
+// ---------- restaurant panel: waiters ----------
+app.get(
+  '/api/waiters',
+  auth('restaurant'),
+  wrap(async (req, res) => {
+    const { rows } = await pool.query(
+      'SELECT id, name, is_active FROM waiters WHERE restaurant_id = $1 AND is_active ORDER BY lower(name)',
+      [req.auth.rid]
+    )
+    res.json({ ok: true, waiters: rows })
+  })
+)
+
+app.post(
+  '/api/waiters',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    const rid = req.auth.rid
+    const name = clean(req.body?.name, 60)
+    if (!name) return bad(res, 'Enter a waiter name')
+    const dup = await pool.query(
+      'SELECT 1 FROM waiters WHERE restaurant_id = $1 AND lower(name) = lower($2) AND is_active',
+      [rid, name]
+    )
+    if (dup.rowCount) return bad(res, 'This waiter already exists')
+    const id = crypto.randomUUID()
+    await pool.query('INSERT INTO waiters (restaurant_id, id, name, is_active) VALUES ($1,$2,$3,TRUE)', [
+      rid,
+      id,
+      name
+    ])
+    res.json({ ok: true, id, name })
+  })
+)
+
+app.delete(
+  '/api/waiters/:id',
+  auth('restaurant'),
+  needActive,
+  wrap(async (req, res) => {
+    if (!isUuid(req.params.id)) return bad(res, 'Invalid id')
+    await pool.query('UPDATE waiters SET is_active = FALSE WHERE restaurant_id = $1 AND id = $2', [
+      req.auth.rid,
+      req.params.id
+    ])
     res.json({ ok: true })
   })
 )

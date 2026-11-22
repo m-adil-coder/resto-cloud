@@ -106,6 +106,27 @@ async function init() {
       PRIMARY KEY (restaurant_id, key)
     );
 
+    CREATE TABLE IF NOT EXISTS users (
+      restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      id UUID NOT NULL,
+      name TEXT NOT NULL,
+      username TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'cashier',
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+      PRIMARY KEY (restaurant_id, id)
+    );
+
+    CREATE TABLE IF NOT EXISTS waiters (
+      restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      id UUID NOT NULL,
+      name TEXT NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+      PRIMARY KEY (restaurant_id, id)
+    );
+
     -- columns and triggers used by the desktop sync
     ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
     ALTER TABLE categories ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
@@ -118,6 +139,10 @@ async function init() {
     ALTER TABLE variants   ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
     ALTER TABLE bills      ADD COLUMN IF NOT EXISTS waiter_name TEXT;
     ALTER TABLE settings   ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
+    ALTER TABLE users      ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+    ALTER TABLE users      ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
+    ALTER TABLE waiters    ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+    ALTER TABLE waiters    ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();
 
     CREATE OR REPLACE FUNCTION touch_synced_at() RETURNS trigger AS $$
     BEGIN
@@ -134,6 +159,10 @@ async function init() {
     CREATE TRIGGER t_variants_sync BEFORE INSERT OR UPDATE ON variants FOR EACH ROW EXECUTE FUNCTION touch_synced_at();
     DROP TRIGGER IF EXISTS t_settings_sync ON settings;
     CREATE TRIGGER t_settings_sync BEFORE INSERT OR UPDATE ON settings FOR EACH ROW EXECUTE FUNCTION touch_synced_at();
+    DROP TRIGGER IF EXISTS t_users_sync ON users;
+    CREATE TRIGGER t_users_sync BEFORE INSERT OR UPDATE ON users FOR EACH ROW EXECUTE FUNCTION touch_synced_at();
+    DROP TRIGGER IF EXISTS t_waiters_sync ON waiters;
+    CREATE TRIGGER t_waiters_sync BEFORE INSERT OR UPDATE ON waiters FOR EACH ROW EXECUTE FUNCTION touch_synced_at();
   `)
 }
 
