@@ -730,7 +730,9 @@ function licStrip() {
   const l = me && me.license
   if (!l || !l.message) return ''
   const red = l.state !== 'active' || (l.days_left !== null && l.days_left < 0)
-  return `<div class="lic" style="background:${red ? '#FEE2E2' : '#FEF3C7'};color:${red ? '#991B1B' : '#92400E'}">${esc(l.message)}</div>`
+  return `<div class="lic" style="background:${red ? '#FEE2E2' : '#FEF3C7'};color:${red ? '#991B1B' : '#92400E'};padding:8px 14px;border-radius:10px;font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <span>⚡ ${esc(l.message)}</span>
+  </div>`
 }
 const kpi = (a, b) => `<div class="kpi"><span>${a}</span><b>${b}</b></div>`
 const hbars = (rows) => {
@@ -1010,17 +1012,23 @@ function drawBilling() {
     const hasOptions = vars.length > 1
     const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
     const isOut = p.track_stock && totalStock <= 0
-    return `<div class="pos-card" data-a="posclickprod" data-id="${esc(p.id)}" style="${isOut ? 'opacity:0.55;' : ''}">
+    const inCartQty = billCart.filter((x) => x.id === p.id).reduce((sum, item) => sum + item.qty, 0)
+    const isItemInCart = inCartQty > 0
+
+    return `<div class="pos-card ${isItemInCart ? 'in-cart' : ''}" data-a="posclickprod" data-id="${esc(p.id)}" style="${isOut ? 'opacity:0.55;' : ''}${isItemInCart ? 'border-color:#9A3412;box-shadow:0 0 0 1px #9A3412;' : ''}">
       <div class="pos-card-img-wrap">
-        ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<div class="pos-card-img-ph">🍔</div>`}
+        ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<div class="pos-card-img-ph">🍽️</div>`}
         ${p.track_stock ? `<span style="position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;background:${isOut ? '#FEE2E2' : '#DCFCE7'};color:${isOut ? '#991B1B' : '#166534'}">${isOut ? 'Out of stock' : `${totalStock} in stock`}</span>` : ''}
-        ${hasOptions ? `<span style="position:absolute;bottom:6px;left:6px;font-size:10px;background:rgba(0,0,0,0.65);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700">${vars.length} options</span>` : ''}
+        ${isItemInCart ? `<span style="position:absolute;top:6px;right:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:10px;background:#9A3412;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.25)">✓ ${inCartQty}</span>` : ''}
+        ${hasOptions ? `<span style="position:absolute;bottom:6px;left:6px;font-size:10px;background:rgba(0,0,0,0.7);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700">${vars.length} options</span>` : ''}
       </div>
       <div class="pos-card-body">
         <div class="pos-card-title">${esc(p.name)}</div>
         <div class="pos-card-footer">
           <span class="pos-card-price">${priceText}</span>
-          <button class="pos-card-add-btn" data-a="posclickprod" data-id="${esc(p.id)}" title="Add to bill">+</button>
+          <button class="pos-card-add-btn" data-a="posclickprod" data-id="${esc(p.id)}" title="Add to bill">
+            ${isItemInCart ? '+' : '+'}
+          </button>
         </div>
       </div>
     </div>`
