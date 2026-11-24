@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Restaurant POS - Portal</title>
 <link rel="icon" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
@@ -228,6 +228,195 @@
   .mrow { display: flex; gap: 10px; }
   .mrow .pri { flex: 1; }
   .lic { padding: 12px 16px; border-radius: 10px; font-size: 14px; }
+
+    /* Bluetooth & Native Mobile App UI */
+  .mob-bt-btn {
+    background: #292524 !important;
+    border: 1px solid #44403C !important;
+    color: #38BDF8 !important;
+    border-radius: 8px !important;
+    padding: 5px 9px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  .mob-bt-btn.connected {
+    background: #064E3B !important;
+    border-color: #059669 !important;
+    color: #34D399 !important;
+  }
+  .pos-top-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 14px;
+    padding: 6px 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    margin-bottom: 2px;
+  }
+  .pos-table-badge-btn {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+    background: #FAF6F0 !important;
+    border: 1.5px solid #D6CEBE !important;
+    color: #1F1B16 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    flex: none !important;
+    white-space: nowrap !important;
+    font-weight: 800 !important;
+    font-size: 13.5px !important;
+    transition: all .15s !important;
+  }
+  .pos-table-badge-btn:active {
+    background: #EFE8DA !important;
+    transform: scale(0.97) !important;
+  }
+  .pos-top-search {
+    width: 100%;
+    height: 38px;
+    min-height: 38px;
+    border: 0;
+    background: transparent;
+    padding: 0 6px;
+    font-size: 14px;
+    color: #1F1B16;
+    outline: none;
+    font-family: inherit;
+  }
+  .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  @media (max-width: 768px) {
+    .pos-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 10px !important;
+    }
+  }
+  .pos-card {
+    background: #ffffff !important;
+    border: 1px solid #E8E0D5 !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    transition: transform .12s, box-shadow .12s !important;
+    position: relative !important;
+    user-select: none !important;
+  }
+  .pos-card:active {
+    transform: scale(0.97) !important;
+  }
+  .pos-card.in-cart {
+    border-color: #9A3412 !important;
+    box-shadow: 0 0 0 1.5px #9A3412, 0 3px 10px rgba(154,52,18,0.15) !important;
+  }
+  .pos-card-img-wrap {
+    width: 100% !important;
+    height: 125px !important;
+    position: relative !important;
+    background: #F7F3EA !important;
+    overflow: hidden !important;
+  }
+  .pos-card img {
+    width: 100% !important;
+    height: 125px !important;
+    object-fit: cover !important;
+    display: block !important;
+    transition: transform .2s ease !important;
+  }
+  .pos-card-img-ph {
+    width: 100% !important;
+    height: 125px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 42px !important;
+    background: #F3ECE1 !important;
+  }
+  .pos-card-body {
+    padding: 10px 10px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    flex: 1 !important;
+  }
+  .pos-card-title {
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    color: #1C1917 !important;
+    line-height: 1.35 !important;
+    min-height: 36px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  .pos-card-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-top: auto !important;
+    padding-top: 4px !important;
+  }
+  .pos-card-price {
+    font-weight: 900 !important;
+    font-size: 15px !important;
+    color: #9A3412 !important;
+  }
+  .pos-card-add-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: #9A3412 !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 3px 8px rgba(154,52,18,0.4) !important;
+    transition: transform .1s, background .15s !important;
+  }
+  .pos-card-add-btn:active {
+    transform: scale(0.9) !important;
+    background: #7C2D12 !important;
+  }
+  .mob-cart-bar {
+    display: none;
+    position: fixed;
+    bottom: 64px;
+    left: 12px;
+    right: 12px;
+    background: #181512;
+    color: #fff;
+    border-radius: 16px;
+    padding: 11px 18px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    z-index: 45;
+    cursor: pointer;
+    border: 1px solid #38332B;
+    animation: slideUp .2s ease-out;
+  }
+  .mob-cart-bar.active { display: flex !important; }
 
   /* Network status pill */
   .net-badge {
@@ -676,12 +865,15 @@
 <!-- Mobile App Header -->
 <div class="mob-header" id="mobHeader">
   <div>
-    <div class="brand-title">Restaurant POS</div>
+    <div class="brand-title" style="display:flex;align-items:center;gap:6px">
+      <span>🏪</span> <span id="mobRnameTitle">Restaurant POS</span>
+    </div>
     <div class="outlet-name" id="mobRname"></div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px">
+  <div style="display:flex;align-items:center;gap:6px">
+    <button id="btHeaderBtn" class="mob-bt-btn" data-a="openbtmodal" title="Connect Bluetooth Thermal Printer">🖨️ BT</button>
     <span id="mobNetBadge" class="net-badge">🟢 Online</span>
-    <button class="mob-out" id="mobLogout">Logout</button>
+    <button class="mob-out" id="mobLogout" title="Logout">⎋</button>
   </div>
 </div>
 
@@ -816,6 +1008,238 @@ function go(p) {
 }
 
 // ---------- Billing (POS) ----------
+
+// ================= BLUETOOTH THERMAL PRINTER DRIVER =================
+let btDevice = null
+let btCharacteristic = null
+let btPrinterName = localStorage.getItem('bt_printer_name') || ''
+let btPrinterWidth = localStorage.getItem('bt_printer_width') || '58' // '58' or '80'
+
+function updateBtStatusUi() {
+  const btn = $('btHeaderBtn')
+  if (!btn) return
+  if (btCharacteristic) {
+    btn.className = 'mob-bt-btn connected'
+    btn.innerHTML = '🖨️ ' + esc(btPrinterName || 'Printer')
+  } else if (btPrinterName) {
+    btn.className = 'mob-bt-btn'
+    btn.innerHTML = '🖨️ Reconnect'
+  } else {
+    btn.className = 'mob-bt-btn'
+    btn.innerHTML = '🖨️ Connect BT'
+  }
+}
+
+async function connectBluetoothPrinter() {
+  if (!navigator.bluetooth) {
+    alert('Web Bluetooth is supported in Chrome on Android.\n\nTip: You can also print using normal Print window to any Bluetooth / Wi-Fi printer connected to your phone!')
+    return false
+  }
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [
+        '000018f0-0000-1000-8000-00805f9b34fb', // Standard ESC/POS thermal printer service
+        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+        '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+      ]
+    })
+    const server = await device.gatt.connect()
+    let foundChar = null
+    const services = await server.getPrimaryServices()
+    for (const service of services) {
+      const chars = await service.getCharacteristics()
+      for (const c of chars) {
+        if (c.properties.write || c.properties.writeWithoutResponse) {
+          foundChar = c
+          break
+        }
+      }
+      if (foundChar) break
+    }
+    if (!foundChar) {
+      alert('Could not find write channel on this printer. Please ensure printer is powered on and paired.')
+      return false
+    }
+    btDevice = device
+    btCharacteristic = foundChar
+    btPrinterName = device.name || 'BT Printer'
+    localStorage.setItem('bt_printer_name', btPrinterName)
+    updateBtStatusUi()
+    alert('✅ Connected successfully to ' + btPrinterName + '!')
+    closeModal()
+    return true
+  } catch (err) {
+    console.error('Bluetooth error:', err)
+    if (err.name !== 'NotFoundError') {
+      alert('Bluetooth connection failed: ' + (err.message || 'Error connecting.'))
+    }
+    return false
+  }
+}
+
+function disconnectBluetoothPrinter() {
+  if (btDevice && btDevice.gatt.connected) {
+    btDevice.gatt.disconnect()
+  }
+  btDevice = null
+  btCharacteristic = null
+  btPrinterName = ''
+  localStorage.removeItem('bt_printer_name')
+  updateBtStatusUi()
+  alert('Printer disconnected.')
+  closeModal()
+}
+
+// Convert receipt into ESC/POS bytes
+function generateEscPosBytes(bill, s) {
+  const enc = new TextEncoder()
+  const bytes = []
+  const push = (arr) => { for (const b of arr) bytes.push(b) }
+  const pushText = (str) => {
+    const b = enc.encode(str)
+    for (const x of b) bytes.push(x)
+  }
+
+  const is58 = btPrinterWidth === '58'
+  const colWidth = is58 ? 32 : 48
+
+  // Initialize printer
+  push([0x1B, 0x40]) // ESC @
+  // Center align
+  push([0x1B, 0x61, 0x01])
+
+  // Header
+  push([0x1B, 0x21, 0x18]) // Double height + bold
+  pushText((s.restaurant_name || 'RESTAURANT POS') + '\n')
+  push([0x1B, 0x21, 0x00]) // Normal
+  if (s.address) pushText(s.address + '\n')
+  if (s.phone) pushText('Tel: ' + s.phone + '\n')
+  pushText('--------------------------------\n')
+
+  push([0x1B, 0x21, 0x08]) // Bold
+  pushText(`Bill #: ${pad(bill.bill_no)}\n`)
+  push([0x1B, 0x21, 0x00]) // Normal
+  pushText('--------------------------------\n')
+
+  // Left align
+  push([0x1B, 0x61, 0x00])
+  pushText(`Date: ${bill.created_at || new Date().toLocaleString()}\n`)
+  pushText(`Type: ${bill.order_type || 'Takeaway'}\n`)
+  if (bill.table_name) pushText(`Table: ${bill.table_name}\n`)
+  if (bill.waiter_name) pushText(`Waiter: ${bill.waiter_name}\n`)
+  pushText('--------------------------------\n')
+
+  // Items table
+  push([0x1B, 0x21, 0x08]) // Bold
+  pushText(is58 ? 'Item            Qty       Amount\n' : 'Item                         Qty          Amount\n')
+  push([0x1B, 0x21, 0x00]) // Normal
+  pushText('--------------------------------\n')
+
+  for (const item of (bill.items || [])) {
+    const nameLine = item.name.slice(0, is58 ? 16 : 26).padEnd(is58 ? 16 : 26)
+    const qtyLine = String(item.qty).padStart(3)
+    const amtLine = String(item.qty * item.price).padStart(is58 ? 11 : 17)
+    pushText(nameLine + qtyLine + amtLine + '\n')
+  }
+  pushText('--------------------------------\n')
+
+  // Totals
+  const padRow = (label, val) => {
+    const l = label.slice(0, 15)
+    const v = String(val)
+    return l + ' '.repeat(Math.max(1, colWidth - l.length - v.length)) + v + '\n'
+  }
+  pushText(padRow('Subtotal:', rs(bill.subtotal)))
+  if (bill.discount > 0) pushText(padRow('Discount:', '-' + rs(bill.discount)))
+  if (bill.tax > 0) pushText(padRow('Tax:', rs(bill.tax)))
+
+  push([0x1B, 0x21, 0x18]) // Double size
+  pushText(padRow('TOTAL:', rs(bill.total)))
+  push([0x1B, 0x21, 0x00]) // Normal
+  pushText('--------------------------------\n')
+
+  // Footer (Center align)
+  push([0x1B, 0x61, 0x01])
+  pushText((s.footer || 'Thank you! Visit again.') + '\n')
+  pushText('\n\n\n') // feed paper
+  push([0x1D, 0x56, 0x41, 0x10]) // Cut paper if supported
+
+  return new Uint8Array(bytes)
+}
+
+async function sendBytesToBluetooth(byteArray) {
+  if (!btCharacteristic) return false
+  const CHUNK_SIZE = 512
+  for (let i = 0; i < byteArray.length; i += CHUNK_SIZE) {
+    const chunk = byteArray.slice(i, i + CHUNK_SIZE)
+    if (btCharacteristic.writeValueWithoutResponse) {
+      await btCharacteristic.writeValueWithoutResponse(chunk)
+    } else {
+      await btCharacteristic.writeValue(chunk)
+    }
+    await new Promise((r) => setTimeout(r, 25))
+  }
+  return true
+}
+
+function openBtModal() {
+  const modal = $('modal')
+  const mbox = $('mbox')
+  if (!modal || !mbox) return
+
+  mbox.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EBE4D8;padding-bottom:10px;margin-bottom:14px">
+      <h3 style="margin:0;font-size:17px;color:#1C1917">🖨️ Bluetooth Thermal Printer</h3>
+      <button data-a="closemodal" class="btn" style="min-height:30px;padding:0 8px;font-size:12px;font-weight:700">✕</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:#FAF8F5;border:1px solid #EAE2D5;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:24px">${btCharacteristic ? '🟢' : '⚪'}</span>
+        <div>
+          <b style="font-size:14px;color:#1C1917">${btCharacteristic ? 'Connected: ' + esc(btPrinterName) : 'No Bluetooth Printer Connected'}</b>
+          <div style="font-size:12px;color:#78716C;margin-top:2px">
+            ${btCharacteristic ? 'Ready for 1-click instant thermal printing.' : 'Connect to any 58mm or 80mm ESC/POS Bluetooth printer.'}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="f">Receipt Paper Width
+          <select id="btWidthSel" class="inp" onchange="btPrinterWidth=this.value;localStorage.setItem('bt_printer_width', this.value)">
+            <option value="58" ${btPrinterWidth === '58' ? 'selected' : ''}>58mm Thermal Paper (Standard Handheld)</option>
+            <option value="80" ${btPrinterWidth === '80' ? 'selected' : ''}>80mm Thermal Paper (Large Counter POS)</option>
+          </select>
+        </label>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+        <button class="pri" data-a="btnconnectbt" style="min-height:44px;font-size:14px">
+          📶 ${btCharacteristic ? 'Switch / Reconnect Printer' : 'Scan & Connect Bluetooth Printer'}
+        </button>
+        ${btCharacteristic ? `
+        <button class="btn" data-a="btntestbt" style="min-height:40px;font-weight:700">
+          🧪 Print Test Slip
+        </button>
+        <button class="btn red" data-a="btndisconnectbt" style="min-height:40px">
+          ✕ Disconnect Printer
+        </button>
+        ` : ''}
+      </div>
+
+      <div style="font-size:12px;color:#78716C;background:#F9FAFB;padding:10px;border-radius:8px;border:1px solid #E5E7EB;margin-top:4px">
+        <b>💡 Mobile Printing Tip:</b><br>
+        1. Turn ON Bluetooth & Location on your Android phone.<br>
+        2. Turn on your thermal printer (POS-58, Goojprt, MPT-II, etc.).<br>
+        3. Tap <b>Scan & Connect</b> above and select your printer.<br>
+        4. Every bill will now print instantly in 1 second!
+      </div>
+    </div>
+  `
+  modal.hidden = false
+}
+
 let billCart = []
 let billCat = 'all'
 let billSearch = ''
@@ -2284,8 +2708,21 @@ const A = {
       billToast = `🟠 Bill #${offNo} saved offline & printed! Will sync when internet reconnects.`
     }
 
-    const html = buildOnlineReceiptHtml(billSaved, settingsCache)
-    printThermalHtml(html)
+    // If Bluetooth printer is connected, print via ESC/POS directly!
+    let printedViaBt = false
+    if (btCharacteristic) {
+      try {
+        const bytes = generateEscPosBytes(billSaved, settingsCache)
+        await sendBytesToBluetooth(bytes)
+        printedViaBt = true
+      } catch (btErr) {
+        console.warn('Bluetooth print failed, falling back to window print:', btErr)
+      }
+    }
+    if (!printedViaBt) {
+      const html = buildOnlineReceiptHtml(billSaved, settingsCache)
+      printThermalHtml(html)
+    }
 
     delete billHeldTables[billTable]
     billCart = []
@@ -2372,6 +2809,31 @@ const A = {
   },
   posopentablepicker: () => {
     openTablePickerModal()
+  },
+  openbtmodal: () => {
+    openBtModal()
+  },
+  btnconnectbt: async () => {
+    await connectBluetoothPrinter()
+  },
+  btndisconnectbt: () => {
+    disconnectBluetoothPrinter()
+  },
+  btntestbt: async () => {
+    if (!btCharacteristic) return alert('Printer not connected.')
+    const testBill = {
+      bill_no: 1,
+      order_type: 'Test Print',
+      created_at: new Date().toLocaleString(),
+      subtotal: 100,
+      discount: 0,
+      tax: 0,
+      total: 100,
+      items: [{ name: 'Test Food Item', qty: 1, price: 100 }]
+    }
+    const bytes = generateEscPosBytes(testBill, settingsCache)
+    await sendBytesToBluetooth(bytes)
+    alert('Test receipt sent to printer!')
   },
   posseltablemodal: (d) => {
     billTable = d.t
