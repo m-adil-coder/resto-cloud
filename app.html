@@ -856,6 +856,295 @@
     .pos-card img, .pos-card .pos-img-ph { height: 120px !important; }
   }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  /* ================= FOODPANDA STYLE HIGH-END MOBILE POS UI ================= */
+  .fp-order-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 6px 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    margin-bottom: 2px;
+  }
+  .fp-table-pill {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+    background: #FFF7ED !important;
+    border: 1.5px solid #FFEDD5 !important;
+    color: #9A3412 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    flex: none !important;
+    white-space: nowrap !important;
+    font-weight: 800 !important;
+    font-size: 13.5px !important;
+    box-shadow: 0 1px 3px rgba(154,52,18,0.08) !important;
+  }
+  .fp-table-pill:active {
+    transform: scale(0.97) !important;
+  }
+  .fp-search-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #F8FAFC;
+    border-radius: 8px;
+    padding: 0 8px;
+    border: 1px solid #F1F5F9;
+  }
+  .fp-search-input {
+    width: 100%;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    font-size: 13.5px;
+    color: #0F172A;
+    outline: none;
+    font-family: inherit;
+  }
+  .fp-clear-search {
+    border: 0;
+    background: transparent;
+    color: #94A3B8;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+  .fp-cats-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 0 6px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fp-cats-scroll::-webkit-scrollbar { display: none; }
+  .fp-cat-pill {
+    flex: none;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 14px !important;
+    border-radius: 20px !important;
+    border: 1px solid #E2E8F0 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    transition: all .15s ease !important;
+  }
+  .fp-cat-pill.active {
+    background: #9A3412 !important;
+    color: #ffffff !important;
+    border-color: #9A3412 !important;
+    box-shadow: 0 3px 8px rgba(154,52,18,0.28) !important;
+  }
+
+  /* Foodpanda Food Cards */
+  .fp-card {
+    background: #ffffff !important;
+    border: 1px solid #EAE6DF !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    transition: transform .12s ease, box-shadow .12s ease !important;
+    position: relative !important;
+  }
+  .fp-card:active {
+    transform: scale(0.97) !important;
+  }
+  .fp-card.in-cart {
+    border-color: #9A3412 !important;
+    box-shadow: 0 0 0 1.5px #9A3412, 0 4px 12px rgba(154,52,18,0.12) !important;
+  }
+  .fp-card-img-wrap {
+    width: 100% !important;
+    height: 130px !important;
+    position: relative !important;
+    background: #F8F6F1 !important;
+    overflow: hidden !important;
+  }
+  .fp-card-img {
+    width: 100% !important;
+    height: 130px !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+  .fp-card-img-ph {
+    width: 100% !important;
+    height: 130px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 46px !important;
+    background: #F5EFE6 !important;
+  }
+  .fp-badge-incart {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    background: #9A3412 !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    padding: 3px 8px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+  }
+  .fp-badge-options {
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    background: rgba(15,23,42,0.75) !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
+    backdrop-filter: blur(2px) !important;
+  }
+  .fp-badge-soldout {
+    position: absolute !important;
+    top: 8px !important;
+    left: 8px !important;
+    background: #DC2626 !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
+  }
+  .fp-card-body {
+    padding: 10px 10px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    flex: 1 !important;
+  }
+  .fp-card-title {
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    color: #0F172A !important;
+    line-height: 1.35 !important;
+    min-height: 36px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  .fp-card-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-top: auto !important;
+    padding-top: 6px !important;
+  }
+  .fp-card-price {
+    font-weight: 900 !important;
+    font-size: 15px !important;
+    color: #9A3412 !important;
+  }
+
+  /* Foodpanda + ADD Button & Stepper */
+  .fp-add-btn {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 12px !important;
+    border-radius: 16px !important;
+    background: #9A3412 !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 6px rgba(154,52,18,0.3) !important;
+    transition: transform .1s, background .15s !important;
+  }
+  .fp-add-btn:active {
+    transform: scale(0.92) !important;
+    background: #7C2D12 !important;
+  }
+  .fp-stepper {
+    display: flex !important;
+    align-items: center !important;
+    background: #9A3412 !important;
+    border-radius: 16px !important;
+    height: 32px !important;
+    padding: 0 4px !important;
+    box-shadow: 0 2px 6px rgba(154,52,18,0.3) !important;
+  }
+  .fp-stepper-btn {
+    width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .fp-stepper-qty {
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    min-width: 18px !important;
+    text-align: center !important;
+  }
+
+  /* Foodpanda Floating Cart Bar */
+  .fp-cart-bar {
+    display: none;
+    position: fixed;
+    bottom: 64px;
+    left: 12px;
+    right: 12px;
+    background: #0F172A;
+    color: #fff;
+    border-radius: 18px;
+    padding: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 45;
+    cursor: pointer;
+    border: 1px solid #334155;
+    animation: slideUp .2s ease-out;
+  }
+  .fp-cart-bar.active { display: flex !important; }
+  .fp-cart-view-btn {
+    background: #9A3412 !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+  }
+
 </style>
 </head>
 <body>
@@ -906,6 +1195,17 @@
 <div id="modal" class="overlay" hidden><div class="mbox" id="mbox"></div></div>
 
 <script>
+// ================= AUTO CACHE BUSTER (V5 FOODPANDA UI) =================
+const CURRENT_VERSION = 'v5-foodpanda-ui'
+if (localStorage.getItem('app_installed_version') !== CURRENT_VERSION) {
+  localStorage.setItem('app_installed_version', CURRENT_VERSION)
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      for (const name of names) caches.delete(name)
+    })
+  }
+}
+
 const $ = (id) => document.getElementById(id)
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const rs = (n) => 'Rs ' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })
@@ -1508,6 +1808,20 @@ function openTablePickerModal() {
   modal.hidden = false
 }
 
+
+function getFoodIcon(name) {
+  const n = String(name || '').toLowerCase()
+  if (n.includes('burg') || n.includes('patty')) return '🍔'
+  if (n.includes('drink') || n.includes('cola') || n.includes('7up') || n.includes('sprite') || n.includes('soda') || n.includes('water') || n.includes('pepsi') || n.includes('sting')) return '🥤'
+  if (n.includes('shawarma') || n.includes('roll') || n.includes('wrap')) return '🌯'
+  if (n.includes('pizza')) return '🍕'
+  if (n.includes('roti') || n.includes('naan') || n.includes('paratha')) return '🫓'
+  if (n.includes('chai') || n.includes('tea') || n.includes('coffee') || n.includes('caffe')) return '☕'
+  if (n.includes('chany') || n.includes('karahi') || n.includes('desi') || n.includes('handi') || n.includes('salan') || n.includes('biryani') || n.includes('rice')) return '🍛'
+  if (n.includes('sweet') || n.includes('ice') || n.includes('kheer')) return '🍨'
+  return '🍽️'
+}
+
 function drawBilling() {
   if (page !== 'Billing') return
   const categories = catalog.categories || []
@@ -1530,23 +1844,19 @@ function drawBilling() {
   const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
   updateMobCartBar(totalQty, total)
 
-  // Tables list
-  const tables = (tablesList && tablesList.length) ? tablesList : Array.from({ length: 10 }, (_, i) => ({ id: `tbl_${i+1}`, name: `Table ${i + 1}` }))
-  const tablesHtml = tables.map((t) => {
-    const isOccupied = !!billHeldTables[t.name]
-    const isSelected = billOrderType === 'Dine-in' && billTable === t.name
-    return `<button data-a="posseltable" data-t="${esc(t.name)}" class="table-chip ${isSelected ? 'on' : ''} ${isOccupied ? 'occupied' : ''}">
-      <span style="font-size:9px">${isOccupied ? '🔴' : '🟢'}</span> ${esc(t.name)}
-    </button>`
-  }).join('')
-
-  // Categories pills
+  // Categories pills with food icons
   const catsHtml = `
-    <button class="pos-cat-btn ${billCat === 'all' ? 'on' : ''}" data-a="poscat" data-id="all">All</button>
-    ${categories.map((c) => `<button class="pos-cat-btn ${billCat === c.id ? 'on' : ''}" data-a="poscat" data-id="${esc(c.id)}">${esc(c.name)}</button>`).join('')}
+    <button class="fp-cat-pill ${billCat === 'all' ? 'active' : ''}" data-a="poscat" data-id="all">
+      🍽️ All
+    </button>
+    ${categories.map((c) => `
+      <button class="fp-cat-pill ${billCat === c.id ? 'active' : ''}" data-a="poscat" data-id="${esc(c.id)}">
+        ${getFoodIcon(c.name)} ${esc(c.name)}
+      </button>
+    `).join('')}
   `
 
-  // Products cards
+  // Foodpanda Style Product Cards
   const prodsHtml = prods.length ? prods.map((p) => {
     const vars = p.variants || []
     let priceText = 'Rs 0'
@@ -1558,23 +1868,32 @@ function drawBilling() {
     const hasOptions = vars.length > 1
     const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
     const isOut = p.track_stock && totalStock <= 0
-    const inCartQty = billCart.filter((x) => x.id === p.id).reduce((sum, item) => sum + item.qty, 0)
+    const inCartItems = billCart.filter((x) => x.product_id === p.id || x.id === p.id)
+    const inCartQty = inCartItems.reduce((sum, item) => sum + item.qty, 0)
     const isItemInCart = inCartQty > 0
 
-    return `<div class="pos-card ${isItemInCart ? 'in-cart' : ''}" data-a="posclickprod" data-id="${esc(p.id)}" style="${isOut ? 'opacity:0.55;' : ''}${isItemInCart ? 'border-color:#9A3412;box-shadow:0 0 0 1px #9A3412;' : ''}">
-      <div class="pos-card-img-wrap">
-        ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<div class="pos-card-img-ph">🍽️</div>`}
-        ${p.track_stock ? `<span style="position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;background:${isOut ? '#FEE2E2' : '#DCFCE7'};color:${isOut ? '#991B1B' : '#166534'}">${isOut ? 'Out of stock' : `${totalStock} in stock`}</span>` : ''}
-        ${isItemInCart ? `<span style="position:absolute;top:6px;right:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:10px;background:#9A3412;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.25)">✓ ${inCartQty}</span>` : ''}
-        ${hasOptions ? `<span style="position:absolute;bottom:6px;left:6px;font-size:10px;background:rgba(0,0,0,0.7);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700">${vars.length} options</span>` : ''}
+    return `<div class="fp-card ${isItemInCart ? 'in-cart' : ''}" data-a="posclickprod" data-id="${esc(p.id)}" style="${isOut ? 'opacity:0.5;' : ''}">
+      <div class="fp-card-img-wrap">
+        ${p.image ? `<img src="${esc(p.image)}" alt="" class="fp-card-img" loading="lazy">` : `<div class="fp-card-img-ph">${getFoodIcon(p.name)}</div>`}
+        ${isOut ? `<span class="fp-badge-soldout">Sold Out</span>` : ''}
+        ${hasOptions ? `<span class="fp-badge-options">${vars.length} options</span>` : ''}
+        ${isItemInCart ? `<span class="fp-badge-incart">✓ ${inCartQty} in cart</span>` : ''}
       </div>
-      <div class="pos-card-body">
-        <div class="pos-card-title">${esc(p.name)}</div>
-        <div class="pos-card-footer">
-          <span class="pos-card-price">${priceText}</span>
-          <button class="pos-card-add-btn" data-a="posclickprod" data-id="${esc(p.id)}" title="Add to bill">
-            ${isItemInCart ? '+' : '+'}
-          </button>
+      <div class="fp-card-body">
+        <div class="fp-card-title">${esc(p.name)}</div>
+        <div class="fp-card-footer">
+          <div class="fp-card-price">${priceText}</div>
+          ${isItemInCart ? `
+            <div class="fp-stepper" onclick="event.stopPropagation()">
+              <button class="fp-stepper-btn" data-a="poscartminusprod" data-id="${esc(p.id)}" title="Decrease">-</button>
+              <span class="fp-stepper-qty">${inCartQty}</span>
+              <button class="fp-stepper-btn" data-a="poscartplusprod" data-id="${esc(p.id)}" title="Increase">+</button>
+            </div>
+          ` : `
+            <button class="fp-add-btn" data-a="posclickprod" data-id="${esc(p.id)}" title="Add to Order">
+              + ADD
+            </button>
+          `}
         </div>
       </div>
     </div>`
@@ -1605,7 +1924,7 @@ function drawBilling() {
         </button>
       </div>
     </div>
-  `).join('') : `<div style="text-align:center;padding:36px 12px" class="muted"><div style="font-size:32px;margin-bottom:8px">🛒</div>Tap any item to start customer order</div>`
+  `).join('') : `<div style="text-align:center;padding:36px 12px" class="muted"><div style="font-size:36px;margin-bottom:8px">🛒</div>Tap any item to start customer order</div>`
 
   const toastHtml = billToast ? `
     <div style="background:#DCFCE7;border:1px solid #86EFAC;color:#166534;border-radius:10px;padding:12px 16px;font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1614,77 +1933,75 @@ function drawBilling() {
     </div>` : ''
 
   main.innerHTML = `
-    <div class="pad" style="max-width:1400px">
+    <div class="pad" style="max-width:1400px;padding:12px 10px">
       ${licStrip()}
       ${toastHtml}
 
-      <!-- Sleek Top Action Bar (Ultra-clean, zero wasted space) -->
-      <div class="pos-top-action-bar">
-        <button class="pos-table-badge-btn" data-a="posopentablepicker" title="Change order type or table">
+      <!-- Foodpanda Style Top Action Bar -->
+      <div class="fp-order-bar">
+        <button class="fp-table-pill" data-a="posopentablepicker" title="Change Order Type or Table">
           <span>${billOrderType === 'Dine-in' ? '🍽️' : billOrderType === 'Takeaway' ? '🥡' : '🛵'}</span>
           <span>${billOrderType === 'Dine-in' ? (billTable || 'Table 1') : billOrderType}</span>
-          <span style="font-size:10px;opacity:0.6">▼</span>
+          <span style="font-size:10px;opacity:0.7">▼</span>
         </button>
-        <div style="flex:1;min-width:0;position:relative;display:flex;align-items:center">
-          <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="🔍 Search menu items..." class="pos-top-search" autocomplete="off">
-          ${billSearch ? `<button data-a="posclearsearch" style="border:0;background:transparent;color:#9CA3AF;font-size:16px;padding:4px 8px;cursor:pointer">✕</button>` : ''}
+        <div class="fp-search-wrap">
+          <span style="font-size:14px;color:#94A3B8">🔍</span>
+          <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="Search menu..." class="fp-search-input" autocomplete="off">
+          ${billSearch ? `<button data-a="posclearsearch" class="fp-clear-search">✕</button>` : ''}
         </div>
       </div>
 
-      <!-- Main POS Content: Products Left, Cart Right -->
+      <!-- Main POS Content -->
       <div class="pos-container">
         <!-- Products Column -->
         <div class="pos-left">
-          <div class="pos-cats">${catsHtml}</div>
+          <div class="fp-cats-scroll">${catsHtml}</div>
           <div class="pos-grid">${prodsHtml}</div>
         </div>
 
-        <!-- Cart Panel (Right Column on Desktop, Modal on Mobile) -->
+        <!-- Cart Panel (Right Column on Desktop, Bottom Sheet on Mobile) -->
         <div class="pos-right" id="posCartPanel">
           <div class="pos-cart-panel">
-            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFE8DA;padding-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EBE4D8;padding-bottom:10px">
               <div>
-                <b style="font-size:17px;color:#1C1917">Customer Order</b>
-                <div style="font-size:12px;color:#78716C;margin-top:2px">
+                <b style="font-size:16px;color:#1C1917">Customer Order</b>
+                <div style="font-size:12px;color:#78716C">
                   ${esc(billOrderType)} ${billOrderType === 'Dine-in' && billTable ? `• ${esc(billTable)}` : ''} ${billWaiter ? `• ${esc(billWaiter)}` : ''}
                 </div>
               </div>
-              <button data-a="posclosemobcart" style="border:0;background:#F3F4F6;border-radius:6px;padding:6px 10px;font-weight:800;cursor:pointer">✕ Close</button>
+              <button data-a="posclosemobcart" class="btn" style="min-height:30px;padding:0 8px;font-size:12px;font-weight:700">✕ Close</button>
             </div>
 
+            <!-- Cart Items List -->
             <div class="pos-cart-items">${cartRowsHtml}</div>
 
-            <!-- Cart Calculation Section -->
-            <div style="border-top:1px solid #EFE8DA;padding-top:10px;display:flex;flex-direction:column;gap:6px">
-              <div style="display:flex;justify-content:space-between;font-size:13px">
-                <span class="muted">Subtotal:</span>
-                <b>${rs(subtotal)}</b>
+            <!-- Summary & Actions -->
+            <div style="border-top:1px solid #E5E7EB;padding-top:12px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;gap:10px">
+                <label style="flex:1;font-size:12px;font-weight:700">Discount (Rs)
+                  <input id="posDiscount" type="number" min="0" value="${billDiscount || ''}" placeholder="0" class="inp" style="min-height:36px;margin-top:2px">
+                </label>
+                <label style="flex:1;font-size:12px;font-weight:700">Payment
+                  <select id="posPayment" class="inp" style="min-height:36px;margin-top:2px">
+                    <option value="Cash" ${billPayment === 'Cash' ? 'selected' : ''}>💵 Cash</option>
+                    <option value="Online / Card" ${billPayment === 'Online / Card' ? 'selected' : ''}>📱 JazzCash / Card</option>
+                    <option value="Split" ${billPayment === 'Split' ? 'selected' : ''}>⚖️ Split</option>
+                  </select>
+                </label>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
-                <span class="muted">Discount (Rs):</span>
-                <input id="posDiscount" type="number" min="0" value="${billDiscount || ''}" placeholder="0" class="inp" style="min-height:32px;width:90px;text-align:right;padding:2px 8px">
-              </div>
-              ${taxPct > 0 ? `
-              <div style="display:flex;justify-content:space-between;font-size:13px">
-                <span class="muted">Tax (${taxPct}%):</span>
-                <b>${rs(tax)}</b>
-              </div>` : ''}
-              <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
-                <span class="muted">Pay via:</span>
-                <select id="posPayment" class="inp" style="min-height:32px;padding:2px 8px">
-                  <option value="Cash" ${billPayment === 'Cash' ? 'selected' : ''}>💵 Cash</option>
-                  <option value="Online / Card" ${billPayment === 'Online / Card' ? 'selected' : ''}>💳 Online / Card</option>
-                </select>
-              </div>
-              <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;border-top:2px solid #1C1917;padding-top:8px;margin-top:4px">
-                <span>TOTAL:</span>
-                <span style="color:#9A3412">${rs(total)}</span>
-              </div>
-            </div>
 
-            <!-- Action Buttons -->
-            <div style="display:grid;gap:8px;margin-top:6px">
-              <button class="pri" data-a="posprintfinal" style="width:100%;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+              <div style="display:flex;justify-content:space-between;font-size:13px;color:#57534E">
+                <span>Subtotal:</span><b>${rs(subtotal)}</b>
+              </div>
+              ${billDiscount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:#DC2626"><span>Discount:</span><b>-${rs(billDiscount)}</b></div>` : ''}
+              ${tax > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:#57534E"><span>Tax (${taxPct}%):</span><b>${rs(tax)}</b></div>` : ''}
+
+              <div style="display:flex;justify-content:space-between;font-size:19px;font-weight:900;color:#1C1917;padding-top:4px;border-top:1px dashed #E5E7EB">
+                <span>Total:</span><span style="color:#9A3412">${rs(total)}</span>
+              </div>
+
+              <!-- Action Buttons -->
+              <button class="pri" data-a="posprintfinal" style="width:100%;min-height:46px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
                 🖨️ Print Final Bill
               </button>
               <div style="display:flex;gap:8px">
@@ -2525,6 +2842,18 @@ const A = {
       billToast = `Loaded active order for ${d.t}`
     }
     drawBilling()
+  },
+    poscartplusprod: (d) => {
+    const item = billCart.find((x) => x.product_id === d.id || x.id === d.id)
+    if (item) { item.qty++; drawBilling() }
+  },
+  poscartminusprod: (d) => {
+    const idx = billCart.findIndex((x) => x.product_id === d.id || x.id === d.id)
+    if (idx !== -1) {
+      billCart[idx].qty--
+      if (billCart[idx].qty <= 0) billCart.splice(idx, 1)
+      drawBilling()
+    }
   },
   posclickprod: (d) => {
     const p = (catalog.products || []).find((x) => x.id === d.id)
