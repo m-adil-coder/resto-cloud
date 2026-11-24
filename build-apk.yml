@@ -1,0 +1,115 @@
+name: Build Resto POS Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare Web Assets for Mobile
+        run: |
+          mkdir -p www
+          cp -r public/* www/ 2>/dev/null || true
+          cp -r *.png *.json *.html www/ 2>/dev/null || true
+          cp app.html www/index.html 2>/dev/null || cp public/app.html www/index.html
+
+      - name: Install Capacitor & Dependencies
+        run: |
+          npm install --no-audit
+          npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android
+
+      - name: Configure Capacitor Project
+        run: |
+          cat << 'EOF' > capacitor.config.json
+          {
+            "appId": "com.restopos.app",
+            "appName": "Resto POS",
+            "webDir": "www",
+            "server": {
+              "url": "https://pospoint.onrender.com/app.html",
+              "cleartext": true,
+              "allowNavigation": ["pospoint.onrender.com"]
+            },
+            "android": {
+              "allowMixedContent": true,
+              "webContentsDebuggingEnabled": false
+            }
+          }
+          EOF
+
+      - name: Add Android Platform & Sync
+        run: |
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Inject Android Bluetooth & Hardware Permissions
+        run: |
+          python3 -c "
+          manifest_path = 'android/app/src/main/AndroidManifest.xml'
+          with open(manifest_path, 'r') as f:
+              content = f.read()
+          perms = '''
+              <uses-permission android:name=\"android.permission.INTERNET\" />
+              <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />
+              <uses-permission android:name=\"android.permission.BLUETOOTH\" />
+              <uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />
+              <uses-permission android:name=\"android.permission.BLUETOOTH_CONNECT\" />
+              <uses-permission android:name=\"android.permission.BLUETOOTH_SCAN\" android:usesPermissionFlags=\"neverForLocation\" />
+              <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />
+              <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />
+          '''
+          if 'android.permission.BLUETOOTH' not in content:
+              content = content.replace('</manifest>', perms + '\n</manifest>')
+              with open(manifest_path, 'w') as f:
+                  f.write(content)
+          "
+
+      - name: Build Android APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+          cd ..
+          mkdir -p release-output
+          cp android/app/build/outputs/apk/debug/app-debug.apk release-output/RestoPOS.apk
+
+      - name: Upload RestoPOS APK as GitHub Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RestoPOS-Android-App
+          path: release-output/RestoPOS.apk
+          retention-days: 30
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          files: release-output/RestoPOS.apk
+          name: "Resto POS Android App v1.0"
+          tag_name: "v1.0.0"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
