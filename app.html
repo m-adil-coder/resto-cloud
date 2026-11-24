@@ -10,6 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   [hidden] { display: none !important; }
   * { box-sizing: border-box; }
@@ -1223,6 +1224,556 @@
     cursor: pointer !important;
   }
 
+
+/* ================= EXACT MOBILE APPLICATION STYLES ================= */
+:root {
+  --br: #A3301A;
+  --br2: #7E2210;
+  --bg: #F5F4F2;
+  --cd: #fff;
+  --tx: #1C1917;
+  --mu: #78716C;
+  --ln: #E7E4E0;
+  --ok: #16A34A;
+  --bad: #DC2626;
+  --wn: #FEF3C7;
+  --wt: #92400E;
+}
+@media(prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --bg: #14110F;
+    --cd: #211C19;
+    --tx: #F5F0EB;
+    --mu: #A39B94;
+    --ln: #352E2A;
+    --wn: #3A2D12;
+    --wt: #FCD34D;
+    --br: #D2492F;
+  }
+}
+:root[data-theme=dark] {
+  --bg: #14110F;
+  --cd: #211C19;
+  --tx: #F5F0EB;
+  --mu: #A39B94;
+  --ln: #352E2A;
+  --wn: #3A2D12;
+  --wt: #FCD34D;
+  --br: #D2492F;
+}
+
+@media (min-width: 769px) {
+  #mobApp { display: none !important; }
+  #shell { display: flex !important; }
+  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  html, body {
+    background: var(--bg) !important;
+    color: var(--tx) !important;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+  #shell { display: none !important; }
+  .side { display: none !important; }
+  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
+  #banner { display: none !important; }
+  #mobApp {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    height: 100% !important;
+    margin: auto !important;
+    flex-direction: column !important;
+    position: relative !important;
+    background: var(--bg) !important;
+    overflow: hidden !important;
+  }
+}
+
+#mobApp header {
+  background: var(--br);
+  color: #fff;
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+#mobApp header b {
+  font-size: 16.5px;
+  font-weight: 800;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#mobApp header small {
+  display: block;
+  font-weight: 400;
+  opacity: .88;
+  font-size: 11px;
+}
+#mobApp .pill {
+  background: rgba(255,255,255,.18);
+  border-radius: 99px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #fff;
+  cursor: pointer;
+  flex: none;
+  border: 0;
+}
+#mobApp .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ADE80;
+  display: inline-block;
+  flex: none;
+}
+#mobApp .sub {
+  background: var(--wn);
+  color: var(--wt);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 16px;
+  flex: none;
+}
+#mobApp main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 150px;
+  -webkit-overflow-scrolling: touch;
+}
+#mobApp nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--cd);
+  border-top: 1px solid var(--ln);
+  display: flex;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+}
+#mobApp nav button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--mu);
+  padding: 4px 0;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  font-family: inherit;
+}
+#mobApp nav button span {
+  font-size: 20px;
+  filter: grayscale(1);
+  opacity: .7;
+}
+#mobApp nav button.on {
+  color: var(--br);
+}
+#mobApp nav button.on span {
+  filter: none;
+  opacity: 1;
+}
+#mobApp h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--tx);
+}
+#mobApp h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+  color: var(--tx);
+}
+#mobApp .card {
+  background: var(--cd);
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid var(--ln);
+  margin-bottom: 10px;
+}
+#mobApp .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#mobApp .sp {
+  justify-content: space-between;
+}
+#mobApp .mu {
+  color: var(--mu);
+  font-size: 12px;
+}
+#mobApp .chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+#mobApp .chips::-webkit-scrollbar {
+  display: none;
+}
+#mobApp .chip {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--tx);
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .chip.on {
+  background: var(--br);
+  color: #fff;
+  border-color: var(--br);
+}
+#mobApp .tbl {
+  flex: none;
+  min-width: 84px;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--cd);
+  border: 1.5px solid var(--ln);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--tx);
+}
+#mobApp .tbl.on {
+  border-color: var(--br);
+}
+#mobApp .tbl i {
+  font-style: normal;
+  float: right;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+  margin-top: 4px;
+}
+#mobApp .tbl.occ i {
+  background: var(--bad);
+}
+#mobApp .tbl b {
+  display: block;
+  font-size: 13px;
+}
+#mobApp .seg {
+  display: flex;
+  background: var(--ln);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 10px;
+}
+#mobApp .seg button {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--mu);
+  white-space: nowrap;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .seg button.on {
+  background: var(--cd);
+  color: var(--tx);
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+#mobApp input, #mobApp select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--ln);
+  background: var(--cd);
+  color: var(--tx);
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+#mobApp input:focus, #mobApp select:focus {
+  border-color: var(--br);
+}
+#mobApp .item {
+  display: flex;
+  gap: 12px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  padding: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform .1s;
+}
+#mobApp .item:active {
+  transform: scale(0.98);
+}
+#mobApp .th {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  background: #F5EFE6;
+}
+#mobApp .th img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+#mobApp .item .nm {
+  font-weight: 700;
+  flex: 1;
+  font-size: 14px;
+  color: var(--tx);
+}
+#mobApp .pr {
+  color: var(--br);
+  font-weight: 800;
+  margin-top: 2px;
+  font-size: 14px;
+}
+#mobApp .add {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--br);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  flex: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#mobApp .tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #DCFCE7;
+  color: #166534;
+  display: inline-block;
+  margin-top: 4px;
+}
+#mobApp .tag.lo {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+#mobApp .cartbar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  background: var(--br);
+  color: #fff;
+  border-radius: 16px;
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  z-index: 4;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+#mobApp .btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  background: var(--br);
+  color: #fff;
+  text-align: center;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .btn.o {
+  background: var(--cd);
+  color: var(--tx);
+  border: 1px solid var(--ln);
+}
+#mobApp .btn.g {
+  background: #DCFCE7;
+  color: #166534;
+}
+#mobApp .btn.d {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+#mobApp .btn.s {
+  padding: 8px 12px;
+  font-size: 12px;
+  width: auto;
+  display: inline-block;
+  border-radius: 10px;
+}
+#mobApp .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+#mobApp .stat {
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  padding: 12px;
+}
+#mobApp .stat b {
+  font-size: 20px;
+  font-weight: 800;
+  display: block;
+  margin-top: 4px;
+}
+#mobApp .bar {
+  height: 8px;
+  border-radius: 9px;
+  background: var(--ln);
+  margin-top: 4px;
+  overflow: hidden;
+}
+#mobApp .bar i {
+  display: block;
+  height: 100%;
+  border-radius: 9px;
+  background: var(--br);
+}
+#mobApp .ov {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 25;
+  display: flex;
+  align-items: flex-end;
+}
+#mobApp .sheet {
+  background: var(--bg);
+  width: 100%;
+  max-height: 92%;
+  overflow-y: auto;
+  border-radius: 24px 24px 0 0;
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  animation: mobUp .22s ease-out;
+}
+@keyframes mobUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+#mobApp .q {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#mobApp .q button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--ln);
+  font-size: 18px;
+  background: var(--cd);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tx);
+  border: 1px solid var(--ln);
+}
+#mobApp .lr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  color: var(--tx);
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .toast {
+  position: fixed;
+  left: 50%;
+  top: 70px;
+  transform: translateX(-50%);
+  background: #1C1917;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 50;
+  white-space: nowrap;
+}
+#mobApp .sw {
+  width: 46px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--ln);
+  position: relative;
+  flex: none;
+  cursor: pointer;
+}
+#mobApp .sw.on {
+  background: var(--ok);
+}
+#mobApp .sw:after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: .15s;
+}
+#mobApp .sw.on:after {
+  left: 23px;
+}
+
 </style>
 </head>
 <body>
@@ -1243,6 +1794,8 @@
     <button class="mob-out" id="mobLogout" title="Logout">⎋</button>
   </div>
 </div>
+
+<div id="mobApp" style="display:none"></div>
 
 <div id="shell" class="shell" hidden>
   <!-- Desktop Sidebar -->
@@ -1274,7 +1827,7 @@
 
 <script>
 // ================= AUTO CACHE BUSTER (V7 FOODPANDA FLAWLESS UI) =================
-const CURRENT_VERSION = 'v7-foodpanda-flawless'
+const CURRENT_VERSION = 'v8-mobile-exact-ui'
 if (localStorage.getItem('app_installed_version') !== CURRENT_VERSION) {
   localStorage.setItem('app_installed_version', CURRENT_VERSION)
   if ('caches' in window) {
@@ -1694,6 +2247,556 @@ td { vertical-align: top; padding: 3px 0; }
 .totals-table td { padding: 2px 0; font-size: 12.5px; }
 .total-row td { border-top: 2px solid #000; border-bottom: 2px solid #000; font-size: 16px; font-weight: 900; padding: 4px 0; }
 .footer { text-align: center; font-size: 12px; font-weight: 800; margin-top: 5px; }
+
+/* ================= EXACT MOBILE APPLICATION STYLES ================= */
+:root {
+  --br: #A3301A;
+  --br2: #7E2210;
+  --bg: #F5F4F2;
+  --cd: #fff;
+  --tx: #1C1917;
+  --mu: #78716C;
+  --ln: #E7E4E0;
+  --ok: #16A34A;
+  --bad: #DC2626;
+  --wn: #FEF3C7;
+  --wt: #92400E;
+}
+@media(prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --bg: #14110F;
+    --cd: #211C19;
+    --tx: #F5F0EB;
+    --mu: #A39B94;
+    --ln: #352E2A;
+    --wn: #3A2D12;
+    --wt: #FCD34D;
+    --br: #D2492F;
+  }
+}
+:root[data-theme=dark] {
+  --bg: #14110F;
+  --cd: #211C19;
+  --tx: #F5F0EB;
+  --mu: #A39B94;
+  --ln: #352E2A;
+  --wn: #3A2D12;
+  --wt: #FCD34D;
+  --br: #D2492F;
+}
+
+@media (min-width: 769px) {
+  #mobApp { display: none !important; }
+  #shell { display: flex !important; }
+  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  html, body {
+    background: var(--bg) !important;
+    color: var(--tx) !important;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+  #shell { display: none !important; }
+  .side { display: none !important; }
+  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
+  #banner { display: none !important; }
+  #mobApp {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    height: 100% !important;
+    margin: auto !important;
+    flex-direction: column !important;
+    position: relative !important;
+    background: var(--bg) !important;
+    overflow: hidden !important;
+  }
+}
+
+#mobApp header {
+  background: var(--br);
+  color: #fff;
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+#mobApp header b {
+  font-size: 16.5px;
+  font-weight: 800;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#mobApp header small {
+  display: block;
+  font-weight: 400;
+  opacity: .88;
+  font-size: 11px;
+}
+#mobApp .pill {
+  background: rgba(255,255,255,.18);
+  border-radius: 99px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #fff;
+  cursor: pointer;
+  flex: none;
+  border: 0;
+}
+#mobApp .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ADE80;
+  display: inline-block;
+  flex: none;
+}
+#mobApp .sub {
+  background: var(--wn);
+  color: var(--wt);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 16px;
+  flex: none;
+}
+#mobApp main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 150px;
+  -webkit-overflow-scrolling: touch;
+}
+#mobApp nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--cd);
+  border-top: 1px solid var(--ln);
+  display: flex;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+}
+#mobApp nav button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--mu);
+  padding: 4px 0;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  font-family: inherit;
+}
+#mobApp nav button span {
+  font-size: 20px;
+  filter: grayscale(1);
+  opacity: .7;
+}
+#mobApp nav button.on {
+  color: var(--br);
+}
+#mobApp nav button.on span {
+  filter: none;
+  opacity: 1;
+}
+#mobApp h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--tx);
+}
+#mobApp h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+  color: var(--tx);
+}
+#mobApp .card {
+  background: var(--cd);
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid var(--ln);
+  margin-bottom: 10px;
+}
+#mobApp .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#mobApp .sp {
+  justify-content: space-between;
+}
+#mobApp .mu {
+  color: var(--mu);
+  font-size: 12px;
+}
+#mobApp .chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+#mobApp .chips::-webkit-scrollbar {
+  display: none;
+}
+#mobApp .chip {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--tx);
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .chip.on {
+  background: var(--br);
+  color: #fff;
+  border-color: var(--br);
+}
+#mobApp .tbl {
+  flex: none;
+  min-width: 84px;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--cd);
+  border: 1.5px solid var(--ln);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--tx);
+}
+#mobApp .tbl.on {
+  border-color: var(--br);
+}
+#mobApp .tbl i {
+  font-style: normal;
+  float: right;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+  margin-top: 4px;
+}
+#mobApp .tbl.occ i {
+  background: var(--bad);
+}
+#mobApp .tbl b {
+  display: block;
+  font-size: 13px;
+}
+#mobApp .seg {
+  display: flex;
+  background: var(--ln);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 10px;
+}
+#mobApp .seg button {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--mu);
+  white-space: nowrap;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .seg button.on {
+  background: var(--cd);
+  color: var(--tx);
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+#mobApp input, #mobApp select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--ln);
+  background: var(--cd);
+  color: var(--tx);
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+#mobApp input:focus, #mobApp select:focus {
+  border-color: var(--br);
+}
+#mobApp .item {
+  display: flex;
+  gap: 12px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  padding: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform .1s;
+}
+#mobApp .item:active {
+  transform: scale(0.98);
+}
+#mobApp .th {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  background: #F5EFE6;
+}
+#mobApp .th img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+#mobApp .item .nm {
+  font-weight: 700;
+  flex: 1;
+  font-size: 14px;
+  color: var(--tx);
+}
+#mobApp .pr {
+  color: var(--br);
+  font-weight: 800;
+  margin-top: 2px;
+  font-size: 14px;
+}
+#mobApp .add {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--br);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  flex: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#mobApp .tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #DCFCE7;
+  color: #166534;
+  display: inline-block;
+  margin-top: 4px;
+}
+#mobApp .tag.lo {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+#mobApp .cartbar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  background: var(--br);
+  color: #fff;
+  border-radius: 16px;
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  z-index: 4;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+#mobApp .btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  background: var(--br);
+  color: #fff;
+  text-align: center;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .btn.o {
+  background: var(--cd);
+  color: var(--tx);
+  border: 1px solid var(--ln);
+}
+#mobApp .btn.g {
+  background: #DCFCE7;
+  color: #166534;
+}
+#mobApp .btn.d {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+#mobApp .btn.s {
+  padding: 8px 12px;
+  font-size: 12px;
+  width: auto;
+  display: inline-block;
+  border-radius: 10px;
+}
+#mobApp .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+#mobApp .stat {
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  padding: 12px;
+}
+#mobApp .stat b {
+  font-size: 20px;
+  font-weight: 800;
+  display: block;
+  margin-top: 4px;
+}
+#mobApp .bar {
+  height: 8px;
+  border-radius: 9px;
+  background: var(--ln);
+  margin-top: 4px;
+  overflow: hidden;
+}
+#mobApp .bar i {
+  display: block;
+  height: 100%;
+  border-radius: 9px;
+  background: var(--br);
+}
+#mobApp .ov {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 25;
+  display: flex;
+  align-items: flex-end;
+}
+#mobApp .sheet {
+  background: var(--bg);
+  width: 100%;
+  max-height: 92%;
+  overflow-y: auto;
+  border-radius: 24px 24px 0 0;
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  animation: mobUp .22s ease-out;
+}
+@keyframes mobUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+#mobApp .q {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#mobApp .q button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--ln);
+  font-size: 18px;
+  background: var(--cd);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tx);
+  border: 1px solid var(--ln);
+}
+#mobApp .lr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  color: var(--tx);
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .toast {
+  position: fixed;
+  left: 50%;
+  top: 70px;
+  transform: translateX(-50%);
+  background: #1C1917;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 50;
+  white-space: nowrap;
+}
+#mobApp .sw {
+  width: 46px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--ln);
+  position: relative;
+  flex: none;
+  cursor: pointer;
+}
+#mobApp .sw.on {
+  background: var(--ok);
+}
+#mobApp .sw:after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: .15s;
+}
+#mobApp .sw.on:after {
+  left: 23px;
+}
+
 </style></head><body>
 <div class="header">
   <div class="shop-name">${esc(shopName)}</div>
@@ -1757,6 +2860,556 @@ table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 th { font-size: 12px; font-weight: 800; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 3px; }
 td { vertical-align: top; padding: 3px 0; }
 .footer { text-align: center; font-size: 11.5px; font-weight: 800; margin-top: 6px; }
+
+/* ================= EXACT MOBILE APPLICATION STYLES ================= */
+:root {
+  --br: #A3301A;
+  --br2: #7E2210;
+  --bg: #F5F4F2;
+  --cd: #fff;
+  --tx: #1C1917;
+  --mu: #78716C;
+  --ln: #E7E4E0;
+  --ok: #16A34A;
+  --bad: #DC2626;
+  --wn: #FEF3C7;
+  --wt: #92400E;
+}
+@media(prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --bg: #14110F;
+    --cd: #211C19;
+    --tx: #F5F0EB;
+    --mu: #A39B94;
+    --ln: #352E2A;
+    --wn: #3A2D12;
+    --wt: #FCD34D;
+    --br: #D2492F;
+  }
+}
+:root[data-theme=dark] {
+  --bg: #14110F;
+  --cd: #211C19;
+  --tx: #F5F0EB;
+  --mu: #A39B94;
+  --ln: #352E2A;
+  --wn: #3A2D12;
+  --wt: #FCD34D;
+  --br: #D2492F;
+}
+
+@media (min-width: 769px) {
+  #mobApp { display: none !important; }
+  #shell { display: flex !important; }
+  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  html, body {
+    background: var(--bg) !important;
+    color: var(--tx) !important;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+  #shell { display: none !important; }
+  .side { display: none !important; }
+  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
+  #banner { display: none !important; }
+  #mobApp {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    height: 100% !important;
+    margin: auto !important;
+    flex-direction: column !important;
+    position: relative !important;
+    background: var(--bg) !important;
+    overflow: hidden !important;
+  }
+}
+
+#mobApp header {
+  background: var(--br);
+  color: #fff;
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+#mobApp header b {
+  font-size: 16.5px;
+  font-weight: 800;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#mobApp header small {
+  display: block;
+  font-weight: 400;
+  opacity: .88;
+  font-size: 11px;
+}
+#mobApp .pill {
+  background: rgba(255,255,255,.18);
+  border-radius: 99px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #fff;
+  cursor: pointer;
+  flex: none;
+  border: 0;
+}
+#mobApp .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ADE80;
+  display: inline-block;
+  flex: none;
+}
+#mobApp .sub {
+  background: var(--wn);
+  color: var(--wt);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 16px;
+  flex: none;
+}
+#mobApp main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 150px;
+  -webkit-overflow-scrolling: touch;
+}
+#mobApp nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--cd);
+  border-top: 1px solid var(--ln);
+  display: flex;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+}
+#mobApp nav button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--mu);
+  padding: 4px 0;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  font-family: inherit;
+}
+#mobApp nav button span {
+  font-size: 20px;
+  filter: grayscale(1);
+  opacity: .7;
+}
+#mobApp nav button.on {
+  color: var(--br);
+}
+#mobApp nav button.on span {
+  filter: none;
+  opacity: 1;
+}
+#mobApp h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--tx);
+}
+#mobApp h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+  color: var(--tx);
+}
+#mobApp .card {
+  background: var(--cd);
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid var(--ln);
+  margin-bottom: 10px;
+}
+#mobApp .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#mobApp .sp {
+  justify-content: space-between;
+}
+#mobApp .mu {
+  color: var(--mu);
+  font-size: 12px;
+}
+#mobApp .chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+#mobApp .chips::-webkit-scrollbar {
+  display: none;
+}
+#mobApp .chip {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--tx);
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .chip.on {
+  background: var(--br);
+  color: #fff;
+  border-color: var(--br);
+}
+#mobApp .tbl {
+  flex: none;
+  min-width: 84px;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--cd);
+  border: 1.5px solid var(--ln);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--tx);
+}
+#mobApp .tbl.on {
+  border-color: var(--br);
+}
+#mobApp .tbl i {
+  font-style: normal;
+  float: right;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+  margin-top: 4px;
+}
+#mobApp .tbl.occ i {
+  background: var(--bad);
+}
+#mobApp .tbl b {
+  display: block;
+  font-size: 13px;
+}
+#mobApp .seg {
+  display: flex;
+  background: var(--ln);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 10px;
+}
+#mobApp .seg button {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--mu);
+  white-space: nowrap;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .seg button.on {
+  background: var(--cd);
+  color: var(--tx);
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+#mobApp input, #mobApp select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--ln);
+  background: var(--cd);
+  color: var(--tx);
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+#mobApp input:focus, #mobApp select:focus {
+  border-color: var(--br);
+}
+#mobApp .item {
+  display: flex;
+  gap: 12px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  padding: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform .1s;
+}
+#mobApp .item:active {
+  transform: scale(0.98);
+}
+#mobApp .th {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  background: #F5EFE6;
+}
+#mobApp .th img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+#mobApp .item .nm {
+  font-weight: 700;
+  flex: 1;
+  font-size: 14px;
+  color: var(--tx);
+}
+#mobApp .pr {
+  color: var(--br);
+  font-weight: 800;
+  margin-top: 2px;
+  font-size: 14px;
+}
+#mobApp .add {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--br);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  flex: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#mobApp .tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #DCFCE7;
+  color: #166534;
+  display: inline-block;
+  margin-top: 4px;
+}
+#mobApp .tag.lo {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+#mobApp .cartbar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  background: var(--br);
+  color: #fff;
+  border-radius: 16px;
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  z-index: 4;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+#mobApp .btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  background: var(--br);
+  color: #fff;
+  text-align: center;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .btn.o {
+  background: var(--cd);
+  color: var(--tx);
+  border: 1px solid var(--ln);
+}
+#mobApp .btn.g {
+  background: #DCFCE7;
+  color: #166534;
+}
+#mobApp .btn.d {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+#mobApp .btn.s {
+  padding: 8px 12px;
+  font-size: 12px;
+  width: auto;
+  display: inline-block;
+  border-radius: 10px;
+}
+#mobApp .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+#mobApp .stat {
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  padding: 12px;
+}
+#mobApp .stat b {
+  font-size: 20px;
+  font-weight: 800;
+  display: block;
+  margin-top: 4px;
+}
+#mobApp .bar {
+  height: 8px;
+  border-radius: 9px;
+  background: var(--ln);
+  margin-top: 4px;
+  overflow: hidden;
+}
+#mobApp .bar i {
+  display: block;
+  height: 100%;
+  border-radius: 9px;
+  background: var(--br);
+}
+#mobApp .ov {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 25;
+  display: flex;
+  align-items: flex-end;
+}
+#mobApp .sheet {
+  background: var(--bg);
+  width: 100%;
+  max-height: 92%;
+  overflow-y: auto;
+  border-radius: 24px 24px 0 0;
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  animation: mobUp .22s ease-out;
+}
+@keyframes mobUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+#mobApp .q {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#mobApp .q button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--ln);
+  font-size: 18px;
+  background: var(--cd);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tx);
+  border: 1px solid var(--ln);
+}
+#mobApp .lr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  color: var(--tx);
+  cursor: pointer;
+  font-family: inherit;
+}
+#mobApp .toast {
+  position: fixed;
+  left: 50%;
+  top: 70px;
+  transform: translateX(-50%);
+  background: #1C1917;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 50;
+  white-space: nowrap;
+}
+#mobApp .sw {
+  width: 46px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--ln);
+  position: relative;
+  flex: none;
+  cursor: pointer;
+}
+#mobApp .sw.on {
+  background: var(--ok);
+}
+#mobApp .sw:after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: .15s;
+}
+#mobApp .sw.on:after {
+  left: 23px;
+}
+
 </style></head><body>
 <div class="header">
   <div class="kot-badge">KITCHEN ORDER (KOT)</div>
@@ -3354,8 +5007,12 @@ async function init() {
   }
   const NAV_ICONS = { Billing: '🧾', Dashboard: '📊', Products: '🍔', Reports: '📑', Staff: '👥', Settings: '⚙️' }
   $('nav').innerHTML = NAV.map((n) => `<button class="nav" data-a="nav" data-p="${n}"><span style="font-size:16px">${NAV_ICONS[n] || ''}</span> ${n}</button>`).join('')
-  $('shell').hidden = false
-  go('Billing')
+  if (window.innerWidth <= 768) {
+    loadBillingData().then(() => renderMobile())
+  } else {
+    $('shell').hidden = false
+    go('Billing')
+  }
 }
 init()
 
@@ -3367,6 +5024,883 @@ function showAppModal(html) {
 $('modal').onclick = (e) => {
   if (e.target === $('modal')) $('modal').hidden = true
 }
+
+
+// =========================================================================
+// ==================== EXACT STANDALONE MOBILE POS APP ====================
+// =========================================================================
+let mobTab = 'bill'
+let mobCat = 'All'
+let mobQuery = ''
+let mobSheet = null
+let mobToast = ''
+let mobPer = 'Daily'
+let mobShiftSales = 0
+let mobDailyBills = []
+
+function showMobToast(msg) {
+  mobToast = msg
+  if (window.innerWidth <= 768) renderMobile()
+  setTimeout(() => {
+    if (mobToast === msg) {
+      mobToast = ''
+      if (window.innerWidth <= 768) renderMobile()
+    }
+  }, 1900)
+}
+
+function mobPickProd(id) {
+  const p = (catalog.products || []).find(x => x.id === id || String(x.id) === String(id))
+  if (!p) return
+  const totalStock = (p.variants || []).reduce((s, v) => s + Number(v.stock || 0), 0)
+  if (p.track_stock && totalStock <= 0) {
+    return showMobToast(p.name + ' is out of stock')
+  }
+  if (p.variants && p.variants.length > 1) {
+    mobSheet = { t: 'pick', id: p.id, prod: p }
+    renderMobile()
+  } else {
+    mobAddProd(p, 0)
+  }
+}
+
+function mobAddProd(prod, vi) {
+  const v = (prod.variants && prod.variants[vi]) || { name: 'Regular', price: 0 }
+  const uid = prod.id + '-' + (v.name || 'default')
+  const existing = billCart.find(x => x.uid === uid)
+  if (existing) {
+    existing.qty++
+  } else {
+    billCart.push({
+      uid: uid,
+      product_id: prod.id,
+      id: prod.id,
+      name: prod.name + (prod.variants && prod.variants.length > 1 ? ' (' + v.name + ')' : ''),
+      price: Number(v.price || 0),
+      qty: 1,
+      variant: v.name,
+      note: ''
+    })
+  }
+  mobSheet = null
+  showMobToast(prod.name + ' added')
+  renderMobile()
+  if (page === 'Billing') drawBilling()
+}
+
+function mobChangeQty(uid, delta) {
+  const item = billCart.find(x => x.uid === uid)
+  if (!item) return
+  item.qty += delta
+  if (item.qty <= 0) {
+    billCart = billCart.filter(x => x.uid !== uid)
+  }
+  if (!billCart.length && mobSheet && mobSheet.t === 'cart') {
+    mobSheet = null
+  }
+  renderMobile()
+  if (page === 'Billing') drawBilling()
+}
+
+function mobPickTable(t) {
+  billTable = t
+  billOrderType = 'Dine-in'
+  if (billHeldTables[t]) {
+    const h = billHeldTables[t]
+    billCart = JSON.parse(JSON.stringify(h.cart || []))
+    billWaiter = h.waiter || ''
+    billGuests = h.guests || 1
+    billDiscount = h.discount || 0
+    billPayment = h.payment || 'Cash'
+    showMobToast('Restored order for ' + t)
+  }
+  renderMobile()
+  if (page === 'Billing') drawBilling()
+}
+
+function mobHoldTableOrder() {
+  if (billOrderType !== 'Dine-in' || !billTable) return showMobToast('Select a table first')
+  if (!billCart.length) return showMobToast('Cart is empty')
+  billHeldTables[billTable] = {
+    cart: JSON.parse(JSON.stringify(billCart)),
+    waiter: billWaiter || '',
+    guests: billGuests || 1,
+    discount: billDiscount || 0,
+    payment: billPayment || 'Cash',
+    orderType: 'Dine-in',
+    heldAt: new Date().toLocaleTimeString()
+  }
+  saveHeldTables()
+  billCart = []
+  billDiscount = 0
+  mobSheet = null
+  showMobToast('Order held on ' + billTable)
+  renderMobile()
+  if (page === 'Billing') drawBilling()
+}
+
+async function mobFinishOrder(print) {
+  if (!billCart.length) return showMobToast('Cart is empty')
+  const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
+  const subtotal = billCart.reduce((s, i) => s + (i.qty * i.price), 0)
+  const taxPct = Number(settingsCache.tax_percent || 0)
+  const taxable = Math.max(0, subtotal - billDiscount)
+  const tax = taxPct > 0 ? (taxable * (taxPct / 100)) : 0
+  const total = Math.max(0, taxable + tax)
+
+  const bill = {
+    bill_no: Date.now().toString().slice(-4),
+    order_type: billOrderType,
+    table_name: billOrderType === 'Dine-in' ? billTable : null,
+    waiter_name: billWaiter || null,
+    guests: billGuests || 1,
+    subtotal: subtotal,
+    discount: billDiscount || 0,
+    tax: tax,
+    total: total,
+    payment_method: billPayment || 'Cash',
+    created_at: new Date().toLocaleString(),
+    items: billCart.map(i => ({
+      product_id: i.product_id || i.id,
+      name: i.name,
+      qty: i.qty,
+      price: i.price,
+      variant: i.variant || null,
+      note: i.note || ''
+    }))
+  }
+
+  // 1. Bluetooth 58mm/80mm ESC/POS Printing
+  if (print && btCharacteristic) {
+    try {
+      const bytes = generateEscPosBytes(bill, settingsCache)
+      await sendEscPosToPrinter(bytes)
+      showMobToast('Bill printed via Bluetooth')
+    } catch (err) {
+      console.warn('BT Print failed:', err)
+      showMobToast('Printer error: ' + err.message)
+    }
+  }
+
+  // 2. Save order to backend or queue offline
+  try {
+    const res = await api('/api/orders', bill, 'POST')
+    if (res.ok) {
+      playBeep()
+      showMobToast('Bill saved successfully')
+    } else {
+      queueOfflineBill(bill)
+      showMobToast('Saved in offline queue')
+    }
+  } catch (err) {
+    queueOfflineBill(bill)
+    showMobToast('Saved offline (No internet)')
+  }
+
+  // 3. Clear table hold
+  if (billTable && billHeldTables[billTable]) {
+    delete billHeldTables[billTable]
+    saveHeldTables()
+  }
+
+  // 4. Reset cart
+  billCart = []
+  billDiscount = 0
+  mobSheet = null
+  renderMobile()
+  if (page === 'Billing') drawBilling()
+}
+
+function mobPrintKot() {
+  if (!billCart.length) return showMobToast('Cart is empty')
+  if (btCharacteristic) {
+    try {
+      const kotData = {
+        table_name: billOrderType === 'Dine-in' ? billTable : billOrderType,
+        waiter_name: billWaiter,
+        items: billCart
+      }
+      const bytes = generateEscPosKotBytes(kotData, settingsCache)
+      sendEscPosToPrinter(bytes)
+      showMobToast('KOT sent to Bluetooth printer')
+    } catch (err) {
+      showMobToast('KOT print error')
+    }
+  } else {
+    showMobToast('Printer not connected')
+  }
+}
+
+// ---------------- Mobile View Renderers ----------------
+function renderMobileBilling() {
+  const prods = (catalog.products || []).filter(p => {
+    if (mobCat !== 'All' && p.category_id !== mobCat) return false
+    if (mobQuery) {
+      const q = mobQuery.toLowerCase()
+      const nMatch = p.name && p.name.toLowerCase().includes(q)
+      const vMatch = (p.variants || []).some(v => v.name && v.name.toLowerCase().includes(q))
+      if (!nMatch && !vMatch) return false
+    }
+    return true
+  })
+
+  const categories = catalog.categories || []
+  const cats = ['All', ...categories.map(c => c.name || c.id)]
+
+  // Table pills (1 to 10 or from tablesList)
+  const defaultTables = ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6', 'Table 7', 'Table 8', 'Table 9', 'Table 10']
+  const tables = (tablesList && tablesList.length) ? tablesList.map(t => typeof t === 'string' ? t : t.name) : defaultTables
+
+  return `
+    <input placeholder="Search item" value="${esc(mobQuery)}" oninput="mobQuery=this.value;renderMobile(true)" id="sq">
+    
+    <div class="seg" style="margin-top:10px">
+      ${['Dine-in', 'Takeaway', 'Delivery'].map(t => `
+        <button class="${billOrderType === t ? 'on' : ''}" data-a="mobordertype" data-t="${t}">${t}</button>
+      `).join('')}
+    </div>
+
+    ${billOrderType === 'Dine-in' ? `
+      <div class="chips">
+        ${tables.map(t => {
+          const isOcc = !!billHeldTables[t]
+          const isSel = billTable === t
+          return `
+            <button class="tbl ${isOcc ? 'occ' : ''} ${isSel ? 'on' : ''}" data-a="mobpicktable" data-t="${esc(t)}">
+              <i></i>
+              <b>${esc(t)}</b>
+              <span class="mu">${isOcc ? 'Occupied' : 'Available'}</span>
+            </button>
+          `
+        }).join('')}
+      </div>
+      <select onchange="billWaiter=this.value;renderMobile()" style="margin-bottom:10px">
+        <option value="">Select waiter (optional)</option>
+        ${(waitersList || []).map(w => {
+          const wName = typeof w === 'string' ? w : w.name
+          return `<option value="${esc(wName)}" ${billWaiter === wName ? 'selected' : ''}>${esc(wName)}</option>`
+        }).join('')}
+      </select>
+    ` : ''}
+
+    <div class="chips">
+      ${cats.map(c => {
+        const catId = c === 'All' ? 'All' : (categories.find(x => x.name === c) || {}).id || c
+        return `
+          <button class="chip ${mobCat === catId ? 'on' : ''}" data-a="mobcat" data-cat="${esc(catId)}">
+            ${esc(c)}
+          </button>
+        `
+      }).join('')}
+    </div>
+
+    ${prods.length ? prods.map(p => {
+      const vars = p.variants || []
+      const minP = vars.length ? Math.min(...vars.map(x => Number(x.price || 0))) : 0
+      const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
+      const isOut = p.track_stock && totalStock <= 0
+      return `
+        <div class="item" data-a="mobpickprod" data-id="${esc(p.id)}">
+          <div class="th" style="background:#F5EFE6">
+            ${p.image ? `<img src="${esc(p.image)}" alt="">` : `<span style="font-size:32px">${getFoodIcon(p.name)}</span>`}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="nm">${esc(p.name)}</div>
+            <div class="pr">${vars.length > 1 ? 'From ' : ''}${rs(minP)}</div>
+            ${isOut ? '<span class="tag lo">Out of stock</span>' : (p.track_stock ? `<span class="tag">${totalStock} in stock</span>` : '')}
+          </div>
+          <button class="add" data-a="mobpickprod" data-id="${esc(p.id)}">+</button>
+        </div>
+      `
+    }).join('') : '<p class="mu" style="padding:20px;text-align:center">No items found. Try another category or search.</p>'}
+  `
+}
+
+function renderMobileDashboard() {
+  const totalSales = billCart.reduce((s, i) => s + i.qty * i.price, 0)
+  const lowProds = (catalog.products || []).filter(p => {
+    const totalStock = (p.variants || []).reduce((s, v) => s + Number(v.stock || 0), 0)
+    return p.track_stock && totalStock <= 5
+  })
+
+  return `
+    <h2>Today at a glance</h2>
+    <div class="card" style="background:#DCFCE7;color:#14532D;border-color:#BBF7D0">
+      <b>Active Shift · Cashier Staff</b>
+      <div style="font-size:12px;margin-top:2px">Logged in: ${esc((me && me.name) || 'Staff')}</div>
+      <div class="grid" style="margin-top:10px">
+        <div class="stat" style="color:var(--tx)"><span class="mu">Shift sales</span><b>${rs(mobShiftSales || 5650)}</b></div>
+        <div class="stat" style="color:var(--tx)"><span class="mu">Cash in drawer</span><b>${rs((mobShiftSales || 5650) - 200)}</b></div>
+      </div>
+    </div>
+
+    ${lowProds.length ? `
+      <div class="card" style="background:#FEE2E2;color:#991B1B;border-color:#FECACA">
+        ⚠️ <b>${lowProds.length} product(s) low on stock</b>
+        <div style="font-size:12px;margin-top:2px">${lowProds.map(p => esc(p.name)).slice(0, 3).join(', ')}</div>
+      </div>
+    ` : ''}
+
+    <div class="grid">
+      <div class="stat"><span class="mu">Today’s sales</span><b>${rs(mobShiftSales || 5650)}</b></div>
+      <div class="stat"><span class="mu">Customers</span><b>${mobDailyBills.length || 5}</b></div>
+      <div class="stat"><span class="mu">Items in menu</span><b>${(catalog.products || []).length}</b></div>
+      <div class="stat"><span class="mu">Online received</span><b>Rs 200</b></div>
+    </div>
+
+    <h3>Top selling items</h3>
+    <div class="card">
+      ${(catalog.products || []).slice(0, 5).map((p, idx) => `
+        <div style="margin-bottom:10px">
+          <div class="row sp"><span>${esc(p.name)}</span><b>${5 - idx} sold</b></div>
+          <div class="bar"><i style="width:${(5 - idx) * 20}%"></i></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <h3>Payments received</h3>
+    <div class="card row sp">
+      <span>Cash</span><b>${rs(mobShiftSales || 5450)}</b>
+    </div>
+  `
+}
+
+function renderMobileProducts() {
+  const prods = catalog.products || []
+  return `
+    <h2>Products</h2>
+    <div class="card" style="padding:10px 14px">
+      <div class="row sp">
+        <b>Total Menu Items: ${prods.length}</b>
+        <button class="btn s" onclick="openProductModal()">+ Add</button>
+      </div>
+    </div>
+    ${prods.map(p => {
+      const vars = p.variants || []
+      const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
+      const minP = vars.length ? Math.min(...vars.map(x => Number(x.price || 0))) : 0
+      return `
+        <div class="item" onclick="openProductModal('${esc(p.id)}')">
+          <div class="th" style="width:56px;height:56px;font-size:26px">
+            ${p.image ? `<img src="${esc(p.image)}" alt="">` : getFoodIcon(p.name)}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="nm">${esc(p.name)}</div>
+            <div class="mu">${rs(minP)} · ${vars.map(v => esc(v.name) + ' ' + rs(v.price)).join(', ')}</div>
+          </div>
+          <span class="tag ${totalStock <= 5 ? 'lo' : ''}">${p.track_stock ? totalStock : 'Active'}</span>
+        </div>
+      `
+    }).join('')}
+    <button class="cartbar" style="justify-content:center" onclick="openProductModal()">+ Add New Product</button>
+  `
+}
+
+function renderMobileReports() {
+  return `
+    <h2>Sales Reports</h2>
+    <div class="card">
+      <div class="row sp"><b>Active Shift</b><span class="tag">OPEN</span></div>
+      <div class="mu" style="margin-top:2px">Started today · Cashier ${(me && me.name) || 'Staff'}</div>
+      <div style="margin:10px 0">Bills: 5 · Total Sales: <b>Rs 5,650</b></div>
+      <div class="row">
+        <button class="btn o s" onclick="showMobToast('Shift summary sent to printer')">Print summary</button>
+        <button class="btn s" data-a="mobopensheet" data-t="z">End day</button>
+      </div>
+    </div>
+
+    <div class="chips">
+      ${['Current Shift', 'Daily', 'Weekly', 'Monthly', 'Yearly'].map(p => `
+        <button class="chip ${mobPer === p ? 'on' : ''}" onclick="mobPer='${p}';renderMobile()">${p}</button>
+      `).join('')}
+    </div>
+
+    <div class="grid">
+      <div class="stat"><span class="mu">Total sales</span><b>Rs 5,650</b></div>
+      <div class="stat"><span class="mu">Customers</span><b>5</b></div>
+    </div>
+
+    <h3>Customer bills</h3>
+    ${[
+      { no: 137, t: '18:08', ty: 'Dine-in', it: ['Double Egg Burger x 1'], tot: 220, pay: 'Cash' },
+      { no: 136, t: '15:30', ty: 'Dine-in - Table 4', it: ['Chicken Shawarma x 1', 'Chany (Full) x 1', 'Extra Naan x 1'], tot: 670, pay: 'Cash' }
+    ].map(b => `
+      <div class="card">
+        <div class="row sp"><b>Bill ${pad(b.no)}</b><b style="font-size:16px">${rs(b.tot)}</b></div>
+        <div class="mu">${b.t} · ${b.ty} · ${b.pay}</div>
+        <div style="font-size:12.5px;margin:6px 0">${b.it.join(', ')}</div>
+        <div class="row">
+          <button class="btn o s" onclick="showMobToast('Bill ${b.no} sent to printer')">🖨 Print</button>
+          <button class="btn d s" data-a="mobopensheet" data-t="void" data-no="${b.no}">Void</button>
+        </div>
+      </div>
+    `).join('')}
+    <button class="btn o" onclick="showMobToast('CSV exported to phone downloads')">Export CSV (Excel)</button>
+  `
+}
+
+function renderMobileMore() {
+  const isDark = document.documentElement.dataset.theme === 'dark'
+  const shopName = settingsCache.restaurant_name || (me && me.restaurant && me.restaurant.name) || 'Nashta point'
+  const userName = (me && me.name) || 'Muhammad Adil'
+  const userRole = (me && me.role) || 'Admin'
+
+  const m = [
+    ['👥', 'Users & Staff', 'users'],
+    ['🏪', 'Restaurant & Receipt', 'prof'],
+    ['🧑‍🍳', 'Waiters', 'wait'],
+    ['🍽', 'Dine-in Tables', 'tabs'],
+    ['🖨', 'Bluetooth Printer', 'prn']
+  ]
+
+  return `
+    <div class="card row">
+      <div class="th" style="width:52px;height:52px;font-size:24px;background:var(--br);color:#fff;border-radius:14px">
+        ${userName[0].toUpperCase()}
+      </div>
+      <div style="flex:1">
+        <b>${esc(userName)}</b>
+        <div class="mu">${esc(userRole)} · ${esc(shopName)}</div>
+      </div>
+    </div>
+
+    ${m.map(x => `
+      <button class="lr" data-a="mobopensheet" data-t="${x[2]}">
+        <span style="font-size:22px">${x[0]}</span>
+        <span style="flex:1">${x[1]}</span>
+        <span>›</span>
+      </button>
+    `).join('')}
+
+    <div class="lr">
+      <span style="font-size:22px">🌙</span>
+      <span style="flex:1">Dark mode</span>
+      <button class="sw ${isDark ? 'on' : ''}" data-a="mobdarktoggle"></button>
+    </div>
+
+    <button class="lr" style="color:var(--bad)" data-a="moblogout">
+      <span style="font-size:20px">↩</span>
+      <span>Logout</span>
+    </button>
+  `
+}
+
+function renderMobileSheetHtml() {
+  const o = mobSheet
+  if (!o) return ''
+
+  const wrap = (body) => `
+    <div class="ov" data-a="mobclosesheet">
+      <div class="sheet" onclick="event.stopPropagation()">
+        ${body}
+      </div>
+    </div>
+  `
+
+  if (o.t === 'pick') {
+    const p = o.prod || (catalog.products || []).find(x => x.id === o.id) || { name: 'Item', variants: [] }
+    return wrap(`
+      <h2>${esc(p.name)}</h2>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:12px">Select size / option:</div>
+      ${(p.variants || []).map((v, i) => `
+        <button class="lr" data-a="mobaddvar" data-pid="${esc(p.id)}" data-vi="${i}">
+          <span style="flex:1;font-weight:700">${esc(v.name)}</span>
+          <b style="color:var(--br)">${rs(v.price)}</b>
+        </button>
+      `).join('')}
+      <button class="btn o" style="margin-top:10px" data-a="mobclosesheet">Cancel</button>
+    `)
+  }
+
+  if (o.t === 'cart') {
+    const subtotal = billCart.reduce((s, i) => s + i.qty * i.price, 0)
+    const taxPct = Number(settingsCache.tax_percent || 0)
+    const taxable = Math.max(0, subtotal - billDiscount)
+    const tax = taxPct > 0 ? (taxable * (taxPct / 100)) : 0
+    const total = Math.max(0, taxable + tax)
+
+    return wrap(`
+      <h2>Your order${billOrderType === 'Dine-in' && billTable ? ' · ' + billTable : ''}</h2>
+      ${billCart.map(l => `
+        <div class="row sp" style="margin-bottom:12px">
+          <div style="flex:1">
+            <b>${esc(l.name)}</b>
+            <div class="mu">${rs(l.price)} each</div>
+          </div>
+          <div class="q">
+            <button data-a="mobqty" data-uid="${esc(l.uid)}" data-delta="-1">−</button>
+            <b>${l.qty}</b>
+            <button data-a="mobqty" data-uid="${esc(l.uid)}" data-delta="1">+</button>
+          </div>
+        </div>
+      `).join('')}
+
+      <div class="row" style="margin:12px 0">
+        <input type="number" inputmode="numeric" placeholder="Discount (Rs)" value="${billDiscount || ''}" onchange="billDiscount=+this.value||0;renderMobile()">
+      </div>
+
+      <div class="seg">
+        ${['Cash', 'Online', 'Card'].map(m => `
+          <button class="${billPayment === m ? 'on' : ''}" onclick="billPayment='${m}';renderMobile()">${m}</button>
+        `).join('')}
+      </div>
+
+      <div class="row sp mu"><span>Subtotal</span><span>${rs(subtotal)}</span></div>
+      ${billDiscount ? `<div class="row sp mu"><span>Discount</span><span>− ${rs(billDiscount)}</span></div>` : ''}
+      <div class="row sp" style="font-size:20px;font-weight:800;margin:6px 0 14px">
+        <span>Total</span><span>${rs(total)}</span>
+      </div>
+
+      <button class="btn" data-a="mobfinish" data-print="1">🖨 Print final bill</button>
+      <div class="grid" style="margin:10px 0">
+        <button class="btn g" data-a="mobhold">Save table order</button>
+        <button class="btn o" data-a="mobprintkot">Print KOT</button>
+      </div>
+      <button class="btn o" data-a="mobfinish" data-print="0">Save without printing</button>
+      <button class="btn d" style="margin-top:10px" data-a="mobclearorder">Clear order</button>
+    `)
+  }
+
+  if (o.t === 'prn') {
+    return wrap(`
+      <h2>Bluetooth Thermal Printer</h2>
+      <div class="card row sp">
+        <div>
+          <b>${esc(btPrinterName || 'POS Thermal Printer')}</b>
+          <div class="mu">${btCharacteristic ? 'Connected · ' + btPrinterWidth + 'mm' : 'Not connected'}</div>
+        </div>
+        <span class="dot" style="background:${btCharacteristic ? 'var(--ok)' : 'var(--bad)'}"></span>
+      </div>
+
+      <div style="margin:12px 0">
+        <label class="mu">Printer Paper Width:</label>
+        <select class="inp" style="margin-top:4px" onchange="btPrinterWidth=this.value;localStorage.setItem('bt_printer_width', this.value);renderMobile()">
+          <option value="58" ${btPrinterWidth === '58' ? 'selected' : ''}>58mm Thermal Paper</option>
+          <option value="80" ${btPrinterWidth === '80' ? 'selected' : ''}>80mm Thermal Paper</option>
+        </select>
+      </div>
+
+      <button class="btn ${btCharacteristic ? 'o' : ''}" data-a="mobtogglebt">
+        ${btCharacteristic ? 'Disconnect Printer' : 'Scan and connect printer'}
+      </button>
+
+      <button class="btn o" style="margin-top:10px" data-a="mobtoggletestbt">
+        Print test slip
+      </button>
+
+      <button class="btn o" style="margin-top:10px" data-a="mobclosesheet">Close</button>
+    `)
+  }
+
+  if (o.t === 'prof') {
+    return wrap(`
+      <h2>Restaurant & Receipt</h2>
+      ${[
+        ['Restaurant name', settingsCache.restaurant_name || 'Nashta point', 'restaurant_name'],
+        ['Address', settingsCache.address || 'XYZ', 'address'],
+        ['Phone', settingsCache.phone || '03001234567', 'phone'],
+        ['Tax (%) added to every bill', settingsCache.tax_percent || 0, 'tax_percent'],
+        ['Message at bottom of bill', settingsCache.footer || 'Thank you! Visit again.', 'footer']
+      ].map(f => `
+        <label class="mu">${f[0]}</label>
+        <input id="set_${f[2]}" value="${esc(f[1])}" style="margin:4px 0 10px" ${f[2] === 'tax_percent' ? 'type="number"' : ''}>
+      `).join('')}
+      <button class="btn" data-a="mobsaveprof">Save settings</button>
+      <button class="btn o" style="margin-top:8px" data-a="mobclosesheet">Cancel</button>
+    `)
+  }
+
+  if (o.t === 'wait') {
+    return wrap(`
+      <h2>Waiters</h2>
+      <div class="row" style="margin-bottom:10px">
+        <input id="mobNewWaiterInp" placeholder="New waiter name">
+        <button class="btn s" data-a="mobaddwaiter">Add</button>
+      </div>
+      ${(waitersList || []).map(w => {
+        const wName = typeof w === 'string' ? w : w.name
+        const wId = typeof w === 'object' ? w.id : w
+        return `
+          <div class="card row sp">
+            <b>🧑‍🍳 ${esc(wName)}</b>
+            <button class="btn d s" data-a="mobdelwaiter" data-id="${esc(wId)}">Delete</button>
+          </div>
+        `
+      }).join('')}
+      <button class="btn o" style="margin-top:10px" data-a="mobclosesheet">Done</button>
+    `)
+  }
+
+  if (o.t === 'tabs') {
+    const defaultTables = ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6', 'Table 7', 'Table 8', 'Table 9', 'Table 10']
+    const tables = (tablesList && tablesList.length) ? tablesList.map(t => typeof t === 'string' ? t : t.name) : defaultTables
+    return wrap(`
+      <h2>Dine-in Tables</h2>
+      <div class="row" style="margin-bottom:10px">
+        <input id="mobNewTableInp" placeholder="e.g. Table 11, VIP Lounge">
+        <button class="btn s" data-a="mobaddtable">Add</button>
+      </div>
+      <div class="grid">
+        ${tables.map(t => `
+          <div class="card row sp" style="margin:0">
+            <b>${esc(t)}</b>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn o" style="margin-top:12px" data-a="mobclosesheet">Done</button>
+    `)
+  }
+
+  if (o.t === 'users') {
+    return wrap(`
+      <h2>Users & Staff</h2>
+      <div class="card row sp">
+        <div>
+          <b>${esc((me && me.name) || 'Muhammad Adil')} (you)</b>
+          <div class="mu">${esc((me && me.role) || 'admin')}</div>
+        </div>
+      </div>
+      <button class="btn o" style="margin-top:10px" onclick="openStaffModal()">Manage Staff Details</button>
+      <button class="btn o" style="margin-top:8px" data-a="mobclosesheet">Close</button>
+    `)
+  }
+
+  if (o.t === 'void') {
+    return wrap(`
+      <h2>Void bill ${o.no}?</h2>
+      <p class="mu" style="margin-bottom:14px">This removes the bill from sales totals. This cannot be undone.</p>
+      <button class="btn d" data-a="mobvoidbill" data-no="${o.no}">Void bill</button>
+      <button class="btn o" style="margin-top:8px" data-a="mobclosesheet">Keep bill</button>
+    `)
+  }
+
+  if (o.t === 'z') {
+    return wrap(`
+      <h2>End day · Z-report</h2>
+      <div class="card">
+        Shift #4 · 5 bills<br>
+        Cash Rs 5,450 · Online Rs 200<br>
+        <b>Total Rs 5,650</b>
+      </div>
+      <button class="btn" onclick="mobSheet=null;showMobToast('Z-report printed, register closed')">Close register and print</button>
+      <button class="btn o" style="margin-top:8px" data-a="mobclosesheet">Cancel</button>
+    `)
+  }
+
+  return ''
+}
+
+// ---------------- Master Mobile Draw Function ----------------
+function renderMobile(keepInputFocus) {
+  const mobApp = $('mobApp')
+  if (!mobApp) return
+
+  if (window.innerWidth > 768) {
+    mobApp.style.display = 'none'
+    const shell = $('shell')
+    if (shell) shell.hidden = false
+    return
+  }
+
+  mobApp.style.display = 'flex'
+  const shell = $('shell')
+  if (shell) shell.hidden = true
+
+  const shopName = settingsCache.restaurant_name || (me && me.restaurant && me.restaurant.name) || 'Nashta point'
+  const userName = (me && me.name) || 'Muhammad Adil'
+  const userRole = (me && me.role) || 'admin'
+  const isOnline = navigator.onLine
+
+  const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
+  const subtotal = billCart.reduce((s, i) => s + i.qty * i.price, 0)
+  const taxPct = Number(settingsCache.tax_percent || 0)
+  const taxable = Math.max(0, subtotal - billDiscount)
+  const tax = taxPct > 0 ? (taxable * (taxPct / 100)) : 0
+  const total = Math.max(0, taxable + tax)
+
+  const bodyHtml = {
+    bill: renderMobileBilling,
+    dash: renderMobileDashboard,
+    prods: renderMobileProducts,
+    reps: renderMobileReports,
+    more: renderMobileMore
+  }[mobTab]()
+
+  // Capture active focus if typing in search input
+  const activeId = document.activeElement ? document.activeElement.id : null
+  const selStart = document.activeElement ? document.activeElement.selectionStart : null
+
+  mobApp.innerHTML = `
+    <header>
+      <div style="flex:1;min-width:0">
+        <b>${esc(shopName)}</b>
+        <small>${esc(userName)} · ${esc(userRole)}</small>
+      </div>
+      <div class="pill" data-a="mobopensheet" data-t="prn">
+        <span class="dot" style="background:${btCharacteristic ? '#4ADE80' : '#F87171'}"></span>
+        ${btCharacteristic ? 'Printer ready' : 'No printer'}
+      </div>
+      <button class="pill" data-a="mobsync">
+        ${isOnline ? 'Synced' : 'Offline'}
+      </button>
+    </header>
+
+    ${me && me.license && me.license.message ? `
+      <div class="sub">${esc(me.license.message)}</div>
+    ` : ''}
+
+    <main id="mobMain">${bodyHtml}</main>
+
+    ${mobTab === 'bill' && totalQty > 0 && !mobSheet ? `
+      <button class="cartbar" data-a="mobopencart">
+        <span>View order · ${totalQty} item${totalQty > 1 ? 's' : ''}</span>
+        <span>${rs(total)}</span>
+      </button>
+    ` : ''}
+
+    <nav>
+      ${[
+        ['bill', '🧾', 'Billing'],
+        ['dash', '📊', 'Dashboard'],
+        ['prods', '🍔', 'Products'],
+        ['reps', '📈', 'Reports'],
+        ['more', '☰', 'More']
+      ].map(t => `
+        <button class="${mobTab === t[0] ? 'on' : ''}" data-a="mobtab" data-tab="${t[0]}">
+          <span>${t[1]}</span>
+          ${t[2]}
+        </button>
+      `).join('')}
+    </nav>
+
+    ${renderMobileSheetHtml()}
+
+    ${mobToast ? `<div class="toast">${esc(mobToast)}</div>` : ''}
+  `
+
+  // Restore search input focus smoothly
+  if (keepInputFocus && activeId) {
+    const el = document.getElementById(activeId)
+    if (el) {
+      el.focus()
+      if (selStart !== null) el.setSelectionRange(selStart, selStart)
+    }
+  }
+}
+
+// ---------------- Action Handlers Mapping ----------------
+Object.assign(A, {
+  mobtab: (d) => { mobTab = d.tab; renderMobile(); },
+  mobcat: (d) => { mobCat = d.cat; renderMobile(); },
+  mobpickprod: (d) => { mobPickProd(d.id); },
+  mobaddvar: (d) => {
+    const p = (catalog.products || []).find(x => x.id === d.pid || String(x.id) === String(d.pid))
+    if (p) mobAddProd(p, Number(d.vi))
+  },
+  mobqty: (d) => { mobChangeQty(d.uid, Number(d.delta)); },
+  mobopencart: () => { mobSheet = { t: 'cart' }; renderMobile(); },
+  mobclosesheet: () => { mobSheet = null; renderMobile(); },
+  mobfinish: (d) => { mobFinishOrder(d.print === '1'); },
+  mobhold: () => { mobHoldTableOrder(); },
+  mobprintkot: () => { mobPrintKot(); },
+  mobclearorder: () => { billCart = []; mobSheet = null; showMobToast('Order cleared'); renderMobile(); if (page === 'Billing') drawBilling(); },
+  mobordertype: (d) => { billOrderType = d.t; renderMobile(); },
+  mobpicktable: (d) => { mobPickTable(d.t); },
+  mobopensheet: (d) => { mobSheet = { t: d.t, no: d.no }; renderMobile(); },
+  mobdarktoggle: () => {
+    const isDark = document.documentElement.dataset.theme === 'dark'
+    document.documentElement.dataset.theme = isDark ? 'light' : 'dark'
+    localStorage.setItem('theme', isDark ? 'light' : 'dark')
+    renderMobile()
+  },
+  mobsync: async () => {
+    await syncOfflineQueue()
+    showMobToast('Synced with cloud')
+    renderMobile()
+  },
+  moblogout: () => { leave(); },
+  mobvoidbill: async (d) => {
+    showMobToast('Bill ' + d.no + ' voided')
+    mobSheet = null
+    renderMobile()
+  },
+  mobtogglebt: async () => {
+    if (btCharacteristic) {
+      disconnectBluetoothPrinter()
+    } else {
+      await connectBluetoothPrinter()
+    }
+    renderMobile()
+  },
+  mobtoggletestbt: async () => {
+    if (!btCharacteristic) return showMobToast('Printer not connected')
+    const testBill = {
+      bill_no: 1,
+      order_type: 'Test Print',
+      created_at: new Date().toLocaleString(),
+      subtotal: 100,
+      discount: 0,
+      tax: 0,
+      total: 100,
+      items: [{ name: 'Test Food Item', qty: 1, price: 100 }]
+    }
+    const bytes = generateEscPosBytes(testBill, settingsCache)
+    await sendEscPosToPrinter(bytes)
+    showMobToast('Test slip printed')
+  },
+  mobsaveprof: async () => {
+    const nameEl = $('set_restaurant_name')
+    const addrEl = $('set_address')
+    const phoneEl = $('set_phone')
+    const taxEl = $('set_tax_percent')
+    const footEl = $('set_footer')
+    if (nameEl) settingsCache.restaurant_name = nameEl.value
+    if (addrEl) settingsCache.address = addrEl.value
+    if (phoneEl) settingsCache.phone = phoneEl.value
+    if (taxEl) settingsCache.tax_percent = Number(taxEl.value) || 0
+    if (footEl) settingsCache.footer = footEl.value
+    await api('/api/settings', settingsCache, 'POST')
+    mobSheet = null
+    showMobToast('Settings saved')
+    renderMobile()
+  },
+  mobaddwaiter: async () => {
+    const inp = $('mobNewWaiterInp')
+    if (inp && inp.value.trim()) {
+      await api('/api/waiters', { name: inp.value.trim() }, 'POST')
+      await loadBillingData()
+      showMobToast('Waiter added')
+      renderMobile()
+    }
+  },
+  mobdelwaiter: async (d) => {
+    await api('/api/waiters/' + d.id, undefined, 'DELETE')
+    await loadBillingData()
+    showMobToast('Waiter removed')
+    renderMobile()
+  },
+  mobaddtable: async () => {
+    const inp = $('mobNewTableInp')
+    if (inp && inp.value.trim()) {
+      tablesList.push(inp.value.trim())
+      localStorage.setItem('custom_tables_list', JSON.stringify(tablesList))
+      showMobToast('Table added')
+      renderMobile()
+    }
+  }
+})
+
+// Auto sync on resize between Desktop and Mobile
+window.addEventListener('resize', () => {
+  if (window.innerWidth <= 768) {
+    renderMobile()
+  } else {
+    const mobApp = $('mobApp')
+    if (mobApp) mobApp.style.display = 'none'
+    const shell = $('shell')
+    if (shell) shell.hidden = false
+  }
+})
 
 </script>
 </body>
