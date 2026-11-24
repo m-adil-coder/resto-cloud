@@ -247,6 +247,68 @@
     color: #FCD34D;
   }
 
+    /* Top Action Bar for Clean Mobile Billing */
+  .pos-top-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #EBE4D8;
+    border-radius: 12px;
+    padding: 6px 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .pos-table-badge-btn {
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    background: #FAF6F0 !important;
+    border: 1px solid #D6CEBE !important;
+    color: #1F1B16 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    flex: none !important;
+    white-space: nowrap !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+  }
+  .pos-top-search {
+    width: 100%;
+    height: 36px;
+    min-height: 36px;
+    border: 0;
+    background: transparent;
+    padding: 0 6px;
+    font-size: 13.5px;
+    color: #1F1B16;
+    outline: none;
+  }
+  .pos-card-add-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: #9A3412 !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 3px 8px rgba(154,52,18,0.4) !important;
+    transition: transform .1s, background .15s !important;
+  }
+  .pos-card-add-btn:active {
+    transform: scale(0.9) !important;
+    background: #7c2d12 !important;
+  }
+
   /* Segmented order-type selector */
   .pos-type-bar {
     display: flex;
@@ -602,7 +664,7 @@
     }
     .mob-cart-bar.active { display: flex !important; }
     .pos-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .pos-card img, .pos-card .pos-img-ph { height: 90px; }
+    .pos-card img, .pos-card .pos-img-ph { height: 120px !important; }
   }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 </style>
@@ -962,6 +1024,66 @@ function addCartItem(prod, v) {
   drawBilling()
 }
 
+function openTablePickerModal() {
+  const tables = (tablesList && tablesList.length) ? tablesList : Array.from({ length: 10 }, (_, i) => ({ id: `tbl_${i+1}`, name: `Table ${i + 1}` }))
+  const modal = $('modal')
+  const mbox = $('mbox')
+  if (!modal || !mbox) return
+
+  mbox.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EBE4D8;padding-bottom:10px;margin-bottom:14px">
+      <h3 style="margin:0;font-size:17px;color:#1C1917">Order & Table Details</h3>
+      <button data-a="closemodal" class="btn" style="min-height:30px;padding:0 8px;font-size:12px;font-weight:700">✕</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:12px;font-weight:800;color:#57534E;margin-bottom:6px;text-transform:uppercase">Order Type</div>
+        <div class="pos-type-bar">
+          <button class="pos-type-pill ${billOrderType === 'Dine-in' ? 'on' : ''}" data-a="possetordertype" data-type="Dine-in">🍽️ Dine-in</button>
+          <button class="pos-type-pill ${billOrderType === 'Takeaway' ? 'on' : ''}" data-a="possetordertype" data-type="Takeaway">🥡 Takeaway</button>
+          <button class="pos-type-pill ${billOrderType === 'Delivery' ? 'on' : ''}" data-a="possetordertype" data-type="Delivery">🛵 Delivery</button>
+        </div>
+      </div>
+
+      ${billOrderType === 'Dine-in' ? `
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;color:#57534E;margin-bottom:6px;text-transform:uppercase">
+          <span>Select Table (${tables.length})</span>
+          <span style="font-size:11px;color:#78716C">🟢 Free • 🔴 Held</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(90px, 1fr));gap:8px;max-height:220px;overflow-y:auto;padding-right:2px">
+          ${tables.map(t => {
+            const isOccupied = !!billHeldTables[t.name]
+            const isSelected = billTable === t.name
+            return `<button data-a="posseltablemodal" data-t="${esc(t.name)}" style="min-height:42px;border-radius:10px;font-weight:700;font-size:13px;border:1px solid ${isSelected ? '#9A3412' : '#D6CEBE'};background:${isSelected ? '#9A3412' : isOccupied ? '#FEE2E2' : '#fff'};color:${isSelected ? '#fff' : isOccupied ? '#991B1B' : '#1F1B16'};display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer">
+              <span style="font-size:10px">${isOccupied ? '🔴' : '🟢'}</span> ${esc(t.name)}
+            </button>`
+          }).join('')}
+        </div>
+      </div>
+      ` : ''}
+
+      <div style="display:flex;gap:10px">
+        <label class="f" style="flex:1">Waiter / Server
+          <select id="modalWaiter" class="inp" onchange="billWaiter=this.value">
+            <option value="">(None assigned)</option>
+            ${waitersList.map(w => `<option value="${esc(w.name)}" ${billWaiter === w.name ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}
+          </select>
+        </label>
+        ${billOrderType === 'Dine-in' ? `
+        <label class="f" style="width:80px">Guests
+          <input type="number" min="1" value="${billGuests}" class="inp" style="text-align:center" onchange="billGuests=Math.max(1, parseInt(this.value,10)||1)">
+        </label>
+        ` : ''}
+      </div>
+
+      <button class="pri" data-a="closemodal" style="min-height:44px;margin-top:6px;font-size:15px">Confirm & Close</button>
+    </div>
+  `
+  modal.hidden = false
+}
+
 function drawBilling() {
   if (page !== 'Billing') return
   const categories = catalog.categories || []
@@ -1072,42 +1194,16 @@ function drawBilling() {
       ${licStrip()}
       ${toastHtml}
 
-      <!-- Compact Top Control Bar -->
-      <div class="card" style="padding:10px 14px;display:flex;flex-direction:column;gap:10px">
-        <!-- Segmented Type Selector -->
-        <div class="pos-type-bar">
-          <button class="pos-type-pill ${billOrderType === 'Dine-in' ? 'on' : ''}" data-a="possetordertype" data-type="Dine-in">🍽️ Dine-in</button>
-          <button class="pos-type-pill ${billOrderType === 'Takeaway' ? 'on' : ''}" data-a="possetordertype" data-type="Takeaway">🥡 Takeaway</button>
-          <button class="pos-type-pill ${billOrderType === 'Delivery' ? 'on' : ''}" data-a="possetordertype" data-type="Delivery">🛵 Delivery</button>
-        </div>
-
-        ${billOrderType === 'Dine-in' ? `
-        <!-- Sleek Horizontal Table Chips Scroller -->
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#78716C">
-            <span>Select Table: <b style="color:#9A3412">${esc(billTable || 'None')}</b></span>
-            <span>🟢 Free • 🔴 Occupied</span>
-          </div>
-          <div class="table-scroll">
-            ${tablesHtml}
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- Compact Sub-row: Waiter, Guests, Search -->
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="posWaiter" class="inp" style="width:125px;min-height:36px;padding:0 8px;font-size:13px">
-            <option value="">👤 Waiter</option>
-            ${waitersList.map((w) => `<option value="${esc(w.name)}" ${billWaiter === w.name ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}
-          </select>
-
-          ${billOrderType === 'Dine-in' ? `
-          <input id="posGuests" type="number" min="1" value="${billGuests}" class="inp" placeholder="Guests" title="Guests count" style="width:65px;min-height:36px;padding:0 6px;text-align:center;font-size:13px">
-          ` : ''}
-
-          <div style="flex:1;min-width:140px">
-            <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="🔍 Search menu..." class="inp" style="width:100%;min-height:36px;padding:0 10px;font-size:13px">
-          </div>
+      <!-- Sleek Top Action Bar (Ultra-clean, zero wasted space) -->
+      <div class="pos-top-action-bar">
+        <button class="pos-table-badge-btn" data-a="posopentablepicker" title="Change order type or table">
+          <span>${billOrderType === 'Dine-in' ? '🍽️' : billOrderType === 'Takeaway' ? '🥡' : '🛵'}</span>
+          <span>${billOrderType === 'Dine-in' ? (billTable || 'Table 1') : billOrderType}</span>
+          <span style="font-size:10px;opacity:0.6">▼</span>
+        </button>
+        <div style="flex:1;min-width:0;position:relative;display:flex;align-items:center">
+          <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="🔍 Search menu items..." class="pos-top-search" autocomplete="off">
+          ${billSearch ? `<button data-a="posclearsearch" style="border:0;background:transparent;color:#9CA3AF;font-size:16px;padding:4px 8px;cursor:pointer">✕</button>` : ''}
         </div>
       </div>
 
@@ -2268,6 +2364,25 @@ const A = {
   },
   posclosetoast: () => {
     billToast = ''
+    drawBilling()
+  },
+  posclearsearch: () => {
+    billSearch = ''
+    drawBilling()
+  },
+  posopentablepicker: () => {
+    openTablePickerModal()
+  },
+  posseltablemodal: (d) => {
+    billTable = d.t
+    billOrderType = 'Dine-in'
+    if (billHeldTables[d.t]) {
+      const h = billHeldTables[d.t]
+      billCart = JSON.parse(JSON.stringify(h.cart || []))
+      billWaiter = h.waiter || ''
+      billGuests = h.guests || 1
+    }
+    closeModal()
     drawBilling()
   }
 }

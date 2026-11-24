@@ -1,4 +1,4 @@
-const CACHE_NAME = 'restopos-app-v2'
+const CACHE_NAME = 'restopos-app-v3'
 const STATIC_ASSETS = [
   '/',
   '/app.html',
