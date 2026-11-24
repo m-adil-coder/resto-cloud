@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const path = require('path')
+const fs = require('fs')
 const { pool, init } = require('./db')
 
 const SECRET = process.env.JWT_SECRET || ''
@@ -19,8 +20,18 @@ const app = express()
 app.set('trust proxy', 1)
 app.disable('x-powered-by')
 app.use(express.json({ limit: '25mb' }))
-app.use(express.static(path.join(__dirname, 'public')))
-app.use(express.static(__dirname))
+app.use(express.static(path.join(__dirname, 'public'), { dotfiles: 'allow' }))
+app.use(express.static(__dirname, { dotfiles: 'allow' }))
+
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  const p1 = path.join(__dirname, 'public', '.well-known', 'assetlinks.json')
+  const p2 = path.join(__dirname, '.well-known', 'assetlinks.json')
+  const p3 = path.join(__dirname, 'assetlinks.json')
+  if (fs.existsSync(p1)) return res.sendFile(p1)
+  if (fs.existsSync(p2)) return res.sendFile(p2)
+  if (fs.existsSync(p3)) return res.sendFile(p3)
+  res.status(404).json({ error: 'assetlinks.json not yet uploaded' })
+})
 
 app.get('/download', (req, res) => {
   const url = process.env.DESKTOP_DOWNLOAD_URL || 'https://github.com/m-adil-coder/resto-cloud/releases/download/v1.0.0/resto-pos-1.0.0-setup.exe'
