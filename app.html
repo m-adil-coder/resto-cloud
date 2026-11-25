@@ -1748,13 +1748,20 @@
   white-space: nowrap;
 }
 #mobApp .sw {
-  width: 46px;
-  height: 26px;
+  width: 44px;
+  height: 24px;
   border-radius: 99px;
   background: var(--ln);
   position: relative;
   flex: none;
   cursor: pointer;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
 }
 #mobApp .sw.on {
   background: var(--ok);
@@ -1762,16 +1769,17 @@
 #mobApp .sw:after {
   content: "";
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 2px;
   width: 20px;
   height: 20px;
   border-radius: 50%;
   background: #fff;
-  transition: .15s;
+  transition: transform .18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 #mobApp .sw.on:after {
-  left: 23px;
+  transform: translateX(20px);
 }
 
 </style>
@@ -1827,7 +1835,7 @@
 
 <script>
 // ================= AUTO CACHE BUSTER (V7 FOODPANDA FLAWLESS UI) =================
-const CURRENT_VERSION = 'v10-clean-full-sync'
+const CURRENT_VERSION = 'v11-perfect-mobile-exe-parity'
 if (localStorage.getItem('app_installed_version') !== CURRENT_VERSION) {
   localStorage.setItem('app_installed_version', CURRENT_VERSION)
   if ('caches' in window) {
@@ -3905,8 +3913,13 @@ const A = {
 }
 
 document.addEventListener('click', (e) => {
+  if (e.target.id === 'mobSheetOverlay' || (e.target.classList.contains('ov') && !e.target.closest('.sheet'))) {
+    mobSheet = null
+    renderMobile()
+    return
+  }
   const el = e.target.closest('[data-a]')
-  if (el && A[el.dataset.a]) A[el.dataset.a](el.dataset)
+  if (el && A[el.dataset.a]) A[el.dataset.a](el.dataset, e)
   const mobBtn = e.target.closest('.mob-nav-btn')
   if (mobBtn && mobBtn.dataset.p) go(mobBtn.dataset.p)
 })
@@ -4259,13 +4272,15 @@ function renderMobileBilling() {
           `
         }).join('')}
       </div>
-      <select onchange="billWaiter=this.value;renderMobile()" style="margin-bottom:10px">
-        <option value="">Select waiter (optional)</option>
-        ${(waitersList || []).map(w => {
-          const wName = typeof w === 'string' ? w : w.name
-          return `<option value="${esc(wName)}" ${billWaiter === wName ? 'selected' : ''}>${esc(wName)}</option>`
-        }).join('')}
-      </select>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input list="mobWaitersDatalist" id="mobWaiterInp" placeholder="Waiter name (type or choose)" value="${esc(billWaiter)}" oninput="billWaiter=this.value" onchange="billWaiter=this.value;renderMobile(true)" style="flex:1">
+          ${billWaiter ? `<button class="btn s o" onclick="billWaiter='';renderMobile()" style="padding:8px 12px;border-radius:10px">✕</button>` : ''}
+        </div>
+        <datalist id="mobWaitersDatalist">
+          ${(waitersList || []).map(w => `<option value="${esc(typeof w === 'string' ? w : w.name)}">`).join('')}
+        </datalist>
+      </div>
     ` : ''}
 
     <div class="chips">
@@ -4353,23 +4368,6 @@ function renderMobileDashboard() {
 
   return `
     <h2>Today at a glance</h2>
-    <div class="card" style="background:#DCFCE7;color:#14532D;border-color:#BBF7D0">
-      <div class="row sp">
-        <b>🟢 Active Shift · ${(me && me.name) || 'Staff'}</b>
-        <span class="tag" style="background:#166534;color:#fff">ONLINE</span>
-      </div>
-      <div style="font-size:12px;margin-top:2px;color:#166534">${esc(shopName)} · Logged in today</div>
-      <div class="grid" style="margin-top:10px">
-        <div class="stat" style="color:var(--tx);background:#fff">
-          <span class="mu">Total sales today</span>
-          <b>${rs(s.sales || 0)}</b>
-        </div>
-        <div class="stat" style="color:var(--tx);background:#fff">
-          <span class="mu">Orders / Bills</span>
-          <b>${s.guests || 0} bills</b>
-        </div>
-      </div>
-    </div>
 
     ${lowList.length ? `
       <div class="card" style="background:#FEF3C7;color:#92400E;border-color:#FCD34D">
@@ -4432,9 +4430,56 @@ function openProductModal(id) {
 function renderMobileProducts() {
   const categories = catalog.categories || []
   const allProds = catalog.products || []
-  
-  const filtered = allProds.filter(p => {
-    if (mobProdCat !== 'All' && p.category_id !== mobProdCat) return false
+  const lowList = getLowStockVariants()
+
+  // LEVEL 1: If no category selected, show Categories Grid matching Desktop EXE
+  if (!mobProdCat) {
+    return `
+      <div class="row sp" style="margin-bottom:12px">
+        <h2 style="margin:0">Categories (${categories.length})</h2>
+        ${lowList.length ? `<span class="tag lo" style="font-size:12px;padding:4px 10px">${lowList.length} Low Stock</span>` : ''}
+      </div>
+
+      <div class="card" style="margin-bottom:14px;padding:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--mu);margin-bottom:6px;text-transform:uppercase">Add New Category</div>
+        <div class="row">
+          <input id="mobNewCatInp" placeholder="Category name (e.g. Burgers, Drinks, Salan)" style="flex:1">
+          <button class="btn s" data-a="mobaddcategory" style="padding:10px 18px">Add</button>
+        </div>
+      </div>
+
+      ${categories.length === 0 ? `
+        <div class="card" style="text-align:center;padding:36px 16px">
+          <div style="font-size:36px;margin-bottom:8px">📂</div>
+          <b style="font-size:16px">No categories yet</b>
+          <p class="mu" style="margin-top:4px">Add your first category above to organize your menu items.</p>
+        </div>
+      ` : `
+        <div class="grid">
+          ${categories.map(c => {
+            const list = allProds.filter(p => p.category_id === c.id)
+            const th = list.filter(p => p.image).slice(0, 3)
+            return `
+              <div class="card" data-a="mobopencat" data-id="${esc(c.id)}" style="cursor:pointer;margin:0;padding:14px;display:flex;flex-direction:column;justify-content:space-between">
+                <div>
+                  <b style="font-size:16px;color:var(--tx);display:block">${esc(c.name)}</b>
+                  <span class="mu" style="font-size:12px;margin-top:2px;display:block">${list.length} ${list.length === 1 ? 'product' : 'products'}</span>
+                </div>
+                <div class="row" style="margin-top:12px;gap:6px">
+                  ${th.length ? th.map(t => `<img src="${esc(t.image)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover">`).join('') : '<div style="font-size:24px">🍽️</div>'}
+                </div>
+              </div>
+            `
+          }).join('')}
+        </div>
+      `}
+    `
+  }
+
+  // LEVEL 2: Category Selected -> Show its Products list matching Desktop EXE
+  const curCat = categories.find(c => c.id === mobProdCat) || { id: mobProdCat, name: 'Category' }
+  const catProds = allProds.filter(p => {
+    if (p.category_id !== mobProdCat) return false
     if (mobProdSearch) {
       const q = mobProdSearch.toLowerCase()
       const nMatch = p.name && p.name.toLowerCase().includes(q)
@@ -4444,64 +4489,44 @@ function renderMobileProducts() {
     return true
   })
 
-  const curCat = categories.find(c => c.id === mobProdCat)
-
   return `
-    <div class="row sp" style="margin-bottom:8px">
-      <h2 style="margin:0">Menu & Products</h2>
-      <button class="btn s" data-a="mobaddprod" style="padding:7px 14px;border-radius:10px">+ Add Item</button>
-    </div>
-
-    <!-- Category Chips with Add Category -->
-    <div class="chips" style="padding-bottom:6px">
-      <button class="chip ${mobProdCat === 'All' ? 'on' : ''}" data-a="mobsetprodcat" data-id="All">
-        All (${allProds.length})
-      </button>
-      ${categories.map(c => {
-        const count = allProds.filter(p => p.category_id === c.id).length
-        return `
-          <button class="chip ${mobProdCat === c.id ? 'on' : ''}" data-a="mobsetprodcat" data-id="${esc(c.id)}">
-            ${esc(c.name)} (${count})
-          </button>
-        `
-      }).join('')}
-      <button class="chip" data-a="mobpromptaddcat" style="border:1.5px dashed var(--br);color:var(--br);font-weight:700">
-        + New Category
+    <div style="margin-bottom:12px">
+      <button class="btn s o" data-a="mobbackcat" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px">
+        ‹ Back to Categories
       </button>
     </div>
 
-    <!-- Category Action Bar if Category Selected -->
-    ${curCat ? `
-      <div class="card row sp" style="padding:8px 12px;margin-bottom:10px;background:#FAF8F5">
-        <b style="font-size:14px">Category: ${esc(curCat.name)}</b>
-        <div style="display:flex;gap:6px">
-          <button class="btn s o" data-a="mobrencat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:4px 8px;font-size:11px">Rename</button>
-          <button class="btn s d" data-a="mobdelcat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:4px 8px;font-size:11px">Delete</button>
-        </div>
+    <div class="card row sp" style="margin-bottom:12px;padding:12px">
+      <div>
+        <h2 style="margin:0;font-size:18px">${esc(curCat.name)}</h2>
+        <span class="mu">${catProds.length} ${catProds.length === 1 ? 'item' : 'items'}</span>
       </div>
-    ` : ''}
-
-    <!-- Search Input -->
-    <div style="position:relative;margin-bottom:12px">
-      <input type="text" id="mobProdSearchInp" value="${esc(mobProdSearch)}" placeholder="Search menu items..." 
-        oninput="mobProdSearch=this.value;renderMobile(true)" style="padding-left:36px;border-radius:12px">
-      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--mu);pointer-events:none">🔍</span>
-      ${mobProdSearch ? `<button onclick="mobProdSearch='';renderMobile()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--mu);cursor:pointer;font-size:16px">✕</button>` : ''}
+      <div style="display:flex;gap:6px">
+        <button class="btn s o" data-a="mobrencat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:6px 10px;font-size:12px">Rename</button>
+        <button class="btn s d" data-a="mobdelcat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:6px 10px;font-size:12px">Delete</button>
+      </div>
     </div>
 
-    <!-- Products List -->
-    ${filtered.length === 0 ? `
+    <div class="row sp" style="margin-bottom:12px;gap:8px">
+      <div style="position:relative;flex:1">
+        <input type="text" id="mobProdSearchInp" value="${esc(mobProdSearch)}" placeholder="Search in ${esc(curCat.name)}..." 
+          oninput="mobProdSearch=this.value;renderMobile(true)" style="padding-left:36px;border-radius:12px">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--mu);pointer-events:none">🔍</span>
+        ${mobProdSearch ? `<button onclick="mobProdSearch='';renderMobile()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--mu);cursor:pointer;font-size:16px">✕</button>` : ''}
+      </div>
+      <button class="btn s" data-a="mobaddprod" style="padding:10px 14px;border-radius:12px;white-space:nowrap">+ Add Product</button>
+    </div>
+
+    ${catProds.length === 0 ? `
       <div class="card" style="text-align:center;padding:32px 14px">
         <div style="font-size:32px;margin-bottom:8px">🍽️</div>
-        <b style="font-size:15px">No products found</b>
-        <p class="mu" style="margin:4px 0 14px">Add your dishes or items to start billing</p>
-        <button class="btn s" data-a="mobaddprod">+ Add First Item</button>
+        <b style="font-size:15px">No products in this category</b>
+        <p class="mu" style="margin:4px 0 14px">Add your dishes, drinks, or items for ${esc(curCat.name)}.</p>
+        <button class="btn s" data-a="mobaddprod">+ Add First Product</button>
       </div>
-    ` : filtered.map(p => {
+    ` : catProds.map(p => {
       const vars = p.variants || []
       const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
-      const minP = vars.length ? Math.min(...vars.map(x => Number(x.price || 0))) : 0
-      const catObj = categories.find(c => c.id === p.category_id)
       const stockBadge = p.track_stock
         ? (totalStock <= 0
             ? '<span class="tag lo">Out of stock (0)</span>'
@@ -4513,94 +4538,26 @@ function renderMobileProducts() {
       return `
         <div class="card" style="margin-bottom:10px;padding:12px">
           <div style="display:flex;gap:12px;align-items:flex-start">
-            <div class="th" style="width:64px;height:64px;border-radius:12px;font-size:28px;flex:none">
-              ${p.image ? `<img src="${esc(p.image)}" alt="">` : getFoodIcon(p.name)}
+            <div class="th" style="width:64px;height:64px;border-radius:12px;flex:none;background:var(--ln);overflow:hidden">
+              ${p.image ? `<img src="${esc(p.image)}" style="width:100%;height:100%;object-fit:cover">` : '<span style="font-size:28px">🍽️</span>'}
             </div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 <b style="font-size:15px;color:var(--tx)">${esc(p.name)}</b>
-                ${catObj ? `<span style="font-size:10.5px;background:var(--ln);padding:1px 6px;border-radius:6px;color:var(--mu)">${esc(catObj.name)}</span>` : ''}
-              </div>
-              <div style="color:var(--br);font-weight:800;font-size:14px;margin-top:2px">
-                From ${rs(minP)}
-              </div>
-              <div class="mu" style="font-size:11.5px;margin-top:2px">
-                ${vars.map(v => `${esc(v.name || 'Standard')}: ${rs(v.price)}${p.track_stock ? ` (${v.stock ?? 0})` : ''}`).join(' · ')}
-              </div>
-              <div style="margin-top:6px">
                 ${stockBadge}
+              </div>
+              <div class="mu" style="margin-top:3px;font-size:12.5px">
+                ${vars.map(v => `${v.name ? esc(v.name) + ': ' : ''}<b>${rs(v.price)}</b>${p.track_stock ? ` (${v.stock ?? 0})` : ''}`).join(' · ')}
               </div>
             </div>
           </div>
-          <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--ln);padding-top:8px">
-            <button class="btn s o" data-a="mobeditprod" data-id="${esc(p.id)}" style="flex:1;font-weight:700">
-              ✏️ Edit Product
-            </button>
-            <button class="btn s d" data-a="mobdelprod" data-id="${esc(p.id)}" style="width:auto;padding:6px 12px">
-              🗑️
-            </button>
+          <div class="row" style="margin-top:10px;gap:8px">
+            <button class="btn s o" data-a="mobeditprod" data-id="${esc(p.id)}" style="flex:1;padding:8px">✏️ Edit Product</button>
+            <button class="btn s d" data-a="mobdelprod" data-id="${esc(p.id)}" data-name="${esc(p.name)}" style="padding:8px 14px">🗑</button>
           </div>
         </div>
       `
     }).join('')}
-  `
-}
-
-function renderMobileReports() {
-  const d = mobReportsData || { summary: { sales: 0, guests: 0, items_sold: 0 }, bills: [] }
-  const s = d.summary || { sales: 0, guests: 0, items_sold: 0 }
-  const bills = d.bills || []
-
-  return `
-    <h2>Sales Reports</h2>
-    <div class="card">
-      <div class="row sp"><b>Active Summary</b><span class="tag">SYNCED</span></div>
-      <div class="mu" style="margin-top:2px">${mobReportsPeriod} · Cashier ${(me && me.name) || 'Staff'}</div>
-      <div style="margin:10px 0;font-size:15px">Bills: <b>${s.guests || bills.length}</b> · Total Sales: <b style="color:var(--br)">${rs(s.sales || 0)}</b></div>
-      <div class="row">
-        <button class="btn o s" data-a="mobprintsummary">Print summary</button>
-        <button class="btn s" data-a="mobopensheet" data-t="z">Z-Report</button>
-      </div>
-    </div>
-
-    <div class="chips">
-      ${['Today', 'Yesterday', '7 Days', '30 Days', 'This Month'].map(p => `
-        <button class="chip ${mobReportsPeriod === p ? 'on' : ''}" data-a="mobsetrepperiod" data-p="${p}">${p}</button>
-      `).join('')}
-    </div>
-
-    <div class="grid">
-      <div class="stat"><span class="mu">Total sales</span><b>${rs(s.sales || 0)}</b></div>
-      <div class="stat"><span class="mu">Total bills</span><b>${s.guests || bills.length}</b></div>
-    </div>
-
-    <h3>Customer bills (${bills.length})</h3>
-    ${bills.length === 0 ? `
-      <div class="card" style="text-align:center;padding:24px 12px">
-        <div style="font-size:28px;margin-bottom:6px">📑</div>
-        <b>No bills found for ${mobReportsPeriod}</b>
-      </div>
-    ` : bills.map(b => {
-      const itemsList = Array.isArray(b.items) ? b.items : []
-      const itemsStr = itemsList.map(i => `${esc(i.name)} x ${i.qty}`).join(', ')
-      const timeStr = b.created_at ? (b.created_at.length > 11 ? b.created_at.slice(11, 16) : b.created_at) : ''
-
-      return `
-        <div class="card" style="margin-bottom:10px">
-          <div class="row sp">
-            <b>Bill #${pad(b.bill_no)}</b>
-            <b style="font-size:16px;color:var(--br)">${rs(b.total)}</b>
-          </div>
-          <div class="mu">${timeStr} · ${esc(b.order_type || 'Takeaway')}${b.table_name ? ' (' + esc(b.table_name) + ')' : ''} · ${esc(b.payment_method || 'Cash')}</div>
-          ${itemsStr ? `<div style="font-size:12.5px;margin:6px 0;color:var(--tx)">${itemsStr}</div>` : ''}
-          <div class="row" style="margin-top:8px">
-            <button class="btn o s" data-a="mobprintbill" data-id="${esc(b.id)}" data-no="${b.bill_no}">🖨 Print</button>
-            <button class="btn d s" data-a="mobopensheet" data-t="void" data-id="${esc(b.id)}" data-no="${b.bill_no}">Void</button>
-          </div>
-        </div>
-      `
-    }).join('')}
-    <button class="btn o" data-a="csv" style="margin-top:10px">Export CSV (Excel)</button>
   `
 }
 
@@ -4655,8 +4612,8 @@ function renderMobileSheetHtml() {
   if (!o) return ''
 
   const wrap = (body) => `
-    <div class="ov" data-a="mobclosesheet">
-      <div class="sheet" onclick="event.stopPropagation()">
+    <div class="ov" id="mobSheetOverlay">
+      <div class="sheet">
         ${body}
       </div>
     </div>
@@ -4827,13 +4784,20 @@ function renderMobileSheetHtml() {
   }
 
   if (o.t === 'users') {
-    const users = (staff && staff.users) || []
+    const users = (staffData && staffData.users) || (staff && staff.users) || []
     return wrap(`
       <h2>Users & Staff</h2>
-      <div class="row sp" style="margin-bottom:12px">
-        <b class="mu">Staff Accounts: ${users.length}</b>
-        <button class="btn s" data-a="mobaddstaff">+ Add Cashier</button>
+      <div class="card" style="margin-bottom:14px;padding:12px">
+        <b style="font-size:13px;text-transform:uppercase;color:var(--mu);display:block;margin-bottom:8px">Create Cashier Account</b>
+        <div style="display:grid;gap:8px">
+          <input id="mobStaffName" placeholder="Full name (e.g. Ali Raza)">
+          <input id="mobStaffEmail" placeholder="Login username or email">
+          <input id="mobStaffPassword" type="password" placeholder="Password (min 4 characters)">
+          <button class="btn s" data-a="mobsubmitaddstaff" style="padding:10px">Create Cashier Account</button>
+        </div>
       </div>
+
+      <b class="mu" style="display:block;margin-bottom:8px">Existing Accounts (${users.length})</b>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${users.map(u => `
           <div class="card row sp" style="margin:0;padding:12px">
@@ -5000,158 +4964,16 @@ Object.assign(A, {
   mobfinish: (d) => { mobFinishOrder(d.print === '1'); },
   mobhold: () => { mobHoldTableOrder(); },
   mobprintkot: () => { mobPrintKot(); },
-  mobclearorder: () => { billCart = []; mobSheet = null; showMobToast('Order cleared'); renderMobile(); if (page === 'Billing') drawBilling(); },
+  mobclearorder: () => {
+    billCart = []
+    mobSheet = null
+    showMobToast('Order cleared')
+    renderMobile()
+    if (page === 'Billing') drawBilling()
+  },
   mobordertype: (d) => { billOrderType = d.t; renderMobile(); },
   mobpicktable: (d) => { mobPickTable(d.t); },
   mobopensheet: (d) => { mobSheet = { t: d.t, no: d.no, id: d.id }; renderMobile(); },
-  mobsetprodcat: (d) => { mobProdCat = d.id; renderMobile(); },
-  mobaddprod: () => { openProduct(null); },
-  mobeditprod: (d) => {
-    const p = (catalog.products || []).find(x => x.id === d.id)
-    if (p) openProduct(p)
-  },
-  mobdelprod: (d) => { A.delprod(d); },
-  mobpromptaddcat: async () => {
-    const name = prompt('Enter new category name (e.g. Fast Food, BBQ, Chai):')
-    if (name && name.trim()) {
-      const r = await api('/api/categories', { name: name.trim() })
-      if (r.ok) {
-        await loadCatalog()
-        if (r.id) mobProdCat = r.id
-        showMobToast('Category created')
-        renderMobile()
-      } else {
-        alert(r.message || 'Could not create category')
-      }
-    }
-  },
-  mobrencat: async (d) => {
-    const newName = prompt('Rename category to:', d.name)
-    if (newName && newName.trim() && newName.trim() !== d.name) {
-      const r = await api('/api/categories/' + d.id, { name: newName.trim() }, 'PUT')
-      if (r.ok) {
-        await loadCatalog()
-        showMobToast('Category renamed')
-        renderMobile()
-      } else {
-        alert(r.message || 'Could not rename category')
-      }
-    }
-  },
-  mobdelcat: async (d) => {
-    if (!confirm(`Delete category "${d.name}" and remove it from products?`)) return
-    const r = await api('/api/categories/' + d.id, undefined, 'DELETE')
-    if (r.ok) {
-      mobProdCat = 'All'
-      await loadCatalog()
-      showMobToast('Category deleted')
-      renderMobile()
-    } else {
-      alert(r.message || 'Could not delete category')
-    }
-  },
-  mobsetrepperiod: async (d) => {
-    mobReportsPeriod = d.p
-    renderMobile()
-    await loadMobileReports()
-  },
-  mobprintbill: async (d) => {
-    const bills = (mobReportsData && mobReportsData.bills) || []
-    const bill = bills.find(b => String(b.bill_no) === String(d.no) || b.id === d.id)
-    if (!bill) return showMobToast('Bill not found')
-    let printedViaBt = false
-    if (btCharacteristic) {
-      try {
-        const bytes = generateEscPosBytes(bill, settingsCache)
-        await sendEscPosToPrinter(bytes)
-        printedViaBt = true
-        showMobToast(`Bill #${pad(bill.bill_no)} printed via Bluetooth`)
-      } catch (err) {
-        console.warn('BT Print failed:', err)
-      }
-    }
-    if (!printedViaBt) {
-      const html = buildOnlineReceiptHtml(bill, settingsCache)
-      printThermalHtml(html)
-      showMobToast(`Bill #${pad(bill.bill_no)} sent to printer`)
-    }
-  },
-  mobprintsummary: async () => {
-    const d = mobReportsData || dashCache
-    if (!d) return showMobToast('No report data to print')
-    const s = d.summary || {}
-    const summaryBill = {
-      bill_no: 'SUMM',
-      order_type: 'Sales Summary',
-      created_at: new Date().toLocaleString(),
-      subtotal: s.sales || 0,
-      discount: 0,
-      tax: 0,
-      total: s.sales || 0,
-      items: (d.items || []).slice(0, 10).map(i => ({ name: i.name, qty: i.qty, price: i.amount ? Math.round(i.amount / i.qty) : 0 }))
-    }
-    if (btCharacteristic) {
-      try {
-        const bytes = generateEscPosBytes(summaryBill, settingsCache)
-        await sendEscPosToPrinter(bytes)
-        showMobToast('Summary printed via Bluetooth')
-      } catch {
-        showMobToast('Printer error')
-      }
-    } else {
-      const html = buildOnlineReceiptHtml(summaryBill, settingsCache)
-      printThermalHtml(html)
-    }
-  },
-  mobvoidbill: async (d) => {
-    const id = d.id || d.no
-    const res = await api('/api/orders/' + id, undefined, 'DELETE')
-    if (res.ok) {
-      showMobToast('Bill #' + d.no + ' voided')
-      await loadMobileReports()
-      await loadMobileDashboard()
-    } else {
-      showMobToast(res.message || 'Error voiding bill')
-    }
-    mobSheet = null
-    renderMobile()
-  },
-  mobopennotemodal: (d) => {
-    A.posopennotemodal(d)
-  },
-  mobaddstaff: async () => {
-    const name = prompt('Enter staff member name:')
-    if (!name || !name.trim()) return
-    const email = prompt('Enter cashier login username or email:')
-    if (!email || !email.trim()) return
-    const pw = prompt('Enter login password (minimum 4 characters):')
-    if (!pw || pw.length < 4) { alert('Password must be at least 4 characters'); return }
-    const r = await api('/api/users', { name: name.trim(), email: email.trim().toLowerCase(), password: pw, role: 'cashier' })
-    if (r.ok) {
-      await loadStaff()
-      showMobToast('Staff member added')
-      renderMobile()
-    } else {
-      alert(r.message || 'Failed to add staff')
-    }
-  },
-  mobdelstaff: async (d) => {
-    if (!confirm(`Delete staff member "${d.name}"?`)) return
-    const r = await api('/api/users/' + d.id, undefined, 'DELETE')
-    if (r.ok) {
-      await loadStaff()
-      showMobToast('Staff removed')
-      renderMobile()
-    } else {
-      alert(r.message || 'Failed to delete staff')
-    }
-  },
-  mobdeltable: (d) => {
-    tablesList = tablesList.filter(t => (typeof t === 'string' ? t : t.name) !== d.name)
-    localStorage.setItem('custom_tables_list', JSON.stringify(tablesList))
-    showMobToast('Table removed')
-    renderMobile()
-  },
   mobdarktoggle: () => {
     const isDark = document.documentElement.dataset.theme === 'dark'
     document.documentElement.dataset.theme = isDark ? 'light' : 'dark'
@@ -5163,29 +4985,16 @@ Object.assign(A, {
     showMobToast('Synced with cloud')
     renderMobile()
   },
-  moblogout: () => { leave(); },
   mobtogglebt: async () => {
     if (btCharacteristic) {
-      disconnectBluetoothPrinter()
+      disconnectBtPrinter()
     } else {
-      await connectBluetoothPrinter()
+      await connectBtPrinter()
     }
     renderMobile()
   },
   mobtoggletestbt: async () => {
-    if (!btCharacteristic) return showMobToast('Printer not connected')
-    const testBill = {
-      bill_no: 1,
-      order_type: 'Test Print',
-      created_at: new Date().toLocaleString(),
-      subtotal: 100,
-      discount: 0,
-      tax: 0,
-      total: 100,
-      items: [{ name: 'Test Food Item', qty: 1, price: 100 }]
-    }
-    const bytes = generateEscPosBytes(testBill, settingsCache)
-    await sendEscPosToPrinter(bytes)
+    await printTestSlip()
     showMobToast('Test slip printed')
   },
   mobsaveprof: async () => {
@@ -5207,7 +5016,8 @@ Object.assign(A, {
   mobaddwaiter: async () => {
     const inp = $('mobNewWaiterInp')
     if (inp && inp.value.trim()) {
-      await api('/api/waiters', { name: inp.value.trim() }, 'POST')
+      const name = inp.value.trim()
+      await api('/api/waiters', { name }, 'POST')
       await loadBillingData()
       showMobToast('Waiter added')
       renderMobile()
@@ -5227,10 +5037,109 @@ Object.assign(A, {
       showMobToast('Table added')
       renderMobile()
     }
+  },
+  mobdeltable: (d) => {
+    tablesList = tablesList.filter(t => (typeof t === 'string' ? t : t.name) !== d.name)
+    localStorage.setItem('custom_tables_list', JSON.stringify(tablesList))
+    showMobToast('Table deleted')
+    renderMobile()
+  },
+  mobsubmitaddstaff: async () => {
+    const name = $('mobStaffName') ? $('mobStaffName').value.trim() : ''
+    const email = $('mobStaffEmail') ? $('mobStaffEmail').value.trim() : ''
+    const pw = $('mobStaffPassword') ? $('mobStaffPassword').value : ''
+    if (!name) return showMobToast('Enter staff name')
+    if (!email) return showMobToast('Enter login username or email')
+    if (!pw || pw.length < 4) return showMobToast('Password must be at least 4 chars')
+    const r = await api('/api/users', { name, email: email.toLowerCase(), password: pw, role: 'cashier' })
+    if (r.ok) {
+      await loadStaff()
+      showMobToast('Staff account created!')
+      renderMobile()
+    } else {
+      showMobToast(r.message || 'Failed to add staff')
+    }
+  },
+  mobdelstaff: async (d) => {
+    if (!confirm(`Delete staff member "${d.name}"?`)) return
+    const r = await api('/api/users/' + d.id, undefined, 'DELETE')
+    if (r.ok) {
+      await loadStaff()
+      showMobToast('Staff removed')
+      renderMobile()
+    } else {
+      showMobToast(r.message || 'Failed to delete staff')
+    }
+  },
+  mobopencat: (d) => {
+    mobProdCat = d.id
+    mobProdSearch = ''
+    renderMobile()
+  },
+  mobbackcat: () => {
+    mobProdCat = null
+    mobProdSearch = ''
+    renderMobile()
+  },
+  mobaddcategory: async () => {
+    const inp = $('mobNewCatInp')
+    if (!inp || !inp.value.trim()) return showMobToast('Enter category name')
+    const name = inp.value.trim()
+    const r = await api('/api/categories', { name }, 'POST')
+    if (r.ok) {
+      await loadCatalog()
+      showMobToast('Category added')
+      renderMobile()
+    } else {
+      showMobToast(r.message || 'Failed to add category')
+    }
+  },
+  mobrencat: async (d) => {
+    const name = prompt('Rename category:', d.name)
+    if (!name || !name.trim() || name.trim() === d.name) return
+    const r = await api('/api/categories/' + d.id, { name: name.trim() }, 'PUT')
+    if (r.ok) {
+      await loadCatalog()
+      showMobToast('Category renamed')
+      renderMobile()
+    } else {
+      showMobToast(r.message || 'Rename failed')
+    }
+  },
+  mobdelcat: async (d) => {
+    if (!confirm(`Delete category "${d.name}" and all items inside it?`)) return
+    const r = await api('/api/categories/' + d.id, undefined, 'DELETE')
+    if (r.ok) {
+      mobProdCat = null
+      await loadCatalog()
+      showMobToast('Category deleted')
+      renderMobile()
+    } else {
+      showMobToast(r.message || 'Delete failed')
+    }
+  },
+  mobaddprod: () => {
+    openProduct(null)
+  },
+  mobeditprod: (d) => {
+    const p = (catalog.products || []).find(x => x.id === d.id)
+    if (p) openProduct(p)
+  },
+  mobdelprod: async (d) => {
+    if (!confirm(`Delete product "${d.name}"?`)) return
+    const r = await api('/api/products/' + d.id, undefined, 'DELETE')
+    if (r.ok) {
+      await loadCatalog()
+      showMobToast('Product deleted')
+      renderMobile()
+    } else {
+      showMobToast(r.message || 'Delete failed')
+    }
+  },
+  moblogout: () => {
+    logout()
   }
-})
-
-// Auto sync on resize between Desktop and Mobile
+})// Auto sync on resize between Desktop and Mobile
 window.addEventListener('resize', () => {
   if (window.innerWidth <= 768) {
     renderMobile()
