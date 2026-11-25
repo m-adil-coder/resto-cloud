@@ -1827,7 +1827,7 @@
 
 <script>
 // ================= AUTO CACHE BUSTER (V7 FOODPANDA FLAWLESS UI) =================
-const CURRENT_VERSION = 'v9-mobile-full-backend'
+const CURRENT_VERSION = 'v10-clean-full-sync'
 if (localStorage.getItem('app_installed_version') !== CURRENT_VERSION) {
   localStorage.setItem('app_installed_version', CURRENT_VERSION)
   if ('caches' in window) {
@@ -1914,6 +1914,7 @@ let me = null, page = 'Billing'
 function licStrip() {
   const l = me && me.license
   if (!l || !l.message) return ''
+  if (l.state === 'active' && (l.days_left === 0 || l.message.includes('0 day'))) return ''
   if (window.innerWidth <= 768 && page === 'Billing') return ''
   const red = l.state !== 'active' || (l.days_left !== null && l.days_left < 0)
   return `<div class="lic" style="background:${red ? '#FEE2E2' : '#FEF3C7'};color:${red ? '#991B1B' : '#92400E'};padding:8px 14px;border-radius:10px;font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
@@ -2553,14 +2554,14 @@ function drawBilling() {
   const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
   updateMobCartBar(totalQty, total)
 
-  // Categories pills with food icons
+  // Categories pills without emojis
   const catsHtml = `
     <button class="fp-cat-pill ${billCat === 'all' ? 'active' : ''}" data-a="poscat" data-id="all">
-      🍽️ All
+      All
     </button>
     ${categories.map((c) => `
       <button class="fp-cat-pill ${billCat === c.id ? 'active' : ''}" data-a="poscat" data-id="${esc(c.id)}">
-        ${getFoodIcon(c.name)} ${esc(c.name)}
+        ${esc(c.name)}
       </button>
     `).join('')}
   `
@@ -2845,7 +2846,7 @@ function lowStockListHtml() {
             ${v.isOut
               ? '<span class="chip" style="background:#DC2626;color:#fff;font-weight:700">🔴 Out of stock (0)</span>'
               : `<span class="chip" style="background:#D97706;color:#fff;font-weight:700">⚠️ Low stock (${v.stock} left)</span>`}
-            ${v.category_name ? `<span class="muted" style="font-size:13px">📁 ${esc(v.category_name)}</span>` : ''}
+            ${v.category_name ? `<span class="muted" style="font-size:13px">${esc(v.category_name)}</span>` : ''}
           </div>
           <div style="font-size:13px;color:#78716C;margin-top:4px">
             Alert threshold: <b>${v.min_stock} units</b>
@@ -2900,7 +2901,7 @@ function drawProducts() {
   const lowStockCount = getLowStockVariants().length
 
   const topTabs = `<div class="tabs" style="margin-bottom:16px">
-    <button class="${prodTab === 'all' ? 'on' : ''}" data-a="taball">📁 All Categories & Products</button>
+    <button class="${prodTab === 'all' ? 'on' : ''}" data-a="taball">All Categories & Products</button>
     <button class="${prodTab === 'alerts' ? 'on' : ''}" data-a="tabalerts">⚠️ Low Stock Alerts ${lowStockCount ? `<span style="background:#DC2626;color:#fff;border-radius:10px;padding:2px 7px;font-size:12px;margin-left:6px">${lowStockCount}</span>` : ''}</button>
   </div>`
 
@@ -4454,7 +4455,7 @@ function renderMobileProducts() {
     <!-- Category Chips with Add Category -->
     <div class="chips" style="padding-bottom:6px">
       <button class="chip ${mobProdCat === 'All' ? 'on' : ''}" data-a="mobsetprodcat" data-id="All">
-        📁 All (${allProds.length})
+        All (${allProds.length})
       </button>
       ${categories.map(c => {
         const count = allProds.filter(p => p.category_id === c.id).length
@@ -4472,7 +4473,7 @@ function renderMobileProducts() {
     <!-- Category Action Bar if Category Selected -->
     ${curCat ? `
       <div class="card row sp" style="padding:8px 12px;margin-bottom:10px;background:#FAF8F5">
-        <b style="font-size:14px">📂 Category: ${esc(curCat.name)}</b>
+        <b style="font-size:14px">Category: ${esc(curCat.name)}</b>
         <div style="display:flex;gap:6px">
           <button class="btn s o" data-a="mobrencat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:4px 8px;font-size:11px">Rename</button>
           <button class="btn s d" data-a="mobdelcat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:4px 8px;font-size:11px">Delete</button>
@@ -4875,6 +4876,105 @@ function renderMobileSheetHtml() {
   }
 
   return ''
+}
+
+
+// ---------------- Master Mobile View Renderer ----------------
+function renderMobile(keepInputFocus) {
+  const mobApp = $('mobApp')
+  if (!mobApp) return
+
+  if (window.innerWidth > 768) {
+    mobApp.style.display = 'none'
+    const shell = $('shell')
+    if (shell) shell.hidden = false
+    return
+  }
+
+  mobApp.style.display = 'flex'
+  const shell = $('shell')
+  if (shell) shell.hidden = true
+
+  const shopName = settingsCache.restaurant_name || (me && me.restaurant && me.restaurant.name) || 'Restaurant POS'
+  const userName = (me && me.name) || 'Staff'
+  const userRole = (me && me.role) || 'Cashier'
+  const isOnline = navigator.onLine
+
+  const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
+  const subtotal = billCart.reduce((s, i) => s + i.qty * i.price, 0)
+  const taxPct = Number(settingsCache.tax_percent || 0)
+  const taxable = Math.max(0, subtotal - billDiscount)
+  const tax = taxPct > 0 ? (taxable * (taxPct / 100)) : 0
+  const total = Math.max(0, taxable + tax)
+
+  const bodyHtml = {
+    bill: renderMobileBilling,
+    dash: renderMobileDashboard,
+    prods: renderMobileProducts,
+    reps: renderMobileReports,
+    more: renderMobileMore
+  }[mobTab]()
+
+  const activeId = document.activeElement ? document.activeElement.id : null
+  const selStart = document.activeElement ? document.activeElement.selectionStart : null
+
+  const licMsg = me && me.license && me.license.message
+  const showLic = licMsg && !licMsg.includes('0 day')
+
+  mobApp.innerHTML = `
+    <header>
+      <div style="flex:1;min-width:0">
+        <b>${esc(shopName)}</b>
+        <small>${esc(userName)} · ${esc(userRole)}</small>
+      </div>
+      <div class="pill" data-a="mobopensheet" data-t="prn">
+        <span class="dot" style="background:${btCharacteristic ? '#4ADE80' : '#F87171'}"></span>
+        ${btCharacteristic ? 'Printer ready' : 'No printer'}
+      </div>
+      <button class="pill" data-a="mobsync">
+        ${isOnline ? 'Synced' : 'Offline'}
+      </button>
+    </header>
+
+    ${showLic ? `
+      <div class="sub">${esc(licMsg)}</div>
+    ` : ''}
+
+    <main id="mobMain">${bodyHtml}</main>
+
+    ${mobTab === 'bill' && totalQty > 0 && !mobSheet ? `
+      <button class="cartbar" data-a="mobopencart">
+        <span>View order · ${totalQty} item${totalQty > 1 ? 's' : ''}</span>
+        <span>${rs(total)}</span>
+      </button>
+    ` : ''}
+
+    <nav>
+      ${[
+        ['bill', '🧾', 'Billing'],
+        ['dash', '📊', 'Dashboard'],
+        ['prods', '🍔', 'Products'],
+        ['reps', '📈', 'Reports'],
+        ['more', '☰', 'More']
+      ].map(t => `
+        <button class="${mobTab === t[0] ? 'on' : ''}" data-a="mobtab" data-tab="${t[0]}">
+          <span>${t[1]}</span>
+          ${t[2]}
+        </button>
+      `).join('')}
+    </nav>
+
+    ${renderMobileSheetHtml()}
+    ${mobToast ? `<div class="toast">${esc(mobToast)}</div>` : ''}
+  `
+
+  if (keepInputFocus && activeId) {
+    const el = document.getElementById(activeId)
+    if (el) {
+      el.focus()
+      if (selStart !== null) el.setSelectionRange(selStart, selStart)
+    }
+  }
 }
 
 // ---------------- Action Handlers Mapping ----------------
