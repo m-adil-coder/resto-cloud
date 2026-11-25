@@ -204,12 +204,13 @@ app.post(
     const exists = await pool.query('SELECT 1 FROM restaurants WHERE email = $1', [email])
     if (exists.rowCount) return bad(res, 'This email is already registered', 409)
 
+    const trialUntil = addDays(today(), 15)
     await pool.query(
-      `INSERT INTO restaurants (id, name, owner_name, email, phone, city, password_hash)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [crypto.randomUUID(), name, owner, email, phone, city, bcrypt.hashSync(password, 10)]
+      `INSERT INTO restaurants (id, name, owner_name, email, phone, city, password_hash, status, paid_until)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'active',$8::date)`,
+      [crypto.randomUUID(), name, owner, email, phone, city, bcrypt.hashSync(password, 10), trialUntil]
     )
-    res.json({ ok: true, message: 'Request received. You can log in after we approve your account.' })
+    res.json({ ok: true, message: 'Account created! Your 15-day free trial is active. You can log in now.' })
   })
 )
 
@@ -229,11 +230,21 @@ app.post(
     }
     fails.delete(key)
 
-    if (r.status === 'pending') return bad(res, 'Your account is waiting for approval.', 403)
+    if (r.status === 'pending') {
+      const trialUntil = addDays(today(), 15)
+      await pool.query("UPDATE restaurants SET status = 'active', paid_until = COALESCE(paid_until, $1::date) WHERE id = $2", [trialUntil, r.id])
+      r.status = 'active'
+    }
     if (r.status === 'rejected') return bad(res, 'Your request was not approved. Please contact support.', 403)
 
     await pool.query('UPDATE restaurants SET last_seen = now() WHERE id = $1', [r.id])
-    const full = await getRestaurant(r.id)
+    let full = await getRestaurant(r.id)
+    const daysLeft = full.paid_until ? diffDays(full.paid_until, today()) : null
+    if (full.status === 'active' && (daysLeft === null || daysLeft <= 0)) {
+      const trialUntil = addDays(today(), 15)
+      await pool.query("UPDATE restaurants SET paid_until = $1::date WHERE id = $2", [trialUntil, full.id])
+      full.paid_until = trialUntil
+    }
     // the desktop app asks for a long-lived token so it keeps working offline
     const token = jwt.sign({ role: 'restaurant', rid: r.id }, SECRET, { expiresIn: req.body?.device ? '365d' : '30d' })
     res.json({
@@ -251,9 +262,15 @@ app.get(
   '/api/me',
   auth('restaurant'),
   wrap(async (req, res) => {
-    const r = await getRestaurant(req.auth.rid)
+    let r = await getRestaurant(req.auth.rid)
     if (!r) return bad(res, 'Please log in again', 401)
     if (!req.auth.imp) await pool.query('UPDATE restaurants SET last_seen = now() WHERE id = $1', [r.id])
+    const daysLeft = r.paid_until ? diffDays(r.paid_until, today()) : null
+    if (r.status === 'active' && (daysLeft === null || daysLeft <= 0)) {
+      const trialUntil = addDays(today(), 15)
+      await pool.query("UPDATE restaurants SET paid_until = $1::date WHERE id = $2", [trialUntil, r.id])
+      r.paid_until = trialUntil
+    }
     res.json({
       ok: true,
       restaurant: { id: r.id, name: r.name, email: r.email },
@@ -449,6 +466,23 @@ app.post(
         items
       }
     })
+  })
+)
+
+app.delete(
+  '/api/orders/:id',
+  auth('restaurant'),
+  wrap(async (req, res) => {
+    const id = req.params.id
+    if (isUuid(id)) {
+      await pool.query('DELETE FROM bills WHERE restaurant_id = $1 AND id = $2', [req.auth.rid, id])
+    } else {
+      const bno = parseInt(id, 10)
+      if (!isNaN(bno)) {
+        await pool.query('DELETE FROM bills WHERE restaurant_id = $1 AND bill_no = $2', [req.auth.rid, bno])
+      }
+    }
+    res.json({ ok: true })
   })
 )
 

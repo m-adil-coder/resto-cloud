@@ -194,8 +194,17 @@ $('sgo').onclick = async () => {
   $('smsg').className = 'msg ' + (d.ok ? 'ok' : 'err')
   $('smsg').textContent = d.message
   if (d.ok) {
-    $('lemail').value = $('email').value
-    setTimeout(() => { view(false); $('lmsg').className = 'msg ok'; $('lmsg').textContent = 'Request sent. You can log in after approval.' }, 1800)
+    const emailVal = $('email').value
+    const pwVal = $('pw').value
+    $('lemail').value = emailVal
+    $('lpw').value = pwVal
+    $('smsg').textContent = 'Account created! 15 days free trial active. Logging you in...'
+    setTimeout(() => {
+      view(false)
+      $('lmsg').className = 'msg ok'
+      $('lmsg').textContent = 'Welcome! Your 15 days free trial is active. Logging in...'
+      login()
+    }, 1200)
   }
 }
 </script>

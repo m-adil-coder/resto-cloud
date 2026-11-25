@@ -1827,7 +1827,7 @@
 
 <script>
 // ================= AUTO CACHE BUSTER (V7 FOODPANDA FLAWLESS UI) =================
-const CURRENT_VERSION = 'v8-mobile-exact-ui'
+const CURRENT_VERSION = 'v9-mobile-full-backend'
 if (localStorage.getItem('app_installed_version') !== CURRENT_VERSION) {
   localStorage.setItem('app_installed_version', CURRENT_VERSION)
   if ('caches' in window) {
@@ -2073,6 +2073,15 @@ function generateEscPosBytes(bill, s) {
     const qtyLine = String(item.qty).padStart(3)
     const amtLine = String(item.qty * item.price).padStart(is58 ? 11 : 17)
     pushText(nameLine + qtyLine + amtLine + '\n')
+    if (item.note) {
+      const cleanNote = item.note.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '').trim()
+      if (cleanNote) {
+        cleanNote.split('\n').map((l) => l.trim()).filter(Boolean).forEach((line) => {
+          const raw = line.replace(/^[•\-\*\s]+/, '').trim()
+          pushText('  * ' + raw + '\n')
+        })
+      }
+    }
   }
   pushText('--------------------------------\n')
 
@@ -2100,6 +2109,59 @@ function generateEscPosBytes(bill, s) {
   return new Uint8Array(bytes)
 }
 
+function generateEscPosKotBytes(kot, s) {
+  const enc = new TextEncoder()
+  const bytes = []
+  const push = (arr) => { for (const b of arr) bytes.push(b) }
+  const pushText = (str) => {
+    const b = enc.encode(str)
+    for (const x of b) bytes.push(x)
+  }
+
+  const is58 = btPrinterWidth === '58'
+
+  push([0x1B, 0x40]) // init
+  push([0x1B, 0x61, 0x01]) // center
+  push([0x1B, 0x21, 0x18]) // double size
+  pushText('KITCHEN ORDER (KOT)\n')
+  push([0x1B, 0x21, 0x00])
+  pushText('--------------------------------\n')
+
+  push([0x1B, 0x61, 0x00]) // left
+  push([0x1B, 0x21, 0x08]) // bold
+  if (kot.table_name) pushText(`TABLE: ${kot.table_name}\n`)
+  if (kot.waiter_name) pushText(`WAITER: ${kot.waiter_name}\n`)
+  push([0x1B, 0x21, 0x00])
+  pushText(`TIME: ${new Date().toLocaleTimeString()}\n`)
+  pushText('--------------------------------\n')
+
+  push([0x1B, 0x21, 0x08])
+  pushText(is58 ? 'Item                         Qty\n' : 'Item                                         Qty\n')
+  push([0x1B, 0x21, 0x00])
+  pushText('--------------------------------\n')
+
+  for (const item of (kot.items || [])) {
+    const nameLine = item.name.slice(0, is58 ? 26 : 40).padEnd(is58 ? 26 : 40)
+    const qtyLine = ('x ' + item.qty).padStart(is58 ? 6 : 8)
+    push([0x1B, 0x21, 0x08])
+    pushText(nameLine + qtyLine + '\n')
+    push([0x1B, 0x21, 0x00])
+    if (item.note) {
+      const cleanNote = item.note.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '').trim()
+      if (cleanNote) {
+        cleanNote.split('\n').map((l) => l.trim()).filter(Boolean).forEach((line) => {
+          const raw = line.replace(/^[•\-\*\s]+/, '').trim()
+          pushText('  * ' + raw + '\n')
+        })
+      }
+    }
+  }
+
+  pushText('--------------------------------\n\n\n')
+  push([0x1D, 0x56, 0x41, 0x10])
+  return new Uint8Array(bytes)
+}
+
 async function sendBytesToBluetooth(byteArray) {
   if (!btCharacteristic) return false
   const CHUNK_SIZE = 512
@@ -2114,6 +2176,8 @@ async function sendBytesToBluetooth(byteArray) {
   }
   return true
 }
+
+const sendEscPosToPrinter = sendBytesToBluetooth
 
 function openBtModal() {
   const modal = $('modal')
@@ -2214,6 +2278,17 @@ function printThermalHtml(html) {
   }, 250)
 }
 
+function formatBulletsHtml(text) {
+  if (!text) return ''
+  const clean = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '').trim()
+  if (!clean) return ''
+  const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean)
+  return lines.map((line) => {
+    const raw = line.replace(/^[•\-\*\s]+/, '').trim()
+    return `<div style="font-size:11.5px;color:#000;font-weight:700;margin-top:1px;padding-left:4px">&bull; ${esc(raw)}</div>`
+  }).join('')
+}
+
 function buildOnlineReceiptHtml(bill, s) {
   const shopName = s.restaurant_name || 'Restaurant POS'
   const rows = (bill.items || []).map((i) => `
@@ -2221,6 +2296,7 @@ function buildOnlineReceiptHtml(bill, s) {
       <td style="width:62%;word-break:break-word">
         <div style="font-weight:800;font-size:13px">${esc(i.name)}</div>
         <div style="font-size:11.5px;font-weight:700">${i.qty} &times; ${rs(i.price)}</div>
+        ${formatBulletsHtml(i.note)}
       </td>
       <td style="width:38%;text-align:right;font-weight:800;font-size:13px">${rs(i.qty * i.price)}</td>
     </tr>
@@ -2247,556 +2323,6 @@ td { vertical-align: top; padding: 3px 0; }
 .totals-table td { padding: 2px 0; font-size: 12.5px; }
 .total-row td { border-top: 2px solid #000; border-bottom: 2px solid #000; font-size: 16px; font-weight: 900; padding: 4px 0; }
 .footer { text-align: center; font-size: 12px; font-weight: 800; margin-top: 5px; }
-
-/* ================= EXACT MOBILE APPLICATION STYLES ================= */
-:root {
-  --br: #A3301A;
-  --br2: #7E2210;
-  --bg: #F5F4F2;
-  --cd: #fff;
-  --tx: #1C1917;
-  --mu: #78716C;
-  --ln: #E7E4E0;
-  --ok: #16A34A;
-  --bad: #DC2626;
-  --wn: #FEF3C7;
-  --wt: #92400E;
-}
-@media(prefers-color-scheme: dark) {
-  :root:not([data-theme=light]) {
-    --bg: #14110F;
-    --cd: #211C19;
-    --tx: #F5F0EB;
-    --mu: #A39B94;
-    --ln: #352E2A;
-    --wn: #3A2D12;
-    --wt: #FCD34D;
-    --br: #D2492F;
-  }
-}
-:root[data-theme=dark] {
-  --bg: #14110F;
-  --cd: #211C19;
-  --tx: #F5F0EB;
-  --mu: #A39B94;
-  --ln: #352E2A;
-  --wn: #3A2D12;
-  --wt: #FCD34D;
-  --br: #D2492F;
-}
-
-@media (min-width: 769px) {
-  #mobApp { display: none !important; }
-  #shell { display: flex !important; }
-  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
-}
-
-@media (max-width: 768px) {
-  html, body {
-    background: var(--bg) !important;
-    color: var(--tx) !important;
-    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    height: 100% !important;
-    overflow: hidden !important;
-  }
-  #shell { display: none !important; }
-  .side { display: none !important; }
-  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
-  #banner { display: none !important; }
-  #mobApp {
-    display: flex !important;
-    width: 100% !important;
-    max-width: 480px !important;
-    height: 100% !important;
-    margin: auto !important;
-    flex-direction: column !important;
-    position: relative !important;
-    background: var(--bg) !important;
-    overflow: hidden !important;
-  }
-}
-
-#mobApp header {
-  background: var(--br);
-  color: #fff;
-  padding: 12px 16px 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: none;
-}
-#mobApp header b {
-  font-size: 16.5px;
-  font-weight: 800;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-#mobApp header small {
-  display: block;
-  font-weight: 400;
-  opacity: .88;
-  font-size: 11px;
-}
-#mobApp .pill {
-  background: rgba(255,255,255,.18);
-  border-radius: 99px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  color: #fff;
-  cursor: pointer;
-  flex: none;
-  border: 0;
-}
-#mobApp .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #4ADE80;
-  display: inline-block;
-  flex: none;
-}
-#mobApp .sub {
-  background: var(--wn);
-  color: var(--wt);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 7px 16px;
-  flex: none;
-}
-#mobApp main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px 16px 150px;
-  -webkit-overflow-scrolling: touch;
-}
-#mobApp nav {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--cd);
-  border-top: 1px solid var(--ln);
-  display: flex;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
-  z-index: 5;
-}
-#mobApp nav button {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--mu);
-  padding: 4px 0;
-  cursor: pointer;
-  border: 0;
-  background: none;
-  font-family: inherit;
-}
-#mobApp nav button span {
-  font-size: 20px;
-  filter: grayscale(1);
-  opacity: .7;
-}
-#mobApp nav button.on {
-  color: var(--br);
-}
-#mobApp nav button.on span {
-  filter: none;
-  opacity: 1;
-}
-#mobApp h2 {
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 10px;
-  color: var(--tx);
-}
-#mobApp h3 {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 16px 0 8px;
-  color: var(--tx);
-}
-#mobApp .card {
-  background: var(--cd);
-  border-radius: 16px;
-  padding: 14px;
-  border: 1px solid var(--ln);
-  margin-bottom: 10px;
-}
-#mobApp .row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-#mobApp .sp {
-  justify-content: space-between;
-}
-#mobApp .mu {
-  color: var(--mu);
-  font-size: 12px;
-}
-#mobApp .chips {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 0 10px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-#mobApp .chips::-webkit-scrollbar {
-  display: none;
-}
-#mobApp .chip {
-  flex: none;
-  padding: 8px 14px;
-  border-radius: 99px;
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--tx);
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .chip.on {
-  background: var(--br);
-  color: #fff;
-  border-color: var(--br);
-}
-#mobApp .tbl {
-  flex: none;
-  min-width: 84px;
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: var(--cd);
-  border: 1.5px solid var(--ln);
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--tx);
-}
-#mobApp .tbl.on {
-  border-color: var(--br);
-}
-#mobApp .tbl i {
-  font-style: normal;
-  float: right;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--ok);
-  margin-top: 4px;
-}
-#mobApp .tbl.occ i {
-  background: var(--bad);
-}
-#mobApp .tbl b {
-  display: block;
-  font-size: 13px;
-}
-#mobApp .seg {
-  display: flex;
-  background: var(--ln);
-  border-radius: 12px;
-  padding: 3px;
-  margin-bottom: 10px;
-}
-#mobApp .seg button {
-  flex: 1;
-  padding: 8px 4px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 12.5px;
-  color: var(--mu);
-  white-space: nowrap;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .seg button.on {
-  background: var(--cd);
-  color: var(--tx);
-  box-shadow: 0 1px 3px rgba(0,0,0,.15);
-}
-#mobApp input, #mobApp select {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--ln);
-  background: var(--cd);
-  color: var(--tx);
-  outline: none;
-  font-family: inherit;
-  font-size: 14px;
-}
-#mobApp input:focus, #mobApp select:focus {
-  border-color: var(--br);
-}
-#mobApp .item {
-  display: flex;
-  gap: 12px;
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  border-radius: 16px;
-  padding: 10px;
-  margin-bottom: 10px;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  transition: transform .1s;
-}
-#mobApp .item:active {
-  transform: scale(0.98);
-}
-#mobApp .th {
-  width: 72px;
-  height: 72px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-size: 34px;
-  flex: none;
-  position: relative;
-  overflow: hidden;
-  background: #F5EFE6;
-}
-#mobApp .th img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 14px;
-}
-#mobApp .item .nm {
-  font-weight: 700;
-  flex: 1;
-  font-size: 14px;
-  color: var(--tx);
-}
-#mobApp .pr {
-  color: var(--br);
-  font-weight: 800;
-  margin-top: 2px;
-  font-size: 14px;
-}
-#mobApp .add {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--br);
-  color: #fff;
-  font-size: 22px;
-  line-height: 1;
-  flex: none;
-  border: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-#mobApp .tag {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 99px;
-  background: #DCFCE7;
-  color: #166534;
-  display: inline-block;
-  margin-top: 4px;
-}
-#mobApp .tag.lo {
-  background: #FEE2E2;
-  color: #991B1B;
-}
-#mobApp .cartbar {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
-  background: var(--br);
-  color: #fff;
-  border-radius: 16px;
-  padding: 13px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-  z-index: 4;
-  box-shadow: 0 8px 24px rgba(0,0,0,.3);
-  border: 0;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: inherit;
-}
-#mobApp .btn {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  font-weight: 700;
-  background: var(--br);
-  color: #fff;
-  text-align: center;
-  border: 0;
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .btn.o {
-  background: var(--cd);
-  color: var(--tx);
-  border: 1px solid var(--ln);
-}
-#mobApp .btn.g {
-  background: #DCFCE7;
-  color: #166534;
-}
-#mobApp .btn.d {
-  background: #FEE2E2;
-  color: #991B1B;
-}
-#mobApp .btn.s {
-  padding: 8px 12px;
-  font-size: 12px;
-  width: auto;
-  display: inline-block;
-  border-radius: 10px;
-}
-#mobApp .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-#mobApp .stat {
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  border-radius: 16px;
-  padding: 12px;
-}
-#mobApp .stat b {
-  font-size: 20px;
-  font-weight: 800;
-  display: block;
-  margin-top: 4px;
-}
-#mobApp .bar {
-  height: 8px;
-  border-radius: 9px;
-  background: var(--ln);
-  margin-top: 4px;
-  overflow: hidden;
-}
-#mobApp .bar i {
-  display: block;
-  height: 100%;
-  border-radius: 9px;
-  background: var(--br);
-}
-#mobApp .ov {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.5);
-  z-index: 25;
-  display: flex;
-  align-items: flex-end;
-}
-#mobApp .sheet {
-  background: var(--bg);
-  width: 100%;
-  max-height: 92%;
-  overflow-y: auto;
-  border-radius: 24px 24px 0 0;
-  padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
-  animation: mobUp .22s ease-out;
-}
-@keyframes mobUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-#mobApp .q {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-#mobApp .q button {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--ln);
-  font-size: 18px;
-  background: var(--cd);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--tx);
-  border: 1px solid var(--ln);
-}
-#mobApp .lr {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  border-radius: 14px;
-  margin-bottom: 8px;
-  width: 100%;
-  text-align: left;
-  font-weight: 600;
-  color: var(--tx);
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .toast {
-  position: fixed;
-  left: 50%;
-  top: 70px;
-  transform: translateX(-50%);
-  background: #1C1917;
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 99px;
-  font-size: 13px;
-  font-weight: 600;
-  z-index: 50;
-  white-space: nowrap;
-}
-#mobApp .sw {
-  width: 46px;
-  height: 26px;
-  border-radius: 99px;
-  background: var(--ln);
-  position: relative;
-  flex: none;
-  cursor: pointer;
-}
-#mobApp .sw.on {
-  background: var(--ok);
-}
-#mobApp .sw:after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  transition: .15s;
-}
-#mobApp .sw.on:after {
-  left: 23px;
-}
-
 </style></head><body>
 <div class="header">
   <div class="shop-name">${esc(shopName)}</div>
@@ -2836,7 +2362,7 @@ function buildOnlineKotHtml(items, info, s) {
     <tr>
       <td style="width:75%;word-break:break-word">
         <div style="font-size:13.5px;font-weight:800">${esc(i.name)}</div>
-        ${i.note ? `<div style="font-size:11.5px;font-style:italic;font-weight:800;margin-top:1px">&raquo; Note: ${esc(i.note)}</div>` : ''}
+        ${formatBulletsHtml(i.note)}
       </td>
       <td style="width:25%;text-align:right;font-size:15px;font-weight:900">&times; ${i.qty}</td>
     </tr>
@@ -2860,556 +2386,6 @@ table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 th { font-size: 12px; font-weight: 800; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 3px; }
 td { vertical-align: top; padding: 3px 0; }
 .footer { text-align: center; font-size: 11.5px; font-weight: 800; margin-top: 6px; }
-
-/* ================= EXACT MOBILE APPLICATION STYLES ================= */
-:root {
-  --br: #A3301A;
-  --br2: #7E2210;
-  --bg: #F5F4F2;
-  --cd: #fff;
-  --tx: #1C1917;
-  --mu: #78716C;
-  --ln: #E7E4E0;
-  --ok: #16A34A;
-  --bad: #DC2626;
-  --wn: #FEF3C7;
-  --wt: #92400E;
-}
-@media(prefers-color-scheme: dark) {
-  :root:not([data-theme=light]) {
-    --bg: #14110F;
-    --cd: #211C19;
-    --tx: #F5F0EB;
-    --mu: #A39B94;
-    --ln: #352E2A;
-    --wn: #3A2D12;
-    --wt: #FCD34D;
-    --br: #D2492F;
-  }
-}
-:root[data-theme=dark] {
-  --bg: #14110F;
-  --cd: #211C19;
-  --tx: #F5F0EB;
-  --mu: #A39B94;
-  --ln: #352E2A;
-  --wn: #3A2D12;
-  --wt: #FCD34D;
-  --br: #D2492F;
-}
-
-@media (min-width: 769px) {
-  #mobApp { display: none !important; }
-  #shell { display: flex !important; }
-  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
-}
-
-@media (max-width: 768px) {
-  html, body {
-    background: var(--bg) !important;
-    color: var(--tx) !important;
-    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    height: 100% !important;
-    overflow: hidden !important;
-  }
-  #shell { display: none !important; }
-  .side { display: none !important; }
-  .mob-header, #mobHeader, .mob-nav, #mobNav, #mobCartBar { display: none !important; }
-  #banner { display: none !important; }
-  #mobApp {
-    display: flex !important;
-    width: 100% !important;
-    max-width: 480px !important;
-    height: 100% !important;
-    margin: auto !important;
-    flex-direction: column !important;
-    position: relative !important;
-    background: var(--bg) !important;
-    overflow: hidden !important;
-  }
-}
-
-#mobApp header {
-  background: var(--br);
-  color: #fff;
-  padding: 12px 16px 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: none;
-}
-#mobApp header b {
-  font-size: 16.5px;
-  font-weight: 800;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-#mobApp header small {
-  display: block;
-  font-weight: 400;
-  opacity: .88;
-  font-size: 11px;
-}
-#mobApp .pill {
-  background: rgba(255,255,255,.18);
-  border-radius: 99px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  color: #fff;
-  cursor: pointer;
-  flex: none;
-  border: 0;
-}
-#mobApp .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #4ADE80;
-  display: inline-block;
-  flex: none;
-}
-#mobApp .sub {
-  background: var(--wn);
-  color: var(--wt);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 7px 16px;
-  flex: none;
-}
-#mobApp main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px 16px 150px;
-  -webkit-overflow-scrolling: touch;
-}
-#mobApp nav {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--cd);
-  border-top: 1px solid var(--ln);
-  display: flex;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
-  z-index: 5;
-}
-#mobApp nav button {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--mu);
-  padding: 4px 0;
-  cursor: pointer;
-  border: 0;
-  background: none;
-  font-family: inherit;
-}
-#mobApp nav button span {
-  font-size: 20px;
-  filter: grayscale(1);
-  opacity: .7;
-}
-#mobApp nav button.on {
-  color: var(--br);
-}
-#mobApp nav button.on span {
-  filter: none;
-  opacity: 1;
-}
-#mobApp h2 {
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 10px;
-  color: var(--tx);
-}
-#mobApp h3 {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 16px 0 8px;
-  color: var(--tx);
-}
-#mobApp .card {
-  background: var(--cd);
-  border-radius: 16px;
-  padding: 14px;
-  border: 1px solid var(--ln);
-  margin-bottom: 10px;
-}
-#mobApp .row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-#mobApp .sp {
-  justify-content: space-between;
-}
-#mobApp .mu {
-  color: var(--mu);
-  font-size: 12px;
-}
-#mobApp .chips {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 0 10px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-#mobApp .chips::-webkit-scrollbar {
-  display: none;
-}
-#mobApp .chip {
-  flex: none;
-  padding: 8px 14px;
-  border-radius: 99px;
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--tx);
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .chip.on {
-  background: var(--br);
-  color: #fff;
-  border-color: var(--br);
-}
-#mobApp .tbl {
-  flex: none;
-  min-width: 84px;
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: var(--cd);
-  border: 1.5px solid var(--ln);
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--tx);
-}
-#mobApp .tbl.on {
-  border-color: var(--br);
-}
-#mobApp .tbl i {
-  font-style: normal;
-  float: right;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--ok);
-  margin-top: 4px;
-}
-#mobApp .tbl.occ i {
-  background: var(--bad);
-}
-#mobApp .tbl b {
-  display: block;
-  font-size: 13px;
-}
-#mobApp .seg {
-  display: flex;
-  background: var(--ln);
-  border-radius: 12px;
-  padding: 3px;
-  margin-bottom: 10px;
-}
-#mobApp .seg button {
-  flex: 1;
-  padding: 8px 4px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 12.5px;
-  color: var(--mu);
-  white-space: nowrap;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .seg button.on {
-  background: var(--cd);
-  color: var(--tx);
-  box-shadow: 0 1px 3px rgba(0,0,0,.15);
-}
-#mobApp input, #mobApp select {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--ln);
-  background: var(--cd);
-  color: var(--tx);
-  outline: none;
-  font-family: inherit;
-  font-size: 14px;
-}
-#mobApp input:focus, #mobApp select:focus {
-  border-color: var(--br);
-}
-#mobApp .item {
-  display: flex;
-  gap: 12px;
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  border-radius: 16px;
-  padding: 10px;
-  margin-bottom: 10px;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  transition: transform .1s;
-}
-#mobApp .item:active {
-  transform: scale(0.98);
-}
-#mobApp .th {
-  width: 72px;
-  height: 72px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-size: 34px;
-  flex: none;
-  position: relative;
-  overflow: hidden;
-  background: #F5EFE6;
-}
-#mobApp .th img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 14px;
-}
-#mobApp .item .nm {
-  font-weight: 700;
-  flex: 1;
-  font-size: 14px;
-  color: var(--tx);
-}
-#mobApp .pr {
-  color: var(--br);
-  font-weight: 800;
-  margin-top: 2px;
-  font-size: 14px;
-}
-#mobApp .add {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--br);
-  color: #fff;
-  font-size: 22px;
-  line-height: 1;
-  flex: none;
-  border: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-#mobApp .tag {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 99px;
-  background: #DCFCE7;
-  color: #166534;
-  display: inline-block;
-  margin-top: 4px;
-}
-#mobApp .tag.lo {
-  background: #FEE2E2;
-  color: #991B1B;
-}
-#mobApp .cartbar {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
-  background: var(--br);
-  color: #fff;
-  border-radius: 16px;
-  padding: 13px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-  z-index: 4;
-  box-shadow: 0 8px 24px rgba(0,0,0,.3);
-  border: 0;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: inherit;
-}
-#mobApp .btn {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  font-weight: 700;
-  background: var(--br);
-  color: #fff;
-  text-align: center;
-  border: 0;
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .btn.o {
-  background: var(--cd);
-  color: var(--tx);
-  border: 1px solid var(--ln);
-}
-#mobApp .btn.g {
-  background: #DCFCE7;
-  color: #166534;
-}
-#mobApp .btn.d {
-  background: #FEE2E2;
-  color: #991B1B;
-}
-#mobApp .btn.s {
-  padding: 8px 12px;
-  font-size: 12px;
-  width: auto;
-  display: inline-block;
-  border-radius: 10px;
-}
-#mobApp .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-#mobApp .stat {
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  border-radius: 16px;
-  padding: 12px;
-}
-#mobApp .stat b {
-  font-size: 20px;
-  font-weight: 800;
-  display: block;
-  margin-top: 4px;
-}
-#mobApp .bar {
-  height: 8px;
-  border-radius: 9px;
-  background: var(--ln);
-  margin-top: 4px;
-  overflow: hidden;
-}
-#mobApp .bar i {
-  display: block;
-  height: 100%;
-  border-radius: 9px;
-  background: var(--br);
-}
-#mobApp .ov {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.5);
-  z-index: 25;
-  display: flex;
-  align-items: flex-end;
-}
-#mobApp .sheet {
-  background: var(--bg);
-  width: 100%;
-  max-height: 92%;
-  overflow-y: auto;
-  border-radius: 24px 24px 0 0;
-  padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
-  animation: mobUp .22s ease-out;
-}
-@keyframes mobUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-#mobApp .q {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-#mobApp .q button {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--ln);
-  font-size: 18px;
-  background: var(--cd);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--tx);
-  border: 1px solid var(--ln);
-}
-#mobApp .lr {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background: var(--cd);
-  border: 1px solid var(--ln);
-  border-radius: 14px;
-  margin-bottom: 8px;
-  width: 100%;
-  text-align: left;
-  font-weight: 600;
-  color: var(--tx);
-  cursor: pointer;
-  font-family: inherit;
-}
-#mobApp .toast {
-  position: fixed;
-  left: 50%;
-  top: 70px;
-  transform: translateX(-50%);
-  background: #1C1917;
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 99px;
-  font-size: 13px;
-  font-weight: 600;
-  z-index: 50;
-  white-space: nowrap;
-}
-#mobApp .sw {
-  width: 46px;
-  height: 26px;
-  border-radius: 99px;
-  background: var(--ln);
-  position: relative;
-  flex: none;
-  cursor: pointer;
-}
-#mobApp .sw.on {
-  background: var(--ok);
-}
-#mobApp .sw:after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  transition: .15s;
-}
-#mobApp .sw.on:after {
-  left: 23px;
-}
-
 </style></head><body>
 <div class="header">
   <div class="kot-badge">KITCHEN ORDER (KOT)</div>
@@ -4541,11 +3517,13 @@ const A = {
   editprod: (d) => openProduct(catalog.products.find((p) => p.id === d.id)),
   delprod: async (d) => {
     const p = catalog.products.find((x) => x.id === d.id)
+    if (!p) return
     if (!confirm(`Delete "${p.name}"?`)) return
     const r = await api('/api/products/' + d.id, undefined, 'DELETE')
     prodMsg = r.ok ? '' : r.message
     if (r.ok) await loadCatalog()
     drawProducts()
+    if (window.innerWidth <= 768 || mobTab === 'prods') renderMobile()
   },
   rmv: (d) => { readDraft(); draft.variants.splice(Number(d.i), 1); drawModal('') },
   addv: () => { readDraft(); draft.variants.push({ id: '', name: '', price: '', stock: 0, min_stock: 5 }); drawModal('') },
@@ -4557,6 +3535,7 @@ const A = {
     $('modal').hidden = true; draft = null; prodMsg = ''
     await loadCatalog()
     drawProducts()
+    if (window.innerWidth <= 768 || mobTab === 'prods') renderMobile()
   },
   savesettings: async () => {
     const body = {}
@@ -4665,13 +3644,13 @@ const A = {
     const item = billCart.find((x) => x.uid === d.uid)
     if (!item) return
     const TAGS = [
-      '🥡 PACK / PARCEL (Takeaway)',
-      '🍽️ DINE-IN (Serve on Table)',
-      '🌶️ Extra Spicy',
-      '🟢 Less Spicy / Mild',
-      '❌ No Onion',
-      '🧂 Extra Sauce / Raita',
-      '🔥 Crispy'
+      'Pack / Parcel',
+      'Dine-in',
+      'Extra Spicy',
+      'Less Spicy / Mild',
+      'No Onion',
+      'Extra Sauce / Raita',
+      'Crispy'
     ]
     const tagsHtml = TAGS.map((t) => `
       <button class="btn" data-a="posappendtag" data-tag="${esc(t)}" style="min-height:34px;font-size:12px;font-weight:700;border-radius:6px">
@@ -4689,13 +3668,13 @@ const A = {
         ${tagsHtml}
       </div>
       <label class="f" style="margin-top:12px">Custom Kitchen Note:
-        <input id="posNoteInp" class="inp" value="${esc(item.note || '')}" placeholder="e.g. 2 table pr, 1 pack, less oil...">
+        <textarea id="posNoteInp" class="inp" rows="3" style="resize:vertical;font-family:inherit" placeholder="e.g. 2 table pr, 1 pack, less oil...">${esc(item.note || '')}</textarea>
       </label>
       ${item.qty > 1 ? `
       <div style="background:#FFFBEB;border:1px dashed #F59E0B;border-radius:10px;padding:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:8px">
         <span style="font-size:13px;color:#92400E"><b>Customer wants 1 separate packed?</b></span>
         <button class="btn" data-a="possplitpacked" data-uid="${esc(item.uid)}" style="background:#FEF3C7;border-color:#F59E0B;color:#92400E;font-weight:800;font-size:12px">
-          ✂️ Split 1 qty as Packed
+          Split 1 qty as Packed
         </button>
       </div>` : ''}
       <div style="display:flex;gap:10px;margin-top:16px">
@@ -4707,8 +3686,13 @@ const A = {
   posappendtag: (d) => {
     const inp = $('posNoteInp')
     if (inp) {
+      const tag = d.tag.replace(/^[•\-\*\s]+/, '').trim()
       const cur = inp.value.trim()
-      inp.value = cur ? cur + ', ' + d.tag : d.tag
+      const lines = cur ? cur.split('\n').map((l) => l.trim()).filter(Boolean) : []
+      if (!lines.some((l) => l.replace(/^[•\-\*\s]+/, '').toLowerCase() === tag.toLowerCase())) {
+        lines.push(`• ${tag}`)
+        inp.value = lines.join('\n')
+      }
     }
   },
   possplitpacked: (d) => {
@@ -4719,7 +3703,7 @@ const A = {
       ...item,
       uid: Date.now() + Math.random().toString(36).substr(2, 4),
       qty: 1,
-      note: '[🥡 PACK / PARCEL]'
+      note: '• Pack / Parcel'
     }
     billCart.push(packedItem)
     $('modal').hidden = true
@@ -5316,126 +4300,306 @@ function renderMobileBilling() {
   `
 }
 
+let mobReportsData = null
+let mobReportsPeriod = 'Today'
+
+async function loadMobileDashboard() {
+  const t = today()
+  try {
+    const d = await api(`/api/report?from=${t}&to=${t}`)
+    if (d.ok) {
+      dashCache = d
+      renderMobile()
+    }
+  } catch (err) {
+    console.warn('Dashboard fetch err:', err)
+  }
+}
+
+async function loadMobileReports() {
+  const t = today()
+  let from = t, to = t
+  if (mobReportsPeriod === 'Yesterday') {
+    from = addDays(t, -1)
+    to = from
+  } else if (mobReportsPeriod === '7 Days') {
+    from = addDays(t, -6)
+    to = t
+  } else if (mobReportsPeriod === '30 Days') {
+    from = addDays(t, -29)
+    to = t
+  } else if (mobReportsPeriod === 'This Month') {
+    from = t.slice(0, 8) + '01'
+    to = t
+  }
+  try {
+    const d = await api(`/api/report?from=${from}&to=${to}&bills=1`)
+    if (d.ok) {
+      mobReportsData = d
+      renderMobile()
+    }
+  } catch (err) {
+    console.warn('Reports fetch err:', err)
+  }
+}
+
 function renderMobileDashboard() {
-  const totalSales = billCart.reduce((s, i) => s + i.qty * i.price, 0)
-  const lowProds = (catalog.products || []).filter(p => {
-    const totalStock = (p.variants || []).reduce((s, v) => s + Number(v.stock || 0), 0)
-    return p.track_stock && totalStock <= 5
-  })
+  const s = (dashCache && dashCache.summary) || { sales: 0, guests: 0, items_sold: 0 }
+  const payments = (dashCache && dashCache.payments) || []
+  const items = (dashCache && dashCache.items) || []
+  const lowList = getLowStockVariants()
+  const shopName = settingsCache.restaurant_name || (me && me.restaurant && me.restaurant.name) || 'Restaurant POS'
 
   return `
     <h2>Today at a glance</h2>
     <div class="card" style="background:#DCFCE7;color:#14532D;border-color:#BBF7D0">
-      <b>Active Shift · Cashier Staff</b>
-      <div style="font-size:12px;margin-top:2px">Logged in: ${esc((me && me.name) || 'Staff')}</div>
+      <div class="row sp">
+        <b>🟢 Active Shift · ${(me && me.name) || 'Staff'}</b>
+        <span class="tag" style="background:#166534;color:#fff">ONLINE</span>
+      </div>
+      <div style="font-size:12px;margin-top:2px;color:#166534">${esc(shopName)} · Logged in today</div>
       <div class="grid" style="margin-top:10px">
-        <div class="stat" style="color:var(--tx)"><span class="mu">Shift sales</span><b>${rs(mobShiftSales || 5650)}</b></div>
-        <div class="stat" style="color:var(--tx)"><span class="mu">Cash in drawer</span><b>${rs((mobShiftSales || 5650) - 200)}</b></div>
+        <div class="stat" style="color:var(--tx);background:#fff">
+          <span class="mu">Total sales today</span>
+          <b>${rs(s.sales || 0)}</b>
+        </div>
+        <div class="stat" style="color:var(--tx);background:#fff">
+          <span class="mu">Orders / Bills</span>
+          <b>${s.guests || 0} bills</b>
+        </div>
       </div>
     </div>
 
-    ${lowProds.length ? `
-      <div class="card" style="background:#FEE2E2;color:#991B1B;border-color:#FECACA">
-        ⚠️ <b>${lowProds.length} product(s) low on stock</b>
-        <div style="font-size:12px;margin-top:2px">${lowProds.map(p => esc(p.name)).slice(0, 3).join(', ')}</div>
+    ${lowList.length ? `
+      <div class="card" style="background:#FEF3C7;color:#92400E;border-color:#FCD34D">
+        <div class="row sp">
+          <b>⚠️ ${lowList.length} Item(s) Low on Stock</b>
+          <button class="btn s" data-a="mobtab" data-tab="prods" style="background:#B45309;color:#fff;padding:4px 8px;font-size:11px">Manage</button>
+        </div>
+        <div style="font-size:12px;margin-top:4px">
+          ${lowList.map(v => `${esc(v.display_name)} (${v.stock} left)`).slice(0, 3).join(', ')}${lowList.length > 3 ? '...' : ''}
+        </div>
       </div>
     ` : ''}
 
     <div class="grid">
-      <div class="stat"><span class="mu">Today’s sales</span><b>${rs(mobShiftSales || 5650)}</b></div>
-      <div class="stat"><span class="mu">Customers</span><b>${mobDailyBills.length || 5}</b></div>
+      <div class="stat"><span class="mu">Today’s sales</span><b>${rs(s.sales || 0)}</b></div>
+      <div class="stat"><span class="mu">Customers</span><b>${s.guests || 0}</b></div>
       <div class="stat"><span class="mu">Items in menu</span><b>${(catalog.products || []).length}</b></div>
-      <div class="stat"><span class="mu">Online received</span><b>Rs 200</b></div>
+      <div class="stat"><span class="mu">Dishes sold</span><b>${s.items_sold || 0}</b></div>
     </div>
 
-    <h3>Top selling items</h3>
+    <h3>Top selling items today</h3>
     <div class="card">
-      ${(catalog.products || []).slice(0, 5).map((p, idx) => `
-        <div style="margin-bottom:10px">
-          <div class="row sp"><span>${esc(p.name)}</span><b>${5 - idx} sold</b></div>
-          <div class="bar"><i style="width:${(5 - idx) * 20}%"></i></div>
-        </div>
-      `).join('')}
+      ${items.length === 0 ? '<div class="mu" style="text-align:center;padding:12px">No sales recorded today yet</div>' : items.slice(0, 5).map((item, idx) => {
+        const maxVal = Math.max(1, ...items.map(x => x.qty))
+        const pct = Math.round((item.qty / maxVal) * 100)
+        return `
+          <div style="margin-bottom:10px">
+            <div class="row sp"><span style="font-weight:600">${esc(item.name)}</span><b>${item.qty} sold</b></div>
+            <div class="bar"><i style="width:${pct}%"></i></div>
+          </div>
+        `
+      }).join('')}
     </div>
 
     <h3>Payments received</h3>
-    <div class="card row sp">
-      <span>Cash</span><b>${rs(mobShiftSales || 5450)}</b>
-    </div>
+    ${payments.length === 0 ? `
+      <div class="card row sp">
+        <span>Cash</span><b>${rs(s.sales || 0)}</b>
+      </div>
+    ` : payments.map(p => `
+      <div class="card row sp" style="margin-bottom:6px">
+        <span>${esc(p.method || 'Cash')}</span><b>${rs(p.total || 0)}</b>
+      </div>
+    `).join('')}
   `
 }
 
+let mobProdCat = 'All'
+let mobProdSearch = ''
+
+function openProductModal(id) {
+  if (id) {
+    const p = (catalog.products || []).find(x => x.id === id || String(x.id) === String(id))
+    if (p) openProduct(p)
+  } else {
+    openProduct(null)
+  }
+}
+
 function renderMobileProducts() {
-  const prods = catalog.products || []
+  const categories = catalog.categories || []
+  const allProds = catalog.products || []
+  
+  const filtered = allProds.filter(p => {
+    if (mobProdCat !== 'All' && p.category_id !== mobProdCat) return false
+    if (mobProdSearch) {
+      const q = mobProdSearch.toLowerCase()
+      const nMatch = p.name && p.name.toLowerCase().includes(q)
+      const vMatch = (p.variants || []).some(v => v.name && v.name.toLowerCase().includes(q))
+      if (!nMatch && !vMatch) return false
+    }
+    return true
+  })
+
+  const curCat = categories.find(c => c.id === mobProdCat)
+
   return `
-    <h2>Products</h2>
-    <div class="card" style="padding:10px 14px">
-      <div class="row sp">
-        <b>Total Menu Items: ${prods.length}</b>
-        <button class="btn s" onclick="openProductModal()">+ Add</button>
-      </div>
+    <div class="row sp" style="margin-bottom:8px">
+      <h2 style="margin:0">Menu & Products</h2>
+      <button class="btn s" data-a="mobaddprod" style="padding:7px 14px;border-radius:10px">+ Add Item</button>
     </div>
-    ${prods.map(p => {
+
+    <!-- Category Chips with Add Category -->
+    <div class="chips" style="padding-bottom:6px">
+      <button class="chip ${mobProdCat === 'All' ? 'on' : ''}" data-a="mobsetprodcat" data-id="All">
+        📁 All (${allProds.length})
+      </button>
+      ${categories.map(c => {
+        const count = allProds.filter(p => p.category_id === c.id).length
+        return `
+          <button class="chip ${mobProdCat === c.id ? 'on' : ''}" data-a="mobsetprodcat" data-id="${esc(c.id)}">
+            ${esc(c.name)} (${count})
+          </button>
+        `
+      }).join('')}
+      <button class="chip" data-a="mobpromptaddcat" style="border:1.5px dashed var(--br);color:var(--br);font-weight:700">
+        + New Category
+      </button>
+    </div>
+
+    <!-- Category Action Bar if Category Selected -->
+    ${curCat ? `
+      <div class="card row sp" style="padding:8px 12px;margin-bottom:10px;background:#FAF8F5">
+        <b style="font-size:14px">📂 Category: ${esc(curCat.name)}</b>
+        <div style="display:flex;gap:6px">
+          <button class="btn s o" data-a="mobrencat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:4px 8px;font-size:11px">Rename</button>
+          <button class="btn s d" data-a="mobdelcat" data-id="${esc(curCat.id)}" data-name="${esc(curCat.name)}" style="padding:4px 8px;font-size:11px">Delete</button>
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- Search Input -->
+    <div style="position:relative;margin-bottom:12px">
+      <input type="text" id="mobProdSearchInp" value="${esc(mobProdSearch)}" placeholder="Search menu items..." 
+        oninput="mobProdSearch=this.value;renderMobile(true)" style="padding-left:36px;border-radius:12px">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--mu);pointer-events:none">🔍</span>
+      ${mobProdSearch ? `<button onclick="mobProdSearch='';renderMobile()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--mu);cursor:pointer;font-size:16px">✕</button>` : ''}
+    </div>
+
+    <!-- Products List -->
+    ${filtered.length === 0 ? `
+      <div class="card" style="text-align:center;padding:32px 14px">
+        <div style="font-size:32px;margin-bottom:8px">🍽️</div>
+        <b style="font-size:15px">No products found</b>
+        <p class="mu" style="margin:4px 0 14px">Add your dishes or items to start billing</p>
+        <button class="btn s" data-a="mobaddprod">+ Add First Item</button>
+      </div>
+    ` : filtered.map(p => {
       const vars = p.variants || []
       const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
       const minP = vars.length ? Math.min(...vars.map(x => Number(x.price || 0))) : 0
+      const catObj = categories.find(c => c.id === p.category_id)
+      const stockBadge = p.track_stock
+        ? (totalStock <= 0
+            ? '<span class="tag lo">Out of stock (0)</span>'
+            : totalStock <= (p.min_stock ?? 5)
+              ? `<span class="tag" style="background:#FEF3C7;color:#92400E">Low stock (${totalStock})</span>`
+              : `<span class="tag">${totalStock} in stock</span>`)
+        : '<span class="tag">Active</span>'
+
       return `
-        <div class="item" onclick="openProductModal('${esc(p.id)}')">
-          <div class="th" style="width:56px;height:56px;font-size:26px">
-            ${p.image ? `<img src="${esc(p.image)}" alt="">` : getFoodIcon(p.name)}
+        <div class="card" style="margin-bottom:10px;padding:12px">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div class="th" style="width:64px;height:64px;border-radius:12px;font-size:28px;flex:none">
+              ${p.image ? `<img src="${esc(p.image)}" alt="">` : getFoodIcon(p.name)}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <b style="font-size:15px;color:var(--tx)">${esc(p.name)}</b>
+                ${catObj ? `<span style="font-size:10.5px;background:var(--ln);padding:1px 6px;border-radius:6px;color:var(--mu)">${esc(catObj.name)}</span>` : ''}
+              </div>
+              <div style="color:var(--br);font-weight:800;font-size:14px;margin-top:2px">
+                From ${rs(minP)}
+              </div>
+              <div class="mu" style="font-size:11.5px;margin-top:2px">
+                ${vars.map(v => `${esc(v.name || 'Standard')}: ${rs(v.price)}${p.track_stock ? ` (${v.stock ?? 0})` : ''}`).join(' · ')}
+              </div>
+              <div style="margin-top:6px">
+                ${stockBadge}
+              </div>
+            </div>
           </div>
-          <div style="flex:1;min-width:0">
-            <div class="nm">${esc(p.name)}</div>
-            <div class="mu">${rs(minP)} · ${vars.map(v => esc(v.name) + ' ' + rs(v.price)).join(', ')}</div>
+          <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--ln);padding-top:8px">
+            <button class="btn s o" data-a="mobeditprod" data-id="${esc(p.id)}" style="flex:1;font-weight:700">
+              ✏️ Edit Product
+            </button>
+            <button class="btn s d" data-a="mobdelprod" data-id="${esc(p.id)}" style="width:auto;padding:6px 12px">
+              🗑️
+            </button>
           </div>
-          <span class="tag ${totalStock <= 5 ? 'lo' : ''}">${p.track_stock ? totalStock : 'Active'}</span>
         </div>
       `
     }).join('')}
-    <button class="cartbar" style="justify-content:center" onclick="openProductModal()">+ Add New Product</button>
   `
 }
 
 function renderMobileReports() {
+  const d = mobReportsData || { summary: { sales: 0, guests: 0, items_sold: 0 }, bills: [] }
+  const s = d.summary || { sales: 0, guests: 0, items_sold: 0 }
+  const bills = d.bills || []
+
   return `
     <h2>Sales Reports</h2>
     <div class="card">
-      <div class="row sp"><b>Active Shift</b><span class="tag">OPEN</span></div>
-      <div class="mu" style="margin-top:2px">Started today · Cashier ${(me && me.name) || 'Staff'}</div>
-      <div style="margin:10px 0">Bills: 5 · Total Sales: <b>Rs 5,650</b></div>
+      <div class="row sp"><b>Active Summary</b><span class="tag">SYNCED</span></div>
+      <div class="mu" style="margin-top:2px">${mobReportsPeriod} · Cashier ${(me && me.name) || 'Staff'}</div>
+      <div style="margin:10px 0;font-size:15px">Bills: <b>${s.guests || bills.length}</b> · Total Sales: <b style="color:var(--br)">${rs(s.sales || 0)}</b></div>
       <div class="row">
-        <button class="btn o s" onclick="showMobToast('Shift summary sent to printer')">Print summary</button>
-        <button class="btn s" data-a="mobopensheet" data-t="z">End day</button>
+        <button class="btn o s" data-a="mobprintsummary">Print summary</button>
+        <button class="btn s" data-a="mobopensheet" data-t="z">Z-Report</button>
       </div>
     </div>
 
     <div class="chips">
-      ${['Current Shift', 'Daily', 'Weekly', 'Monthly', 'Yearly'].map(p => `
-        <button class="chip ${mobPer === p ? 'on' : ''}" onclick="mobPer='${p}';renderMobile()">${p}</button>
+      ${['Today', 'Yesterday', '7 Days', '30 Days', 'This Month'].map(p => `
+        <button class="chip ${mobReportsPeriod === p ? 'on' : ''}" data-a="mobsetrepperiod" data-p="${p}">${p}</button>
       `).join('')}
     </div>
 
     <div class="grid">
-      <div class="stat"><span class="mu">Total sales</span><b>Rs 5,650</b></div>
-      <div class="stat"><span class="mu">Customers</span><b>5</b></div>
+      <div class="stat"><span class="mu">Total sales</span><b>${rs(s.sales || 0)}</b></div>
+      <div class="stat"><span class="mu">Total bills</span><b>${s.guests || bills.length}</b></div>
     </div>
 
-    <h3>Customer bills</h3>
-    ${[
-      { no: 137, t: '18:08', ty: 'Dine-in', it: ['Double Egg Burger x 1'], tot: 220, pay: 'Cash' },
-      { no: 136, t: '15:30', ty: 'Dine-in - Table 4', it: ['Chicken Shawarma x 1', 'Chany (Full) x 1', 'Extra Naan x 1'], tot: 670, pay: 'Cash' }
-    ].map(b => `
-      <div class="card">
-        <div class="row sp"><b>Bill ${pad(b.no)}</b><b style="font-size:16px">${rs(b.tot)}</b></div>
-        <div class="mu">${b.t} · ${b.ty} · ${b.pay}</div>
-        <div style="font-size:12.5px;margin:6px 0">${b.it.join(', ')}</div>
-        <div class="row">
-          <button class="btn o s" onclick="showMobToast('Bill ${b.no} sent to printer')">🖨 Print</button>
-          <button class="btn d s" data-a="mobopensheet" data-t="void" data-no="${b.no}">Void</button>
-        </div>
+    <h3>Customer bills (${bills.length})</h3>
+    ${bills.length === 0 ? `
+      <div class="card" style="text-align:center;padding:24px 12px">
+        <div style="font-size:28px;margin-bottom:6px">📑</div>
+        <b>No bills found for ${mobReportsPeriod}</b>
       </div>
-    `).join('')}
-    <button class="btn o" onclick="showMobToast('CSV exported to phone downloads')">Export CSV (Excel)</button>
+    ` : bills.map(b => {
+      const itemsList = Array.isArray(b.items) ? b.items : []
+      const itemsStr = itemsList.map(i => `${esc(i.name)} x ${i.qty}`).join(', ')
+      const timeStr = b.created_at ? (b.created_at.length > 11 ? b.created_at.slice(11, 16) : b.created_at) : ''
+
+      return `
+        <div class="card" style="margin-bottom:10px">
+          <div class="row sp">
+            <b>Bill #${pad(b.bill_no)}</b>
+            <b style="font-size:16px;color:var(--br)">${rs(b.total)}</b>
+          </div>
+          <div class="mu">${timeStr} · ${esc(b.order_type || 'Takeaway')}${b.table_name ? ' (' + esc(b.table_name) + ')' : ''} · ${esc(b.payment_method || 'Cash')}</div>
+          ${itemsStr ? `<div style="font-size:12.5px;margin:6px 0;color:var(--tx)">${itemsStr}</div>` : ''}
+          <div class="row" style="margin-top:8px">
+            <button class="btn o s" data-a="mobprintbill" data-id="${esc(b.id)}" data-no="${b.bill_no}">🖨 Print</button>
+            <button class="btn d s" data-a="mobopensheet" data-t="void" data-id="${esc(b.id)}" data-no="${b.bill_no}">Void</button>
+          </div>
+        </div>
+      `
+    }).join('')}
+    <button class="btn o" data-a="csv" style="margin-top:10px">Export CSV (Excel)</button>
   `
 }
 
@@ -5504,7 +4668,7 @@ function renderMobileSheetHtml() {
       <div style="font-size:12px;color:var(--mu);margin-bottom:12px">Select size / option:</div>
       ${(p.variants || []).map((v, i) => `
         <button class="lr" data-a="mobaddvar" data-pid="${esc(p.id)}" data-vi="${i}">
-          <span style="flex:1;font-weight:700">${esc(v.name)}</span>
+          <span style="flex:1;font-weight:700">${esc(v.name || 'Standard')}</span>
           <b style="color:var(--br)">${rs(v.price)}</b>
         </button>
       `).join('')}
@@ -5520,12 +4684,20 @@ function renderMobileSheetHtml() {
     const total = Math.max(0, taxable + tax)
 
     return wrap(`
-      <h2>Your order${billOrderType === 'Dine-in' && billTable ? ' · ' + billTable : ''}</h2>
+      <h2>Your order${billOrderType === 'Dine-in' && billTable ? ' · ' + esc(billTable) : ''}</h2>
       ${billCart.map(l => `
-        <div class="row sp" style="margin-bottom:12px">
-          <div style="flex:1">
-            <b>${esc(l.name)}</b>
+        <div class="row sp" style="margin-bottom:12px;align-items:flex-start">
+          <div style="flex:1;min-width:0;padding-right:8px">
+            <b style="font-size:14.5px;color:var(--tx)">${esc(l.name)}</b>
             <div class="mu">${rs(l.price)} each</div>
+            ${l.note ? `
+              <div style="font-size:11.5px;color:var(--br);font-weight:700;margin-top:3px">
+                ${esc(l.note).split('\n').map(x => x.trim()).filter(Boolean).join(' · ')}
+              </div>
+            ` : ''}
+            <button class="btn s o" data-a="mobopennotemodal" data-uid="${esc(l.uid)}" style="padding:3px 8px;font-size:11px;margin-top:4px">
+              ${l.note ? '✏️ Edit Note' : '+ Note / Pack'}
+            </button>
           </div>
           <div class="q">
             <button data-a="mobqty" data-uid="${esc(l.uid)}" data-delta="-1">−</button>
@@ -5547,6 +4719,7 @@ function renderMobileSheetHtml() {
 
       <div class="row sp mu"><span>Subtotal</span><span>${rs(subtotal)}</span></div>
       ${billDiscount ? `<div class="row sp mu"><span>Discount</span><span>− ${rs(billDiscount)}</span></div>` : ''}
+      ${tax > 0 ? `<div class="row sp mu"><span>Tax (${taxPct}%)</span><span>${rs(tax)}</span></div>` : ''}
       <div class="row sp" style="font-size:20px;font-weight:800;margin:6px 0 14px">
         <span>Total</span><span>${rs(total)}</span>
       </div>
@@ -5596,9 +4769,9 @@ function renderMobileSheetHtml() {
     return wrap(`
       <h2>Restaurant & Receipt</h2>
       ${[
-        ['Restaurant name', settingsCache.restaurant_name || 'Nashta point', 'restaurant_name'],
-        ['Address', settingsCache.address || 'XYZ', 'address'],
-        ['Phone', settingsCache.phone || '03001234567', 'phone'],
+        ['Restaurant name', settingsCache.restaurant_name || 'Restaurant POS', 'restaurant_name'],
+        ['Address', settingsCache.address || '', 'address'],
+        ['Phone', settingsCache.phone || '', 'phone'],
         ['Tax (%) added to every bill', settingsCache.tax_percent || 0, 'tax_percent'],
         ['Message at bottom of bill', settingsCache.footer || 'Thank you! Visit again.', 'footer']
       ].map(f => `
@@ -5642,8 +4815,9 @@ function renderMobileSheetHtml() {
       </div>
       <div class="grid">
         ${tables.map(t => `
-          <div class="card row sp" style="margin:0">
+          <div class="card row sp" style="margin:0;padding:10px">
             <b>${esc(t)}</b>
+            <button class="btn d s" data-a="mobdeltable" data-name="${esc(t)}" style="padding:2px 8px;font-size:11px">✕</button>
           </div>
         `).join('')}
       </div>
@@ -5652,37 +4826,50 @@ function renderMobileSheetHtml() {
   }
 
   if (o.t === 'users') {
+    const users = (staff && staff.users) || []
     return wrap(`
       <h2>Users & Staff</h2>
-      <div class="card row sp">
-        <div>
-          <b>${esc((me && me.name) || 'Muhammad Adil')} (you)</b>
-          <div class="mu">${esc((me && me.role) || 'admin')}</div>
-        </div>
+      <div class="row sp" style="margin-bottom:12px">
+        <b class="mu">Staff Accounts: ${users.length}</b>
+        <button class="btn s" data-a="mobaddstaff">+ Add Cashier</button>
       </div>
-      <button class="btn o" style="margin-top:10px" onclick="openStaffModal()">Manage Staff Details</button>
-      <button class="btn o" style="margin-top:8px" data-a="mobclosesheet">Close</button>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${users.map(u => `
+          <div class="card row sp" style="margin:0;padding:12px">
+            <div>
+              <b>${esc(u.name)}</b>
+              <div class="mu">${esc(u.email || u.username || 'Cashier')} · <span style="color:var(--ok)">Active</span></div>
+            </div>
+            ${u.role !== 'admin' ? `
+              <button class="btn d s" data-a="mobdelstaff" data-id="${esc(u.id)}" data-name="${esc(u.name)}" style="padding:4px 10px;font-size:11px">Delete</button>
+            ` : '<span class="tag">Owner</span>'}
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn o" style="margin-top:14px" data-a="mobclosesheet">Close</button>
     `)
   }
 
   if (o.t === 'void') {
     return wrap(`
-      <h2>Void bill ${o.no}?</h2>
+      <h2>Void bill #${pad(o.no)}?</h2>
       <p class="mu" style="margin-bottom:14px">This removes the bill from sales totals. This cannot be undone.</p>
-      <button class="btn d" data-a="mobvoidbill" data-no="${o.no}">Void bill</button>
+      <button class="btn d" data-a="mobvoidbill" data-id="${esc(o.id || '')}" data-no="${o.no}">Void bill</button>
       <button class="btn o" style="margin-top:8px" data-a="mobclosesheet">Keep bill</button>
     `)
   }
 
   if (o.t === 'z') {
+    const d = mobReportsData || dashCache || { summary: { sales: 0, guests: 0 } }
+    const s = d.summary || { sales: 0, guests: 0 }
     return wrap(`
       <h2>End day · Z-report</h2>
       <div class="card">
-        Shift #4 · 5 bills<br>
-        Cash Rs 5,450 · Online Rs 200<br>
-        <b>Total Rs 5,650</b>
+        <b>Daily Summary</b><br>
+        Total Bills: <b>${s.guests || 0}</b><br>
+        Total Sales: <b>${rs(s.sales || 0)}</b>
       </div>
-      <button class="btn" onclick="mobSheet=null;showMobToast('Z-report printed, register closed')">Close register and print</button>
+      <button class="btn" data-a="mobprintsummary">Print Z-Report & Summary</button>
       <button class="btn o" style="margin-top:8px" data-a="mobclosesheet">Cancel</button>
     `)
   }
@@ -5690,107 +4877,17 @@ function renderMobileSheetHtml() {
   return ''
 }
 
-// ---------------- Master Mobile Draw Function ----------------
-function renderMobile(keepInputFocus) {
-  const mobApp = $('mobApp')
-  if (!mobApp) return
-
-  if (window.innerWidth > 768) {
-    mobApp.style.display = 'none'
-    const shell = $('shell')
-    if (shell) shell.hidden = false
-    return
-  }
-
-  mobApp.style.display = 'flex'
-  const shell = $('shell')
-  if (shell) shell.hidden = true
-
-  const shopName = settingsCache.restaurant_name || (me && me.restaurant && me.restaurant.name) || 'Nashta point'
-  const userName = (me && me.name) || 'Muhammad Adil'
-  const userRole = (me && me.role) || 'admin'
-  const isOnline = navigator.onLine
-
-  const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
-  const subtotal = billCart.reduce((s, i) => s + i.qty * i.price, 0)
-  const taxPct = Number(settingsCache.tax_percent || 0)
-  const taxable = Math.max(0, subtotal - billDiscount)
-  const tax = taxPct > 0 ? (taxable * (taxPct / 100)) : 0
-  const total = Math.max(0, taxable + tax)
-
-  const bodyHtml = {
-    bill: renderMobileBilling,
-    dash: renderMobileDashboard,
-    prods: renderMobileProducts,
-    reps: renderMobileReports,
-    more: renderMobileMore
-  }[mobTab]()
-
-  // Capture active focus if typing in search input
-  const activeId = document.activeElement ? document.activeElement.id : null
-  const selStart = document.activeElement ? document.activeElement.selectionStart : null
-
-  mobApp.innerHTML = `
-    <header>
-      <div style="flex:1;min-width:0">
-        <b>${esc(shopName)}</b>
-        <small>${esc(userName)} · ${esc(userRole)}</small>
-      </div>
-      <div class="pill" data-a="mobopensheet" data-t="prn">
-        <span class="dot" style="background:${btCharacteristic ? '#4ADE80' : '#F87171'}"></span>
-        ${btCharacteristic ? 'Printer ready' : 'No printer'}
-      </div>
-      <button class="pill" data-a="mobsync">
-        ${isOnline ? 'Synced' : 'Offline'}
-      </button>
-    </header>
-
-    ${me && me.license && me.license.message ? `
-      <div class="sub">${esc(me.license.message)}</div>
-    ` : ''}
-
-    <main id="mobMain">${bodyHtml}</main>
-
-    ${mobTab === 'bill' && totalQty > 0 && !mobSheet ? `
-      <button class="cartbar" data-a="mobopencart">
-        <span>View order · ${totalQty} item${totalQty > 1 ? 's' : ''}</span>
-        <span>${rs(total)}</span>
-      </button>
-    ` : ''}
-
-    <nav>
-      ${[
-        ['bill', '🧾', 'Billing'],
-        ['dash', '📊', 'Dashboard'],
-        ['prods', '🍔', 'Products'],
-        ['reps', '📈', 'Reports'],
-        ['more', '☰', 'More']
-      ].map(t => `
-        <button class="${mobTab === t[0] ? 'on' : ''}" data-a="mobtab" data-tab="${t[0]}">
-          <span>${t[1]}</span>
-          ${t[2]}
-        </button>
-      `).join('')}
-    </nav>
-
-    ${renderMobileSheetHtml()}
-
-    ${mobToast ? `<div class="toast">${esc(mobToast)}</div>` : ''}
-  `
-
-  // Restore search input focus smoothly
-  if (keepInputFocus && activeId) {
-    const el = document.getElementById(activeId)
-    if (el) {
-      el.focus()
-      if (selStart !== null) el.setSelectionRange(selStart, selStart)
-    }
-  }
-}
-
 // ---------------- Action Handlers Mapping ----------------
 Object.assign(A, {
-  mobtab: (d) => { mobTab = d.tab; renderMobile(); },
+  mobtab: async (d) => {
+    mobTab = d.tab
+    renderMobile()
+    if (mobTab === 'dash') await loadMobileDashboard()
+    if (mobTab === 'reps') await loadMobileReports()
+    if (mobTab === 'prods') await loadCatalog()
+    if (mobTab === 'more') await loadStaff()
+    renderMobile()
+  },
   mobcat: (d) => { mobCat = d.cat; renderMobile(); },
   mobpickprod: (d) => { mobPickProd(d.id); },
   mobaddvar: (d) => {
@@ -5806,7 +4903,155 @@ Object.assign(A, {
   mobclearorder: () => { billCart = []; mobSheet = null; showMobToast('Order cleared'); renderMobile(); if (page === 'Billing') drawBilling(); },
   mobordertype: (d) => { billOrderType = d.t; renderMobile(); },
   mobpicktable: (d) => { mobPickTable(d.t); },
-  mobopensheet: (d) => { mobSheet = { t: d.t, no: d.no }; renderMobile(); },
+  mobopensheet: (d) => { mobSheet = { t: d.t, no: d.no, id: d.id }; renderMobile(); },
+  mobsetprodcat: (d) => { mobProdCat = d.id; renderMobile(); },
+  mobaddprod: () => { openProduct(null); },
+  mobeditprod: (d) => {
+    const p = (catalog.products || []).find(x => x.id === d.id)
+    if (p) openProduct(p)
+  },
+  mobdelprod: (d) => { A.delprod(d); },
+  mobpromptaddcat: async () => {
+    const name = prompt('Enter new category name (e.g. Fast Food, BBQ, Chai):')
+    if (name && name.trim()) {
+      const r = await api('/api/categories', { name: name.trim() })
+      if (r.ok) {
+        await loadCatalog()
+        if (r.id) mobProdCat = r.id
+        showMobToast('Category created')
+        renderMobile()
+      } else {
+        alert(r.message || 'Could not create category')
+      }
+    }
+  },
+  mobrencat: async (d) => {
+    const newName = prompt('Rename category to:', d.name)
+    if (newName && newName.trim() && newName.trim() !== d.name) {
+      const r = await api('/api/categories/' + d.id, { name: newName.trim() }, 'PUT')
+      if (r.ok) {
+        await loadCatalog()
+        showMobToast('Category renamed')
+        renderMobile()
+      } else {
+        alert(r.message || 'Could not rename category')
+      }
+    }
+  },
+  mobdelcat: async (d) => {
+    if (!confirm(`Delete category "${d.name}" and remove it from products?`)) return
+    const r = await api('/api/categories/' + d.id, undefined, 'DELETE')
+    if (r.ok) {
+      mobProdCat = 'All'
+      await loadCatalog()
+      showMobToast('Category deleted')
+      renderMobile()
+    } else {
+      alert(r.message || 'Could not delete category')
+    }
+  },
+  mobsetrepperiod: async (d) => {
+    mobReportsPeriod = d.p
+    renderMobile()
+    await loadMobileReports()
+  },
+  mobprintbill: async (d) => {
+    const bills = (mobReportsData && mobReportsData.bills) || []
+    const bill = bills.find(b => String(b.bill_no) === String(d.no) || b.id === d.id)
+    if (!bill) return showMobToast('Bill not found')
+    let printedViaBt = false
+    if (btCharacteristic) {
+      try {
+        const bytes = generateEscPosBytes(bill, settingsCache)
+        await sendEscPosToPrinter(bytes)
+        printedViaBt = true
+        showMobToast(`Bill #${pad(bill.bill_no)} printed via Bluetooth`)
+      } catch (err) {
+        console.warn('BT Print failed:', err)
+      }
+    }
+    if (!printedViaBt) {
+      const html = buildOnlineReceiptHtml(bill, settingsCache)
+      printThermalHtml(html)
+      showMobToast(`Bill #${pad(bill.bill_no)} sent to printer`)
+    }
+  },
+  mobprintsummary: async () => {
+    const d = mobReportsData || dashCache
+    if (!d) return showMobToast('No report data to print')
+    const s = d.summary || {}
+    const summaryBill = {
+      bill_no: 'SUMM',
+      order_type: 'Sales Summary',
+      created_at: new Date().toLocaleString(),
+      subtotal: s.sales || 0,
+      discount: 0,
+      tax: 0,
+      total: s.sales || 0,
+      items: (d.items || []).slice(0, 10).map(i => ({ name: i.name, qty: i.qty, price: i.amount ? Math.round(i.amount / i.qty) : 0 }))
+    }
+    if (btCharacteristic) {
+      try {
+        const bytes = generateEscPosBytes(summaryBill, settingsCache)
+        await sendEscPosToPrinter(bytes)
+        showMobToast('Summary printed via Bluetooth')
+      } catch {
+        showMobToast('Printer error')
+      }
+    } else {
+      const html = buildOnlineReceiptHtml(summaryBill, settingsCache)
+      printThermalHtml(html)
+    }
+  },
+  mobvoidbill: async (d) => {
+    const id = d.id || d.no
+    const res = await api('/api/orders/' + id, undefined, 'DELETE')
+    if (res.ok) {
+      showMobToast('Bill #' + d.no + ' voided')
+      await loadMobileReports()
+      await loadMobileDashboard()
+    } else {
+      showMobToast(res.message || 'Error voiding bill')
+    }
+    mobSheet = null
+    renderMobile()
+  },
+  mobopennotemodal: (d) => {
+    A.posopennotemodal(d)
+  },
+  mobaddstaff: async () => {
+    const name = prompt('Enter staff member name:')
+    if (!name || !name.trim()) return
+    const email = prompt('Enter cashier login username or email:')
+    if (!email || !email.trim()) return
+    const pw = prompt('Enter login password (minimum 4 characters):')
+    if (!pw || pw.length < 4) { alert('Password must be at least 4 characters'); return }
+    const r = await api('/api/users', { name: name.trim(), email: email.trim().toLowerCase(), password: pw, role: 'cashier' })
+    if (r.ok) {
+      await loadStaff()
+      showMobToast('Staff member added')
+      renderMobile()
+    } else {
+      alert(r.message || 'Failed to add staff')
+    }
+  },
+  mobdelstaff: async (d) => {
+    if (!confirm(`Delete staff member "${d.name}"?`)) return
+    const r = await api('/api/users/' + d.id, undefined, 'DELETE')
+    if (r.ok) {
+      await loadStaff()
+      showMobToast('Staff removed')
+      renderMobile()
+    } else {
+      alert(r.message || 'Failed to delete staff')
+    }
+  },
+  mobdeltable: (d) => {
+    tablesList = tablesList.filter(t => (typeof t === 'string' ? t : t.name) !== d.name)
+    localStorage.setItem('custom_tables_list', JSON.stringify(tablesList))
+    showMobToast('Table removed')
+    renderMobile()
+  },
   mobdarktoggle: () => {
     const isDark = document.documentElement.dataset.theme === 'dark'
     document.documentElement.dataset.theme = isDark ? 'light' : 'dark'
@@ -5819,11 +5064,6 @@ Object.assign(A, {
     renderMobile()
   },
   moblogout: () => { leave(); },
-  mobvoidbill: async (d) => {
-    showMobToast('Bill ' + d.no + ' voided')
-    mobSheet = null
-    renderMobile()
-  },
   mobtogglebt: async () => {
     if (btCharacteristic) {
       disconnectBluetoothPrinter()
