@@ -1835,7 +1835,7 @@
 
 <script>
 // ================= AUTO CACHE BUSTER (V7 FOODPANDA FLAWLESS UI) =================
-const CURRENT_VERSION = 'v11-perfect-mobile-exe-parity'
+const CURRENT_VERSION = 'v14-exe-parity-complete'
 if (localStorage.getItem('app_installed_version') !== CURRENT_VERSION) {
   localStorage.setItem('app_installed_version', CURRENT_VERSION)
   if ('caches' in window) {
@@ -2245,6 +2245,17 @@ function openBtModal() {
   modal.hidden = false
 }
 
+let activeOrders = []
+try {
+  activeOrders = JSON.parse(localStorage.getItem('restopos_active_orders') || '[]')
+} catch (e) {
+  activeOrders = []
+}
+function saveActiveOrdersStore() {
+  localStorage.setItem('restopos_active_orders', JSON.stringify(activeOrders))
+}
+let lastBillId = null
+let curOrderNo = Math.floor(100 + Math.random() * 900)
 let billCart = []
 let billCat = 'all'
 let billSearch = ''
@@ -2562,6 +2573,19 @@ function drawBilling() {
   const totalQty = billCart.reduce((s, i) => s + i.qty, 0)
   updateMobCartBar(totalQty, total)
 
+  const tables = (tablesList && tablesList.length) ? tablesList : [
+    { id: '1', name: 'Table 1' }, { id: '2', name: 'Table 2' }, { id: '3', name: 'Table 3' },
+    { id: '4', name: 'Table 4' }, { id: '5', name: 'Table 5' }, { id: '6', name: 'Table 6' },
+    { id: '7', name: 'Table 7' }, { id: '8', name: 'Table 8' }, { id: '9', name: 'Table 9' },
+    { id: '10', name: 'Table 10' }
+  ]
+  const occupiedTables = activeOrders.map(ao => ao.table_name)
+  const occCount = tables.filter(t => occupiedTables.includes(t.name)).length
+  const availCount = tables.length - occCount
+  const isCurrentTableActive = billOrderType === 'Dine-in' && billTable && activeOrders.some(ao => ao.table_name === billTable)
+  const activeTableOrder = isCurrentTableActive ? activeOrders.find(ao => ao.table_name === billTable) : null
+  const displayOrderNo = (activeTableOrder && activeTableOrder.order_no) || curOrderNo
+
   // Categories pills without emojis
   const catsHtml = `
     <button class="fp-cat-pill ${billCat === 'all' ? 'active' : ''}" data-a="poscat" data-id="all">
@@ -2574,7 +2598,7 @@ function drawBilling() {
     `).join('')}
   `
 
-  // Foodpanda Style Product Cards
+  // Product cards matching EXE
   const prodsHtml = prods.length ? prods.map((p) => {
     const vars = p.variants || []
     let priceText = 'Rs 0'
@@ -2594,6 +2618,7 @@ function drawBilling() {
       <div class="fp-card-img-wrap">
         ${p.image ? `<img src="${esc(p.image)}" alt="" class="fp-card-img" loading="lazy">` : `<div class="fp-card-img-ph">${getFoodIcon(p.name)}</div>`}
         ${isOut ? `<span class="fp-badge-soldout">Sold Out</span>` : ''}
+        ${p.track_stock && !isOut ? `<span class="fp-badge-options" style="background:#FEF3C7;color:#92400E">${totalStock} in stock</span>` : ''}
         ${hasOptions ? `<span class="fp-badge-options">${vars.length} options</span>` : ''}
         ${isItemInCart ? `<span class="fp-badge-incart">✓ ${inCartQty} in cart</span>` : ''}
       </div>
@@ -2624,7 +2649,7 @@ function drawBilling() {
         <div style="flex:1;min-width:0">
           <b style="font-size:14px;color:#1C1917">${esc(i.name)}</b>
           <div style="font-size:12px;color:#78716C;margin-top:2px">${rs(i.price)} each</div>
-          ${i.note ? `<div style="font-size:12px;color:#9A3412;font-weight:700;margin-top:2px">&raquo; ${esc(i.note)}</div>` : ''}
+          ${i.note ? `<div style="font-size:12px;color:#9A3412;font-weight:700;margin-top:2px">&bull; ${esc(i.note)}</div>` : ''}
         </div>
         <button data-a="posrmvcart" data-uid="${esc(i.uid)}" style="border:0;background:transparent;color:#9CA3AF;cursor:pointer;font-size:16px;padding:2px 6px">✕</button>
       </div>
@@ -2636,9 +2661,9 @@ function drawBilling() {
         </div>
         <span style="font-weight:900;font-size:14px;color:#1C1917">${rs(i.qty * i.price)}</span>
       </div>
-      <div>
-        <button data-a="posopennotemodal" data-uid="${esc(i.uid)}" style="border:0;background:transparent;color:#9A3412;font-size:12px;font-weight:700;cursor:pointer;padding:2px 0">
-          ${i.note ? '✏️ Edit Kitchen Note' : '+ Kitchen note'}
+      <div style="margin-top:4px">
+        <button data-a="posopennotemodal" data-uid="${esc(i.uid)}" style="border:1px solid #E6DED0;background:#FAF6F0;color:#9A3412;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;padding:3px 8px">
+          ${i.note ? '✏️ Edit Note' : '• Note / Pack'}
         </button>
       </div>
     </div>
@@ -2650,97 +2675,210 @@ function drawBilling() {
       <button data-a="posclosetoast" style="border:0;background:transparent;color:#166534;font-weight:800;cursor:pointer">✕</button>
     </div>` : ''
 
+  // Waiters options for dropdown
+  const waiters = (waitersList && waitersList.length) ? waitersList : []
+  const waitersOptionsHtml = waiters.map(w => `
+    <option value="${esc(w.name)}" ${billWaiter === w.name ? 'selected' : ''}>${esc(w.name)}</option>
+  `).join('')
+
   main.innerHTML = `
-    <div class="pad" style="max-width:1400px;padding:12px 10px">
+    <div class="pad" style="max-width:1440px;padding:14px 16px">
       ${licStrip()}
       ${toastHtml}
 
-      <!-- Foodpanda Style Top Action Bar -->
-      <div class="fp-order-bar">
-        <button class="fp-table-pill" data-a="posopentablepicker" title="Change Order Type or Table">
-          <span>${billOrderType === 'Dine-in' ? '🍽️' : billOrderType === 'Takeaway' ? '🥡' : '🛵'}</span>
-          <span>${billOrderType === 'Dine-in' ? (billTable || 'Table 1') : billOrderType}</span>
-          <span style="font-size:10px;opacity:0.7">▼</span>
-        </button>
-        <div class="fp-search-wrap">
-          <span style="font-size:14px;color:#94A3B8">🔍</span>
-          <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="Search menu..." class="fp-search-input" autocomplete="off">
-          ${billSearch ? `<button data-a="posclearsearch" class="fp-clear-search">✕</button>` : ''}
-        </div>
-        <button class="fp-view-toggle-btn" data-a="postoggleview" title="Toggle Grid or List View">
-          ${mobViewMode === 'list' ? '⊞ Grid' : '☰ List'}
-        </button>
-      </div>
-
-      <!-- Main POS Content -->
+      <!-- Main POS Container matching Desktop EXE -->
       <div class="pos-container">
-        <!-- Products Column -->
+
+        <!-- Left Column: Top Search, Tables Strip, Category Pills, Products Grid -->
         <div class="pos-left">
-          <div class="fp-cats-scroll">${catsHtml}</div>
+
+          <!-- Header Bar: Title and Search -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <h2 style="margin:0;font-size:24px;color:#1F1B16">Billing</h2>
+            <div style="position:relative;width:320px;max-width:100%">
+              <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#94A3B8">🔍</span>
+              <input id="posSearch" type="text" value="${esc(billSearch)}" placeholder="Search item..." style="width:100%;height:40px;box-sizing:border-box;border:1px solid #D6CEBE;border-radius:10px;padding:0 36px 0 34px;font-size:14px;background:#fff;outline:none" autocomplete="off">
+              ${billSearch ? `<button data-a="posclearsearch" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:none;color:#94A3B8;cursor:pointer;font-size:14px">✕</button>` : ''}
+            </div>
+          </div>
+
+          <!-- Dine-In Tables Strip Matching EXE Image 3 -->
+          <div style="background:#fff;border:1px solid #D6CEBE;border-radius:12px;padding:12px 14px;margin-top:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div style="font-size:13px;font-weight:700;color:#57534E">
+                🍽️ Dine-In Tables (${tables.length}) • Click any table to open or hold order
+              </div>
+              <div style="display:flex;gap:12px;font-size:12px;font-weight:700">
+                <span style="color:#166534">🟢 Available: ${availCount}</span>
+                <span style="color:#DC2626">🔴 Occupied: ${occCount}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">
+              ${tables.map(t => {
+                const act = activeOrders.find(ao => ao.table_name === t.name)
+                const isSel = (billOrderType === 'Dine-in' && billTable === t.name)
+                return `
+                  <button data-a="posselecttablecard" data-table="${esc(t.name)}" style="flex:none;min-width:105px;padding:8px 10px;border-radius:10px;border:${isSel ? '2px solid #9A3412' : act ? '1px solid #FCA5A5' : '1px solid #D6CEBE'};background:${isSel ? '#FFEDD5' : act ? '#FEF2F2' : '#fff'};cursor:pointer;text-align:left">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <b style="font-size:13px;color:#1F1B16">${esc(t.name)}</b>
+                      <span style="font-size:10px">${act ? '🔴' : '🟢'}</span>
+                    </div>
+                    <div style="font-size:11px;color:${act ? '#DC2626' : '#78716C'};margin-top:2px;font-weight:${act ? '700' : '500'}">
+                      ${act ? rs(act.total || 0) : 'Available'}
+                    </div>
+                  </button>
+                `
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Category Pills -->
+          <div class="fp-cats-scroll" style="margin-top:4px">${catsHtml}</div>
+
+          <!-- Products Grid -->
           <div class="pos-grid ${mobViewMode === 'list' ? 'list-mode' : ''}">${prodsHtml}</div>
         </div>
 
-        <!-- Cart Panel (Right Column on Desktop, Bottom Sheet on Mobile) -->
+        <!-- Right Column: Customer Order Panel Matching EXE Image 3 -->
         <div class="pos-right" id="posCartPanel">
-          <div class="pos-cart-panel">
-            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EBE4D8;padding-bottom:10px">
+          <div class="pos-cart-panel" style="background:#fff;border:1px solid #D6CEBE;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:12px">
+
+            <!-- Panel Header -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
               <div>
-                <b style="font-size:16px;color:#1C1917">Customer Order</b>
-                <div style="font-size:12px;color:#78716C">
-                  ${esc(billOrderType)} ${billOrderType === 'Dine-in' && billTable ? `• ${esc(billTable)}` : ''} ${billWaiter ? `• ${esc(billWaiter)}` : ''}
+                <div style="font-size:20px;font-weight:700;color:#1F1B16">Customer order</div>
+                <div style="font-size:12px;font-weight:800;color:#9A3412;margin-top:2px">
+                  Order #${pad(displayOrderNo)}
                 </div>
               </div>
-              <button data-a="posclosemobcart" class="btn" style="min-height:30px;padding:0 8px;font-size:12px;font-weight:700">✕ Close</button>
+              ${isCurrentTableActive ? `
+                <span style="font-size:11px;padding:3px 8px;border-radius:6px;background:#FEF2F2;color:#DC2626;border:1px solid #FCA5A5;font-weight:700">
+                  🔴 Active Table Order
+                </span>
+              ` : `
+                <button data-a="posclosemobcart" class="btn" style="min-height:30px;padding:0 8px;font-size:12px;font-weight:700">✕ Close</button>
+              `}
+            </div>
+
+            <!-- Order Type, Table, Guests Row Matching Image 3 -->
+            <div style="display:flex;gap:8px">
+              <select id="posOrderType" class="inp" style="flex:1;min-height:40px;border:1px solid #D6CEBE;border-radius:8px">
+                <option value="Dine-in" ${billOrderType === 'Dine-in' ? 'selected' : ''}>Dine-in</option>
+                <option value="Takeaway" ${billOrderType === 'Takeaway' ? 'selected' : ''}>Takeaway</option>
+                <option value="Delivery" ${billOrderType === 'Delivery' ? 'selected' : ''}>Delivery</option>
+              </select>
+
+              ${billOrderType === 'Dine-in' ? `
+                <input id="posTableInp" value="${esc(billTable || 'Table 1')}" placeholder="Table no." style="width:95px;min-height:40px;box-sizing:border-box;border:1px solid #D6CEBE;border-radius:8px;padding:0 8px;font-size:14px;background:#fff">
+                <input id="posGuests" type="number" min="1" value="${billGuests || 1}" placeholder="Guests" title="Number of guests" style="width:70px;min-height:40px;box-sizing:border-box;border:1px solid #D6CEBE;border-radius:8px;padding:0 8px;font-size:14px;background:#fff">
+              ` : ''}
+            </div>
+
+            <!-- Waiter Selector Row Matching Image 3 -->
+            <div style="display:flex;gap:8px">
+              <select id="posWaiter" class="inp" style="width:100%;min-height:40px;border:1px solid #D6CEBE;border-radius:8px">
+                <option value="">👤 Select Waiter (Optional)</option>
+                ${waitersOptionsHtml}
+              </select>
             </div>
 
             <!-- Cart Items List -->
-            <div class="pos-cart-items">${cartRowsHtml}</div>
+            <div class="pos-cart-items" style="max-height:320px;overflow-y:auto">${cartRowsHtml}</div>
 
-            <!-- Summary & Actions -->
-            <div style="border-top:1px solid #E5E7EB;padding-top:12px;display:flex;flex-direction:column;gap:10px">
-              <div style="display:flex;gap:10px">
-                <label style="flex:1;font-size:12px;font-weight:700">Discount (Rs)
-                  <input id="posDiscount" type="number" min="0" value="${billDiscount || ''}" placeholder="0" class="inp" style="min-height:36px;margin-top:2px">
-                </label>
-                <label style="flex:1;font-size:12px;font-weight:700">Payment
-                  <select id="posPayment" class="inp" style="min-height:36px;margin-top:2px">
-                    <option value="Cash" ${billPayment === 'Cash' ? 'selected' : ''}>💵 Cash</option>
-                    <option value="Online / Card" ${billPayment === 'Online / Card' ? 'selected' : ''}>📱 JazzCash / Card</option>
-                    <option value="Split" ${billPayment === 'Split' ? 'selected' : ''}>⚖️ Split</option>
-                  </select>
-                </label>
+            <!-- Discount & Payment Row Matching Image 3 -->
+            <div style="display:flex;gap:8px">
+              <div style="flex:1">
+                <label style="display:block;font-size:11px;font-weight:700;color:#57534E;margin-bottom:3px">Discount (Rs)</label>
+                <input id="posDiscount" type="number" min="0" value="${billDiscount || ''}" placeholder="0" class="inp" style="width:100%;box-sizing:border-box;min-height:38px;border:1px solid #D6CEBE;border-radius:8px;padding:0 8px;font-size:14px">
               </div>
-
-              <div style="display:flex;justify-content:space-between;font-size:13px;color:#57534E">
-                <span>Subtotal:</span><b>${rs(subtotal)}</b>
+              <div style="flex:1">
+                <label style="display:block;font-size:11px;font-weight:700;color:#57534E;margin-bottom:3px">Payment</label>
+                <select id="posPayment" class="inp" style="width:100%;min-height:38px;border:1px solid #D6CEBE;border-radius:8px;padding:0 8px;font-size:14px">
+                  <option value="Cash" ${billPayment === 'Cash' ? 'selected' : ''}>💵 Cash</option>
+                  <option value="Online / Card" ${billPayment === 'Online / Card' ? 'selected' : ''}>📱 Online / Card</option>
+                  <option value="Split" ${billPayment === 'Split' ? 'selected' : ''}>⚖️ Split</option>
+                </select>
               </div>
-              ${billDiscount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:#DC2626"><span>Discount:</span><b>-${rs(billDiscount)}</b></div>` : ''}
-              ${tax > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:#57534E"><span>Tax (${taxPct}%):</span><b>${rs(tax)}</b></div>` : ''}
+            </div>
 
-              <div style="display:flex;justify-content:space-between;font-size:19px;font-weight:900;color:#1C1917;padding-top:4px;border-top:1px dashed #E5E7EB">
-                <span>Total:</span><span style="color:#9A3412">${rs(total)}</span>
+            <!-- Subtotal & Total Matching Image 3 -->
+            <div style="border-top:1px solid #EFE8DA;padding-top:8px;display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;justify-content:space-between;font-size:14px;color:#57534E">
+                <span>Subtotal:</span>
+                <b>${rs(subtotal)}</b>
               </div>
+              ${billDiscount > 0 ? `
+                <div style="display:flex;justify-content:space-between;font-size:14px;color:#DC2626">
+                  <span>Discount:</span>
+                  <b>-${rs(billDiscount)}</b>
+                </div>
+              ` : ''}
+              ${tax > 0 ? `
+                <div style="display:flex;justify-content:space-between;font-size:14px;color:#57534E">
+                  <span>Tax (${taxPct}%):</span>
+                  <b>${rs(tax)}</b>
+                </div>
+              ` : ''}
+              <div style="display:flex;justify-content:space-between;font-size:22px;font-weight:900;color:#1F1B16;padding-top:4px">
+                <span>Total:</span>
+                <span style="color:#1F1B16">${rs(total)}</span>
+              </div>
+            </div>
 
-              <!-- Action Buttons -->
-              <button class="pri" data-a="posprintfinal" style="width:100%;min-height:46px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
-                🖨️ Print Final Bill
-              </button>
+            <!-- Active Table Order Status Banner Matching Image 3 -->
+            ${isCurrentTableActive ? `
+              <div style="background:#F0FDF4;border:1px solid #BBF7D0;color:#166534;border-radius:8px;padding:10px 12px;font-size:12.5px;font-weight:700">
+                Saved running order on ${esc(billTable)} (Order #${pad(displayOrderNo)}). Table is now held.
+              </div>
+            ` : ''}
+
+            <!-- Action Buttons Matching EXE Image 3 -->
+            ${billOrderType === 'Dine-in' ? `
               <div style="display:flex;gap:8px">
-                <button class="btn" data-a="posprintkot" style="flex:1;justify-content:center;font-weight:700" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
-                  📋 Print KOT
+                <button data-a="possavetableorder" style="flex:1;min-height:42px;border-radius:10px;border:1px solid #BBF7D0;background:#F0FDF4;color:#166534;font-size:13.5px;font-weight:700;cursor:pointer" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+                  💾 Save Table Order
                 </button>
-                ${billOrderType === 'Dine-in' ? `
-                <button class="btn" data-a="posholdorder" style="flex:1;justify-content:center;font-weight:700" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
-                  💾 Hold Table
-                </button>` : ''}
-                <button class="btn red" data-a="posclearcart" style="justify-content:center" title="Clear order">
-                  🗑️
+                <button data-a="posprintkot" style="flex:1;min-height:42px;border-radius:10px;border:1px solid #E9D5FF;background:#FAF5FF;color:#6B21A8;font-size:13.5px;font-weight:700;cursor:pointer" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+                  🍳 Print KOT
                 </button>
               </div>
+            ` : `
+              <button data-a="posprintkot" style="width:100%;min-height:42px;border-radius:10px;border:1px solid #E9D5FF;background:#FAF5FF;color:#6B21A8;font-size:13.5px;font-weight:700;cursor:pointer" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+                🍳 Print KOT
+              </button>
+            `}
+
+            <!-- Print Final Bill (Large Primary Brown Button) -->
+            <button data-a="posprintfinal" style="width:100%;min-height:46px;border-radius:10px;border:0;background:#9A3412;color:#fff;font-size:15px;font-weight:800;cursor:pointer" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+              Print Final Bill
+            </button>
+
+            <!-- Save without printing Button -->
+            <button data-a="possavewithoutprint" style="width:100%;min-height:40px;border-radius:10px;border:1px solid #D6CEBE;background:#FAF6F0;color:#57534E;font-size:13.5px;font-weight:600;cursor:pointer" ${!billCart.length ? 'disabled style="opacity:0.5"' : ''}>
+              Save without printing
+            </button>
+
+            <!-- Bottom Row: [Clear] [🔄 Move Table] [Void] [Reprint] -->
+            <div style="display:flex;gap:6px">
+              <button data-a="posclearcart" style="flex:1;min-height:38px;border-radius:8px;border:1px solid #D6CEBE;background:#fff;color:#1F1B16;font-size:13px;font-weight:600;cursor:pointer">
+                Clear
+              </button>
+              ${isCurrentTableActive ? `
+                <button data-a="posmovetable" style="flex:1;min-height:38px;border-radius:8px;border:1px solid #93C5FD;background:#EFF6FF;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer">
+                  🔄 Move Table
+                </button>
+                <button data-a="posvoidtableorder" style="flex:1;min-height:38px;border-radius:8px;border:1px solid #FCA5A5;background:#FEF2F2;color:#DC2626;font-size:13px;font-weight:700;cursor:pointer">
+                  Void
+                </button>
+              ` : ''}
+              <button data-a="posreprintlast" style="flex:1;min-height:38px;border-radius:8px;border:1px solid #D6CEBE;background:#fff;color:${lastBillId ? '#1F1B16' : '#A8A29E'};font-size:13px;font-weight:600;cursor:pointer">
+                Reprint
+              </button>
             </div>
 
           </div>
         </div>
+
       </div>
     </div>
   `
@@ -3628,6 +3766,123 @@ const A = {
     billCart = billCart.filter((x) => x.uid !== d.uid)
     drawBilling()
   },
+    possavewithoutprint: async () => {
+    await A.posprintfinal({ noPrint: true })
+  },
+  posreprintlast: () => {
+    if (lastBillId) {
+      window.open(`/api/receipt/${lastBillId}`, '_blank', 'width=380,height=600')
+    } else {
+      alert('No recent bill to reprint.')
+    }
+  },
+  posselecttablecard: (d) => {
+    const tname = d.table
+    if (!tname) return
+    billTable = tname
+    billOrderType = 'Dine-in'
+    const active = activeOrders.find(ao => ao.table_name === tname)
+    if (active) {
+      billCart = JSON.parse(JSON.stringify(active.cart || []))
+      billWaiter = active.waiter || ''
+      billGuests = active.guests || 1
+      billDiscount = Number(active.discount || 0)
+      billToast = `Loaded active order for ${tname} (Order #${pad(active.order_no || 1)})`
+    } else {
+      billCart = []
+      billDiscount = 0
+      billToast = `Selected ${tname} (Available)`
+    }
+    drawBilling()
+    if (window.innerWidth <= 768) renderMobile()
+  },
+  possavetableorder: () => {
+    if (!billCart.length) {
+      alert('Please add items to order first')
+      return
+    }
+    if (!billTable) billTable = 'Table 1'
+    billOrderType = 'Dine-in'
+    const existingIdx = activeOrders.findIndex(ao => ao.table_name === billTable)
+    const orderData = {
+      table_name: billTable,
+      cart: JSON.parse(JSON.stringify(billCart)),
+      waiter: billWaiter || '',
+      guests: Number(billGuests || 1),
+      discount: Number(billDiscount || 0),
+      order_no: curOrderNo || Math.floor(100 + Math.random() * 900),
+      total: billCart.reduce((s, i) => s + (i.qty * i.price), 0) - (billDiscount || 0),
+      updated_at: new Date().toLocaleTimeString()
+    }
+    if (existingIdx >= 0) {
+      activeOrders[existingIdx] = orderData
+    } else {
+      activeOrders.push(orderData)
+    }
+    saveActiveOrdersStore()
+    billToast = `Saved running order on ${billTable} (Order #${pad(orderData.order_no)}). Table is now held.`
+    drawBilling()
+    if (window.innerWidth <= 768) renderMobile()
+  },
+  posmovetable: () => {
+    if (!billTable) return
+    const target = prompt(`Move active order from ${billTable} to which table? (e.g. Table 2):`, '')
+    if (target && target.trim() && target.trim() !== billTable) {
+      const activeIdx = activeOrders.findIndex(ao => ao.table_name === billTable)
+      if (activeIdx >= 0) {
+        activeOrders[activeIdx].table_name = target.trim()
+        saveActiveOrdersStore()
+      }
+      billTable = target.trim()
+      billToast = `Order moved to ${billTable}.`
+      drawBilling()
+      if (window.innerWidth <= 768) renderMobile()
+    }
+  },
+  posvoidtableorder: () => {
+    if (!billTable) return
+    if (confirm(`Void / cancel held order on ${billTable}?`)) {
+      activeOrders = activeOrders.filter(ao => ao.table_name !== billTable)
+      saveActiveOrdersStore()
+      billCart = []
+      billDiscount = 0
+      billToast = `Order on ${billTable} has been voided.`
+      drawBilling()
+      if (window.innerWidth <= 768) renderMobile()
+    }
+  },
+  mobsetperiod: (d) => {
+    mobPer = d.p
+    if (d.p === 'Daily') { rep.date = today(); }
+    else if (d.p === 'Weekly') { rep.date = today(); }
+    else if (d.p === 'Monthly') { rep.month = today().slice(0, 7); }
+    else if (d.p === 'Yearly') { rep.year = String(new Date().getFullYear()); }
+    loadReport().then(() => renderMobile())
+  },
+  mobreprintbill: async (d) => {
+    showMobToast(`Sending Bill #${d.no} to printer...`)
+    renderMobile()
+    if (btCharacteristic) {
+      const b = (repData && repData.bills && repData.bills.find(x => String(x.id) === String(d.id)))
+      if (b) await printThermalReceipt(b)
+    } else {
+      window.open(`/api/receipt/${d.id}`, '_blank', 'width=380,height=600')
+    }
+    showMobToast(`Bill #${d.no} printed!`)
+    renderMobile()
+  },
+  mobvoidbill: async (d) => {
+    if (!confirm(`Are you sure you want to VOID Bill #${d.no}?`)) return
+    const r = await api(`/api/orders/${d.id}/void`, {}, 'POST')
+    if (r.ok) {
+      showMobToast(`Bill #${d.no} voided!`)
+      await loadReport()
+      renderMobile()
+    } else {
+      alert(r.message || 'Could not void bill')
+    }
+  },
+
   posclearcart: () => {
     if (!billCart.length || confirm('Clear current customer order?')) {
       billCart = []
@@ -3726,7 +3981,8 @@ const A = {
     $('modal').hidden = true
     drawBilling()
   },
-  posprintfinal: async () => {
+  posprintfinal: async (d) => {
+    const isNoPrint = (d && d.noPrint) === true;
     if (!billCart.length) return
     const subtotal = billCart.reduce((s, i) => s + (i.qty * i.price), 0)
     const taxPct = Number(settingsCache.tax_percent || 0)
@@ -3782,8 +4038,13 @@ const A = {
       printThermalHtml(html)
     }
 
+    if (billOrderType === 'Dine-in' && billTable) {
+      activeOrders = activeOrders.filter(ao => ao.table_name !== billTable)
+      saveActiveOrdersStore()
+    }
     delete billHeldTables[billTable]
     billCart = []
+    curOrderNo = Math.floor(100 + Math.random() * 900)
     billDiscount = 0
     const panel = $('posCartPanel')
     if (panel) panel.classList.remove('mob-open')
@@ -3980,13 +4241,17 @@ async function syncOfflineQueue() {
 
 async function init() {
   updateNetStatus()
+  if (window.innerWidth <= 768) {
+    renderMobile()
+  }
   const d = await api('/api/me')
   if (!d.ok) {
     const cachedMe = localStorage.getItem('cached_api_/api/me')
     if (cachedMe) {
-      me = JSON.parse(cachedMe)
+      try { me = JSON.parse(cachedMe) } catch (e) {}
     } else {
-      main.innerHTML = ''; $('shell').hidden = false; main.innerHTML = `<div class="pad err">${esc(d.message)}</div>`; return
+      location.replace('/')
+      return
     }
   } else {
     me = d
@@ -4033,7 +4298,6 @@ let mobQuery = ''
 let mobSheet = null
 let mobToast = ''
 let mobPer = 'Daily'
-let mobShiftSales = 0
 let mobDailyBills = []
 
 function showMobToast(msg) {
@@ -4415,7 +4679,7 @@ function renderMobileDashboard() {
   `
 }
 
-let mobProdCat = 'All'
+let mobProdCat = null
 let mobProdSearch = ''
 
 function openProductModal(id) {
@@ -4558,6 +4822,98 @@ function renderMobileProducts() {
         </div>
       `
     }).join('')}
+  `
+}
+
+function renderMobileReports() {
+  const bills = (repData && repData.bills) || mobDailyBills || []
+  const summary = (repData && repData.summary) || {
+    sales: bills.reduce((s, b) => s + Number(b.total || 0), 0),
+    guests: bills.length,
+    itemsSold: bills.reduce((s, b) => s + (b.items || []).reduce((is, it) => is + Number(it.qty || 1), 0), 0)
+  }
+
+  const periods = [
+    ['Daily', 'Daily'],
+    ['Weekly', 'Weekly'],
+    ['Monthly', 'Monthly'],
+    ['Yearly', 'Yearly']
+  ]
+
+  return `
+    <div class="row sp" style="margin-bottom:12px">
+      <h2 style="margin:0">Sales Reports</h2>
+      <button class="btn s o" data-a="mobexportcsv" style="padding:6px 12px;font-size:12px;font-weight:700">Export CSV</button>
+    </div>
+
+    <!-- Period Tabs -->
+    <div class="chips" style="margin-bottom:14px">
+      ${periods.map(p => `
+        <button class="chip ${mobPer === p[0] ? 'on' : ''}" data-a="mobsetperiod" data-p="${p[0]}">${p[1]}</button>
+      `).join('')}
+    </div>
+
+    <!-- KPI Cards -->
+    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:14px">
+      <div class="card" style="padding:10px;text-align:center">
+        <div style="font-size:11px;color:var(--mu);font-weight:700">TOTAL SALES</div>
+        <b style="font-size:16px;color:var(--tx);margin-top:4px;display:block">${rs(summary.sales || 0)}</b>
+      </div>
+      <div class="card" style="padding:10px;text-align:center">
+        <div style="font-size:11px;color:var(--mu);font-weight:700">CUSTOMERS</div>
+        <b style="font-size:16px;color:var(--tx);margin-top:4px;display:block">${summary.guests || 0}</b>
+      </div>
+      <div class="card" style="padding:10px;text-align:center">
+        <div style="font-size:11px;color:var(--mu);font-weight:700">ITEMS SOLD</div>
+        <b style="font-size:16px;color:var(--tx);margin-top:4px;display:block">${summary.itemsSold || 0}</b>
+      </div>
+    </div>
+
+    <!-- Bills List Header -->
+    <div style="font-size:13px;font-weight:800;color:var(--tx);margin-bottom:8px">All Orders & Bills (${bills.length})</div>
+
+    ${bills.length === 0 ? `
+      <div class="card" style="text-align:center;padding:32px 14px">
+        <div style="font-size:32px;margin-bottom:8px">📊</div>
+        <b style="font-size:14px;color:var(--tx)">No sales recorded for this period</b>
+        <div class="mu" style="font-size:12px;margin-top:4px">Completed customer bills will appear here automatically.</div>
+      </div>
+    ` : `
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${bills.map(b => {
+          const bNo = pad(b.bill_no || b.id)
+          const bTime = (b.created_at || '').slice(11, 16) || (b.created_at || '')
+          const bTotal = rs(b.total || 0)
+          const bItems = b.items || []
+          const bType = b.order_type || 'Dine-in'
+          const bTable = b.table_name ? ` • ${b.table_name}` : ''
+          const bWaiter = b.waiter_name ? ` • Waiter: ${b.waiter_name}` : ''
+          return `
+            <div class="card" style="padding:12px">
+              <div class="row sp">
+                <div>
+                  <b style="font-size:15px;color:var(--tx)">Bill #${bNo}</b>
+                  <div class="mu" style="font-size:12px;margin-top:2px">${esc(bType)}${esc(bTable)}${esc(bWaiter)} ${bTime ? `· ${bTime}` : ''}</div>
+                </div>
+                <div style="text-align:right">
+                  <b style="font-size:16px;color:#9A3412">${bTotal}</b>
+                  <div class="mu" style="font-size:11px">${esc(b.payment_method || 'Cash')}</div>
+                </div>
+              </div>
+              ${bItems.length ? `
+                <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--bd);font-size:12px;color:var(--mu)">
+                  ${bItems.map(bi => `${bi.name} x${bi.qty}`).join(', ')}
+                </div>
+              ` : ''}
+              <div class="row" style="margin-top:10px;gap:8px">
+                <button class="btn s o" data-a="mobreprintbill" data-id="${esc(b.id)}" data-no="${bNo}" style="flex:1;padding:7px;font-size:12px">🖨️ Reprint</button>
+                <button class="btn s d" data-a="mobvoidbill" data-id="${esc(b.id)}" data-no="${bNo}" style="padding:7px 12px;font-size:12px">Void</button>
+              </div>
+            </div>
+          `
+        }).join('')}
+      </div>
+    `}
   `
 }
 
