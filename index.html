@@ -101,7 +101,10 @@
   <div id="loginCard" class="card">
     <h1>Log in</h1>
     <div class="field">
-      <input id="lemail" type="email" placeholder="Email address" autocomplete="username">
+      <input id="lemail" type="text" inputmode="email" placeholder="Owner email or Staff username" autocomplete="username">
+    </div>
+    <div id="lrestwrap" class="field" hidden>
+      <input id="lrestemail" type="email" placeholder="Restaurant email (for staff login)" autocomplete="off">
     </div>
     <div class="field">
       <input id="lpw" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:44px">
@@ -113,6 +116,7 @@
     </div>
     <button class="main" id="lgo">Log in</button>
     <div id="lmsg" class="msg"></div>
+    <div style="text-align:center"><button type="button" class="link" id="toggleStaffBtn" style="font-size:13px;color:#78716C;text-decoration:none">Staff / Cashier login? Enter restaurant email</button></div>
     <div class="switch">New restaurant? <button class="link" id="toSignup">Create an account</button></div>
   </div>
 
@@ -169,16 +173,44 @@ function view(signup) {
 }
 $('toSignup').onclick = () => view(true)
 $('toLogin').onclick = () => view(false)
+$('toggleStaffBtn').onclick = () => {
+  const w = $('lrestwrap')
+  w.hidden = !w.hidden
+  if (!w.hidden) $('lrestemail').focus()
+}
 
 async function login() {
   $('lmsg').className = 'msg'
   $('lmsg').textContent = 'Please wait...'
-  const d = await post('/api/login', { email: $('lemail').value, password: $('lpw').value })
-  if (!d.ok) { $('lmsg').className = 'msg err'; $('lmsg').textContent = d.message; return }
-  sessionStorage.setItem('tok', d.token)
-  localStorage.setItem('tok', d.token)
-  sessionStorage.removeItem('imp')
-  location.href = '/app.html'
+  try {
+    const body = { email: $('lemail').value.trim(), password: $('lpw').value }
+    if ($('lrestemail') && $('lrestemail').value.trim()) {
+      body.restaurant_email = $('lrestemail').value.trim()
+    }
+    const d = await post('/api/login', body)
+    if (!d.ok) {
+      if (d.need_restaurant_email && $('lrestwrap')) $('lrestwrap').hidden = false
+      $('lmsg').className = 'msg err'
+      $('lmsg').textContent = d.message || 'Login failed'
+      return
+    }
+    const prevRid = localStorage.getItem('cached_rid')
+    if (d.restaurant && d.restaurant.id && prevRid && prevRid !== d.restaurant.id) {
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith('cached_') || k === 'restopos_active_orders' || k === 'offline_bills_queue') {
+          localStorage.removeItem(k)
+        }
+      }
+    }
+    if (d.restaurant && d.restaurant.id) localStorage.setItem('cached_rid', d.restaurant.id)
+    sessionStorage.setItem('tok', d.token)
+    localStorage.setItem('tok', d.token)
+    sessionStorage.removeItem('imp')
+    location.href = '/app.html'
+  } catch (err) {
+    $('lmsg').className = 'msg err'
+    $('lmsg').textContent = 'Cannot reach server. Please wait 30s if server is waking up and try again.'
+  }
 }
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {})

@@ -136,6 +136,32 @@ async function init() {
       PRIMARY KEY (restaurant_id, id)
     );
 
+    CREATE TABLE IF NOT EXISTS active_orders (
+      restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      table_name TEXT NOT NULL,
+      order_type TEXT NOT NULL DEFAULT 'Dine-in',
+      waiter_id TEXT NOT NULL DEFAULT '',
+      waiter_name TEXT NOT NULL DEFAULT '',
+      guests INT NOT NULL DEFAULT 1,
+      discount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      tax_percent NUMERIC(5,2) NOT NULL DEFAULT 0,
+      cart JSONB NOT NULL DEFAULT '[]',
+      printed_cart JSONB NOT NULL DEFAULT '[]',
+      kot_seq INT NOT NULL DEFAULT 0,
+      token_no INT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (restaurant_id, table_name)
+    );
+
+    CREATE INDEX IF NOT EXISTS categories_rid_active_idx ON categories (restaurant_id, is_active);
+    CREATE INDEX IF NOT EXISTS products_rid_active_cat_idx ON products (restaurant_id, is_active, category_id);
+    CREATE INDEX IF NOT EXISTS variants_rid_prod_active_idx ON variants (restaurant_id, product_id, is_active, pos);
+    CREATE INDEX IF NOT EXISTS users_rid_uname_idx ON users (restaurant_id, lower(username));
+    CREATE INDEX IF NOT EXISTS waiters_rid_active_idx ON waiters (restaurant_id, is_active);
+    CREATE INDEX IF NOT EXISTS tables_rid_active_idx ON tables (restaurant_id, is_active);
+    CREATE INDEX IF NOT EXISTS bills_rid_rec_idx ON bills (restaurant_id, received_at);
+
     -- columns and triggers used by the desktop sync
     ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
     ALTER TABLE categories ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp();

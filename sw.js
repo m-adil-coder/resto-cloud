@@ -1,4 +1,5 @@
-const CACHE_NAME = 'restopos-app-v14'
+const CACHE_NAME = 'restopos-app-v15'
+const IMG_CACHE_NAME = 'restopos-img-v1'
 const STATIC_ASSETS = [
   '/',
   '/app.html',
@@ -25,7 +26,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((k) => {
-          if (k !== CACHE_NAME) return caches.delete(k)
+          if (k !== CACHE_NAME && k !== IMG_CACHE_NAME) return caches.delete(k)
         })
       )
     })
@@ -36,6 +37,20 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request
   const url = new URL(req.url)
+
+  // Product images with version hash: cache-first for instant repeat loads
+  if (url.pathname.startsWith('/api/product-image/') && req.method === 'GET') {
+    e.respondWith(
+      caches.open(IMG_CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(req)
+        if (cached) return cached
+        const res = await fetch(req)
+        if (res && res.status === 200) cache.put(req, res.clone())
+        return res
+      }).catch(() => caches.match(req))
+    )
+    return
+  }
 
   // API calls: Network first, with graceful offline JSON fallback
   if (url.pathname.startsWith('/api/')) {
