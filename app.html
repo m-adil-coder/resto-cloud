@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -4702,7 +4702,7 @@ const A = {
 document.addEventListener('click', (e) => {
   if (e.target.id === 'mobSheetOverlay' || (e.target.classList.contains('ov') && !e.target.closest('.sheet'))) {
     mobSheet = null
-    renderMobile()
+    syncMobSheetOverlayDom()
     return
   }
   const el = e.target.closest('[data-a]')
@@ -4894,17 +4894,129 @@ function getFilteredMobileProducts() {
   })
 }
 
+function mobCartBarHtml() {
+  if (!billCart.length || mobTab !== 'bill') return ''
+  const totals = calcOrderTotals(billCart, billDiscount, settingsCache.tax_percent || 0)
+  const qCount = billCart.reduce((s, c) => s + Number(c.qty || 0), 0)
+  return `<button class="cartbar" data-a="mobopensheet" data-t="cart">
+    <span>${qCount} ${qCount === 1 ? 'item' : 'items'}${billOrderType === 'Dine-in' ? ' • ' + esc(billTable) : ''}</span>
+    <b>View Cart • ${rs(totals.total)}</b>
+  </button>`
+}
+
+function updateMobCartBarDom() {
+  const m = $('mobApp')
+  if (!m) return
+  const existing = m.querySelector('.cartbar')
+  const html = mobCartBarHtml()
+  if (!html) {
+    if (existing) existing.remove()
+    return
+  }
+  const wrap = document.createElement('div')
+  wrap.innerHTML = html
+  const nextEl = wrap.firstElementChild
+  if (existing) existing.replaceWith(nextEl)
+  else {
+    const nav = m.querySelector('nav')
+    if (nav) m.insertBefore(nextEl, nav)
+    else m.appendChild(nextEl)
+  }
+}
+
+function updateMobProductCardBadge(productId) {
+  const listEl = $('mobBillList')
+  if (!listEl) return
+  const card = listEl.querySelector(`.item[data-id="${CSS && CSS.escape ? CSS.escape(String(productId)) : String(productId)}"]`)
+  if (!card) return
+  const tagRow = card.querySelector('.mob-item-tags')
+  if (!tagRow) return
+  const inCartQty = billCart
+    .filter((x) => String(x.product_id) === String(productId))
+    .reduce((s, x) => s + Number(x.qty || 0), 0)
+  let badge = tagRow.querySelector('[data-in-order]')
+  if (inCartQty > 0) {
+    if (!badge) {
+      badge = document.createElement('span')
+      badge.className = 'tag'
+      badge.setAttribute('data-in-order', '1')
+      badge.style.cssText = 'background:var(--br);color:#fff'
+      tagRow.appendChild(badge)
+    }
+    badge.textContent = `${inCartQty} in order`
+  } else if (badge) {
+    badge.remove()
+  }
+}
+
+function syncMobSheetOverlayDom() {
+  const m = $('mobApp')
+  if (!m) return
+  const existing = $('mobSheetOverlay')
+  if (!mobSheet) {
+    if (existing) existing.remove()
+    return
+  }
+  const html = renderMobileSheetHtml()
+  const wrap = document.createElement('div')
+  wrap.innerHTML = html
+  const nextOv = wrap.firstElementChild
+  if (existing) existing.replaceWith(nextOv)
+  else m.appendChild(nextOv)
+}
+
+function mobCartTotalsHtml() {
+  const t = calcOrderTotals(billCart, billDiscount, settingsCache.tax_percent || 0)
+  return `
+    <div class="row sp mu"><span>Subtotal</span><span>${rs(t.subtotal)}</span></div>
+    ${t.discount > 0 ? `<div class="row sp" style="color:var(--bad);font-size:12px;margin-top:2px"><span>Discount</span><span>-${rs(t.discount)}</span></div>` : ''}
+    ${t.tax > 0 ? `<div class="row sp mu" style="margin-top:2px"><span>Tax (${t.taxPct}%)</span><span>${rs(t.tax)}</span></div>` : ''}
+    <div class="row sp" style="font-size:19px;font-weight:800;margin-top:6px;padding-top:6px;border-top:1px solid var(--ln)">
+      <span>Total</span><span style="color:var(--br)">${rs(t.total)}</span>
+    </div>
+  `
+}
+
+function updateMobCartSheetTotalsDom() {
+  const totalsBox = $('mobCartTotals')
+  if (totalsBox) totalsBox.innerHTML = mobCartTotalsHtml()
+  const t = calcOrderTotals(billCart, billDiscount, settingsCache.tax_percent || 0)
+  const finBtn = $('mobFinishBtn')
+  if (finBtn && !billSubmitting) {
+    finBtn.textContent = `Print Final Bill (${rs(t.total)})`
+  }
+}
+
+function getMobItemStockLimit(prod, variant, currentCart, excludeUid) {
+  if (!prod || !prod.track_stock) return Infinity
+  const vars = prod.variants || []
+  const sumVarStock = vars.reduce((s, v) => s + Math.max(0, Number(v.stock || 0)), 0)
+  const prodStock = Math.max(0, Number(prod.stock || 0))
+  const isSharedPool = vars.length > 1 && prodStock > 0 && sumVarStock === 0
+  const usedSameItem = currentCart
+    .filter((x) => x.uid !== excludeUid && String(x.product_id) === String(prod.id))
+    .reduce((s, x) => s + Number(x.qty || 0), 0)
+  const usedSameVar = currentCart
+    .filter((x) => x.uid !== excludeUid && String(x.product_id) === String(prod.id) && String(x.variant_id || '') === String((variant && variant.id) || ''))
+    .reduce((s, x) => s + Number(x.qty || 0), 0)
+  if (isSharedPool) {
+    return { maxForRow: Math.max(0, prodStock - usedSameItem), totalCap: prodStock }
+  }
+  const varCap = variant ? Math.max(0, Number(variant.stock ?? 0)) : prodStock
+  return { maxForRow: Math.max(0, varCap - usedSameVar), totalCap: varCap }
+}
+
 function mobPickProd(id) {
   const p = (catalog.products || []).find((x) => String(x.id) === String(id))
   if (!p) return
   const vars = p.variants || []
-  const totalStock = vars.reduce((s, v) => s + Number(v.stock || 0), 0)
+  const totalStock = Math.max(Number(p.stock || 0), vars.reduce((s, v) => s + Number(v.stock || 0), 0))
   if (p.track_stock && totalStock <= 0) {
     return showMobToast(p.name + ' is out of stock')
   }
   if (vars.length > 1) {
     mobSheet = { t: 'pick', id: p.id, prod: p }
-    renderMobile()
+    syncMobSheetOverlayDom()
   } else {
     mobAddProd(p, 0)
   }
@@ -4913,12 +5025,9 @@ function mobPickProd(id) {
 function mobAddProd(prod, vi) {
   const v = (prod.variants && prod.variants[vi]) || { id: prod.id, name: '', price: 0, stock: 0 }
   if (prod.track_stock) {
-    const stockAvail = Number(v.stock ?? 0)
-    const alreadyInCart = billCart
-      .filter((x) => String(x.product_id) === String(prod.id) && String(x.variant_id || '') === String(v.id || ''))
-      .reduce((s, x) => s + Number(x.qty || 0), 0)
-    if (stockAvail <= 0) return showMobToast((v.name ? prod.name + ' (' + v.name + ')' : prod.name) + ' is out of stock')
-    if (alreadyInCart + 1 > stockAvail) return showMobToast(`Only ${stockAvail} in stock for ${prod.name}`)
+    const { maxForRow, totalCap } = getMobItemStockLimit(prod, v, billCart, null)
+    if (totalCap <= 0) return showMobToast((v.name ? prod.name + ' (' + v.name + ')' : prod.name) + ' is out of stock')
+    if (maxForRow < 1) return showMobToast(`Only ${totalCap} in stock`)
   }
   const uid = String(prod.id) + '-' + String(v.id || v.name || 'default')
   const existing = billCart.find((x) => x.uid === uid && !x.note)
@@ -4938,36 +5047,73 @@ function mobAddProd(prod, vi) {
       note: ''
     })
   }
+  const hadPickSheet = mobSheet && mobSheet.t === 'pick'
   mobSheet = null
+  if (hadPickSheet) syncMobSheetOverlayDom()
   showMobToast(prod.name + ' added')
-  renderMobile()
+  // Surgical DOM update only: preserve scroll position of the product list (<main>)
+  if (window.innerWidth <= 768 && mobTab === 'bill' && $('mobBillList')) {
+    updateMobProductCardBadge(prod.id)
+    updateMobCartBarDom()
+  } else if (window.innerWidth <= 768) {
+    renderMobile()
+  }
   if (page === 'Billing' && window.innerWidth > 768) drawBilling()
+}
+
+function syncCartRowDom(item) {
+  const escUid = CSS && CSS.escape ? CSS.escape(String(item.uid)) : String(item.uid)
+  const qInp = document.querySelector(`[data-cart-qty="${escUid}"]`)
+  if (qInp) qInp.value = String(item.qty)
+  const lineEl = document.querySelector(`[data-cart-line="${escUid}"]`)
+  if (lineEl) lineEl.textContent = rs(item.qty * item.price)
+  updateMobCartSheetTotalsDom()
+  updateMobCartBarDom()
+  updateMobProductCardBadge(item.product_id)
+}
+
+function commitMobQty(uid, desiredQty) {
+  const item = billCart.find((x) => x.uid === uid)
+  if (!item) return
+  let qty = parseInt(desiredQty, 10)
+  if (!Number.isFinite(qty) || qty <= 0) {
+    // Restore previous valid quantity cleanly without deleting item
+    syncCartRowDom(item)
+    return
+  }
+  const p = (catalog.products || []).find((x) => String(x.id) === String(item.product_id))
+  if (p && p.track_stock) {
+    const v = (p.variants || []).find((vx) => String(vx.id) === String(item.variant_id))
+    const { maxForRow, totalCap } = getMobItemStockLimit(p, v, billCart, item.uid)
+    if (qty > maxForRow) {
+      qty = Math.max(1, maxForRow)
+      showMobToast(`Only ${totalCap} in stock`)
+    }
+  }
+  item.qty = qty
+  syncCartRowDom(item)
 }
 
 function mobChangeQty(uid, delta) {
   const item = billCart.find((x) => x.uid === uid)
   if (!item) return
-  if (delta > 0) {
-    const p = (catalog.products || []).find((x) => String(x.id) === String(item.product_id))
-    if (p && p.track_stock) {
-      const v = (p.variants || []).find((vx) => String(vx.id) === String(item.variant_id))
-      const stockAvail = Number((v && v.stock) ?? p.stock ?? 0)
-      const totalSameVar = billCart
-        .filter((x) => String(x.product_id) === String(item.product_id) && String(x.variant_id || '') === String(item.variant_id || ''))
-        .reduce((s, x) => s + Number(x.qty || 0), 0)
-      if (totalSameVar + delta > stockAvail) {
-        return showMobToast(`Only ${stockAvail} left in stock`)
-      }
-    }
-  }
-  item.qty += delta
-  if (item.qty <= 0) {
+  const nextQty = Number(item.qty || 1) + delta
+  if (nextQty <= 0) {
     billCart = billCart.filter((x) => x.uid !== uid)
+    if (!billCart.length && mobSheet && (mobSheet.t === 'cart' || mobSheet.t === 'note')) {
+      mobSheet = null
+      syncMobSheetOverlayDom()
+    } else if (mobSheet && mobSheet.t === 'cart') {
+      const escUid = CSS && CSS.escape ? CSS.escape(String(uid)) : String(uid)
+      const rowCard = document.querySelector(`[data-cart-card="${escUid}"]`)
+      if (rowCard) rowCard.remove()
+      updateMobCartSheetTotalsDom()
+    }
+    updateMobCartBarDom()
+    updateMobProductCardBadge(item.product_id)
+    return
   }
-  if (!billCart.length && mobSheet && (mobSheet.t === 'cart' || mobSheet.t === 'note')) {
-    mobSheet = null
-  }
-  renderMobile()
+  commitMobQty(uid, nextQty)
 }
 
 function mobPickTable(t) {
@@ -5322,10 +5468,10 @@ function mobBillListHtml() {
         <div style="flex:1;min-width:0">
           <div class="nm">${esc(p.name)}</div>
           <div class="pr">${pStr}</div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:3px">
+          <div class="mob-item-tags" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:3px">
             ${vars.length > 1 ? `<span class="tag" style="background:var(--ln);color:var(--tx)">${vars.length} options</span>` : ''}
             ${isOut ? `<span class="tag lo">Out of stock</span>` : p.track_stock ? `<span class="tag" style="${isLow ? 'background:var(--wn);color:var(--wt)' : ''}">${totalStock} left</span>` : ''}
-            ${inCartQty > 0 ? `<span class="tag" style="background:var(--br);color:#fff">${inCartQty} in order</span>` : ''}
+            ${inCartQty > 0 ? `<span class="tag" data-in-order="1" style="background:var(--br);color:#fff">${inCartQty} in order</span>` : ''}
           </div>
         </div>
         <button class="add" data-a="mobpickprod" data-id="${esc(p.id)}" type="button">+</button>
@@ -5745,7 +5891,7 @@ function renderMobileSheetHtml() {
       </div>
 
       ${billCart.map((c) => `
-        <div class="card" style="padding:12px">
+        <div class="card" data-cart-card="${esc(c.uid)}" style="padding:12px">
           <div class="row sp">
             <div style="flex:1;min-width:0">
               <b style="font-size:14.5px">${esc(c.name)}</b>
@@ -5753,10 +5899,10 @@ function renderMobileSheetHtml() {
               ${c.note ? `<div style="font-size:12px;color:var(--br);font-weight:700;margin-top:3px">${formatBulletsHtml(c.note)}</div>` : ''}
             </div>
             <div style="text-align:right">
-              <b>${rs(c.qty * c.price)}</b>
+              <b data-cart-line="${esc(c.uid)}">${rs(c.qty * c.price)}</b>
               <div class="q" style="margin-top:6px">
                 <button type="button" data-a="mobqty" data-uid="${esc(c.uid)}" data-d="-1">-</button>
-                <b>${c.qty}</b>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" data-mobqty-uid="${esc(c.uid)}" data-cart-qty="${esc(c.uid)}" value="${c.qty}" aria-label="Quantity" style="width:48px;min-width:48px;padding:4px 2px;text-align:center;font-weight:800;font-size:14px;border-radius:8px;border:1px solid var(--ln);background:var(--cd);color:var(--tx)">
                 <button type="button" data-a="mobqty" data-uid="${esc(c.uid)}" data-d="1">+</button>
               </div>
             </div>
@@ -5796,16 +5942,11 @@ function renderMobileSheetHtml() {
         </div>
       ` : ''}
 
-      <div class="card" style="padding:12px">
-        <div class="row sp mu"><span>Subtotal</span><span>${rs(t.subtotal)}</span></div>
-        ${t.discount > 0 ? `<div class="row sp" style="color:var(--bad);font-size:12px;margin-top:2px"><span>Discount</span><span>-${rs(t.discount)}</span></div>` : ''}
-        ${t.tax > 0 ? `<div class="row sp mu" style="margin-top:2px"><span>Tax (${t.taxPct}%)</span><span>${rs(t.tax)}</span></div>` : ''}
-        <div class="row sp" style="font-size:19px;font-weight:800;margin-top:6px;padding-top:6px;border-top:1px solid var(--ln)">
-          <span>Total</span><span style="color:var(--br)">${rs(t.total)}</span>
-        </div>
+      <div class="card" id="mobCartTotals" style="padding:12px">
+        ${mobCartTotalsHtml()}
       </div>
 
-      <button class="btn" data-a="mobfinish" ${billSubmitting ? 'disabled style="opacity:.6"' : ''}>
+      <button class="btn" id="mobFinishBtn" data-a="mobfinish" ${billSubmitting ? 'disabled style="opacity:.6"' : ''}>
         ${billSubmitting ? 'Saving Bill...' : 'Print Final Bill (' + rs(t.total) + ')'}
       </button>
       <div class="row" style="gap:8px;margin-top:8px">
@@ -6184,12 +6325,7 @@ function renderMobile() {
       </div>
     </header>
     <main>${bodyHtml}</main>
-    ${billCart.length && mobTab === 'bill' ? `
-      <button class="cartbar" data-a="mobopensheet" data-t="cart">
-        <span>${qCount} ${qCount === 1 ? 'item' : 'items'}${billOrderType === 'Dine-in' ? ' • ' + esc(billTable) : ''}</span>
-        <b>View Cart • ${rs(totals.total)}</b>
-      </button>
-    ` : ''}
+    ${mobCartBarHtml()}
     <nav>
       ${navTabs.map((t) => `<button class="${mobTab === t.id ? 'on' : ''}" data-a="mobtab" data-t="${t.id}"><span>${t.icon}</span>${t.label}</button>`).join('')}
     </nav>
@@ -6197,9 +6333,34 @@ function renderMobile() {
   `
 }
 
-// Live input & change handlers scoped cleanly so focus is NEVER wiped while typing
+// Live input, focus & commit handlers scoped cleanly so focus/scroll are NEVER wiped
+document.addEventListener('focusin', (e) => {
+  if (e.target && e.target.dataset && e.target.dataset.mobqtyUid !== undefined) {
+    try { e.target.select() } catch {}
+  }
+})
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target && e.target.dataset && e.target.dataset.mobqtyUid !== undefined) {
+    e.preventDefault()
+    commitMobQty(e.target.dataset.mobqtyUid, e.target.value)
+    e.target.blur()
+  }
+})
+
+document.addEventListener('focusout', (e) => {
+  if (e.target && e.target.dataset && e.target.dataset.mobqtyUid !== undefined) {
+    commitMobQty(e.target.dataset.mobqtyUid, e.target.value)
+  }
+})
+
 document.addEventListener('input', (e) => {
   const id = e.target.id
+  if (e.target && e.target.dataset && e.target.dataset.mobqtyUid !== undefined) {
+    const cleaned = e.target.value.replace(/\D/g, '')
+    if (e.target.value !== cleaned) e.target.value = cleaned
+    return
+  }
   if (id === 'mobSearchInp') {
     mobQuery = e.target.value
     const listEl = $('mobBillList')
@@ -6211,6 +6372,8 @@ document.addEventListener('input', (e) => {
     if (curCat && listEl) listEl.innerHTML = mobProdItemsHtml(curCat)
   } else if (id === 'mobDiscInp') {
     billDiscount = Math.max(0, Number(e.target.value) || 0)
+    updateMobCartSheetTotalsDom()
+    updateMobCartBarDom()
   } else if (id === 'mobCashSplitInp') {
     const t = calcOrderTotals(billCart, billDiscount, settingsCache.tax_percent || 0)
     billCashAmount = Math.max(0, Number(e.target.value) || 0)
@@ -6239,7 +6402,7 @@ document.addEventListener('change', async (e) => {
       billCashAmount = Math.round(t.total / 2)
       billOnlineAmount = Math.max(0, Math.round((t.total - billCashAmount) * 100) / 100)
     }
-    renderMobile()
+    syncMobSheetOverlayDom()
   } else if (id === 'mobBtWidthSel') {
     btPrinterWidth = e.target.value
     lsSet('bt_printer_width', btPrinterWidth)
@@ -6288,7 +6451,13 @@ Object.assign(A, {
     renderMobile()
   },
   mobsettype: (d) => { billOrderType = d.type; renderMobile() },
-  mobsetcat: (d) => { mobCat = d.cat; renderMobile() },
+  mobsetcat: (d) => {
+    mobCat = d.cat
+    document.querySelectorAll('#mobApp .chips .chip').forEach((el) => el.classList.toggle('on', String(el.dataset.cat) === String(mobCat)))
+    const listEl = $('mobBillList')
+    if (listEl) listEl.innerHTML = mobBillListHtml()
+    else renderMobile()
+  },
   mobpickprod: (d) => { mobPickProd(d.id) },
   mobaddvar: (d) => {
     const p = (catalog.products || []).find((x) => String(x.id) === String(d.pid))
@@ -6301,9 +6470,19 @@ Object.assign(A, {
   },
   mobqty: (d) => { mobChangeQty(d.uid, Number(d.d)) },
   mobrmvitem: (d) => {
+    const removed = billCart.find((x) => x.uid === d.uid)
     billCart = billCart.filter((x) => x.uid !== d.uid)
-    if (!billCart.length) mobSheet = null
-    renderMobile()
+    if (!billCart.length) {
+      mobSheet = null
+      syncMobSheetOverlayDom()
+    } else if (mobSheet && mobSheet.t === 'cart') {
+      const escUid = CSS && CSS.escape ? CSS.escape(String(d.uid)) : String(d.uid)
+      const rowCard = document.querySelector(`[data-cart-card="${escUid}"]`)
+      if (rowCard) rowCard.remove()
+      updateMobCartSheetTotalsDom()
+    }
+    updateMobCartBarDom()
+    if (removed) updateMobProductCardBadge(removed.product_id)
   },
   mobclearcart: () => {
     if (!billCart.length || confirm('Clear all items from cart?')) {
@@ -6581,11 +6760,11 @@ Object.assign(A, {
       scanAndroidBtDevices()
     }
     mobSheet = { t: d.t }
-    renderMobile()
+    syncMobSheetOverlayDom()
   },
   mobclosesheet: () => {
     mobSheet = null
-    renderMobile()
+    syncMobSheetOverlayDom()
   },
   mobbtscan: () => {
     const res = scanAndroidBtDevices()
